@@ -1,0 +1,32 @@
+package projetosSpringcom.example.ClickSmile.domain;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
+
+@Entity
+@Table(name = "usuario")
+@Inheritance(strategy = InheritanceType.JOINED) // Estratégia crucial: Cria uma tabela 'usuario' separada, e as filhas terão chaves estrangeiras apontando para cá.
+@Data // Anotação do Lombok (no seu build.gradle) que gera Getters e Setters implicitamente em tempo de compilação.
+public abstract class Usuario {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank(message = "O e-mail não pode estar vazio.")
+    @Email(message = "O formato do e-mail é inválido.")
+    @Column(nullable = false, unique = true) // Regra de SGBD: Impede duplicidade a nível de banco de dados.
+    private String email;
+
+    @NotBlank(message = "A senha não pode estar vazia.")
+    @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres.")
+    @Column(nullable = false)
+    private String senha;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Perfil perfil;
+}

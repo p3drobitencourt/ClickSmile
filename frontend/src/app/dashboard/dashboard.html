@@ -1,0 +1,27 @@
+<section class="dashboard">
+  <div class="summary">
+    <div>
+      <p class="eyebrow">Agenda semanal</p>
+      <h2>Appointment control</h2>
+      <p>
+        Click on an available slot to create a new booking. If the backend is not
+        available, a demo schedule stays on screen so the prototype still works.
+      </p>
+    </div>
+
+    <div class="stats">
+      <article>
+        <span>Visible events</span>
+        <strong>{{ events.length }}</strong>
+      </article>
+      <article>
+        <span>Default view</span>
+        <strong>Week</strong>
+      </article>
+    </div>
+  </div>
+
+  <div class="calendar-shell">
+    <p-fullCalendar [options]="calendarOptions"></p-fullCalendar>
+  </div>
+</section>

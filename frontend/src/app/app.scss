@@ -1,0 +1,65 @@
+ :host {
+	display: block;
+	min-height: 100dvh;
+	color: #f8fafc;
+	background:
+		radial-gradient(circle at top left, rgba(21, 128, 61, 0.28), transparent 30%),
+		radial-gradient(circle at top right, rgba(14, 165, 233, 0.18), transparent 28%),
+		linear-gradient(180deg, #0f172a 0%, #111827 48%, #020617 100%);
+}
+
+.app-shell {
+	min-height: 100dvh;
+	padding: 32px clamp(16px, 4vw, 40px) 40px;
+}
+
+.hero {
+	display: flex;
+	align-items: end;
+	justify-content: space-between;
+	gap: 24px;
+	margin: 0 auto 28px;
+	max-width: 1280px;
+}
+
+.eyebrow {
+	margin: 0 0 6px;
+	font-size: 0.75rem;
+	letter-spacing: 0.22em;
+	text-transform: uppercase;
+	color: #7dd3fc;
+}
+
+h1 {
+	margin: 0;
+	font-size: clamp(2rem, 4vw, 4rem);
+	line-height: 0.96;
+	letter-spacing: -0.05em;
+}
+
+.subtitle {
+	margin: 12px 0 0;
+	max-width: 60ch;
+	color: rgba(226, 232, 240, 0.78);
+}
+
+.status {
+	align-self: flex-start;
+	padding: 10px 14px;
+	border-radius: 999px;
+	border: 1px solid rgba(148, 163, 184, 0.24);
+	background: rgba(15, 23, 42, 0.6);
+	color: #cbd5e1;
+	backdrop-filter: blur(14px);
+}
+
+router-outlet {
+	display: block;
+}
+
+@media (max-width: 720px) {
+	.hero {
+		align-items: start;
+		flex-direction: column;
+	}
+}

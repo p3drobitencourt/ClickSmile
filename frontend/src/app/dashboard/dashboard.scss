@@ -1,0 +1,84 @@
+.dashboard {
+	margin: 0 auto;
+	max-width: 1280px;
+	color: #0f172a;
+}
+
+.summary {
+	display: flex;
+	justify-content: space-between;
+	gap: 24px;
+	padding: 28px;
+	border-radius: 28px;
+	background: rgba(248, 250, 252, 0.96);
+	border: 1px solid rgba(148, 163, 184, 0.16);
+	box-shadow: 0 24px 60px rgba(2, 6, 23, 0.2);
+}
+
+.eyebrow {
+	margin: 0 0 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.2em;
+	font-size: 0.72rem;
+	color: #0f766e;
+}
+
+h2 {
+	margin: 0;
+	font-size: clamp(1.6rem, 3vw, 2.4rem);
+	letter-spacing: -0.04em;
+}
+
+.summary p {
+	margin: 12px 0 0;
+	max-width: 58ch;
+	color: #475569;
+}
+
+.stats {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(120px, 1fr));
+	gap: 12px;
+	min-width: min(320px, 100%);
+}
+
+.stats article {
+	padding: 18px;
+	border-radius: 20px;
+	background: linear-gradient(180deg, #ecfeff 0%, #f8fafc 100%);
+	border: 1px solid rgba(15, 118, 110, 0.14);
+}
+
+.stats span {
+	display: block;
+	margin-bottom: 8px;
+	font-size: 0.78rem;
+	text-transform: uppercase;
+	letter-spacing: 0.14em;
+	color: #64748b;
+}
+
+.stats strong {
+	font-size: 2rem;
+	line-height: 1;
+	color: #0f172a;
+}
+
+.calendar-shell {
+	margin-top: 20px;
+	padding: 18px;
+	border-radius: 28px;
+	background: rgba(15, 23, 42, 0.55);
+	border: 1px solid rgba(148, 163, 184, 0.16);
+	box-shadow: 0 24px 60px rgba(2, 6, 23, 0.2);
+}
+
+@media (max-width: 900px) {
+	.summary {
+		flex-direction: column;
+	}
+
+	.stats {
+		min-width: 0;
+	}
+}
