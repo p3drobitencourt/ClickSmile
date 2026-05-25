@@ -1,0 +1,89 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: clicksmile-postgres
+    environment:
+      POSTGRES_DB: clicksmile
+      POSTGRES_USER: clicksmile
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-clicksmile_dev}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clicksmile -d clicksmile"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: clicksmile-redis
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-clicksmile_dev}"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - app
+      - data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-clicksmile_dev}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: clicksmile-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/clicksmile
+      SPRING_DATASOURCE_USERNAME: clicksmile
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-clicksmile_dev}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-clicksmile_dev}
+      APP_CORS_ALLOWED_ORIGINS: http://localhost:8081,http://localhost:4200
+      APP_WEBSOCKET_ALLOWED_ORIGINS: http://localhost:8081,http://localhost:4200
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app
+      - data
+    ports:
+      - "127.0.0.1:8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: clicksmile-frontend
+    depends_on:
+      - backend
+    networks:
+      - edge
+      - app
+    ports:
+      - "127.0.0.1:8081:80"
+
+volumes:
+  pg_data:
+  redis_data:
+
+networks:
+  edge:
+    driver: bridge
+  app:
+    driver: bridge
+    internal: true
+  data:
+    driver: bridge
+    internal: true

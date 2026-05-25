@@ -2,7 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Engine do PrimeNG */
-@import "primeng/resources/themes/lara-light-blue/theme.css";
-@import "primeng/resources/primeng.css";
 @import "primeicons/primeicons.css";
+
+:root {
+	color-scheme: dark;
+	--cs-bg: #0f172a;
+	--cs-bg-elevated: rgba(15, 23, 42, 0.72);
+	--cs-surface: rgba(30, 41, 59, 0.84);
+	--cs-border: rgba(148, 163, 184, 0.14);
+	--cs-text: #e2e8f0;
+	--cs-text-muted: #94a3b8;
+	--cs-primary: #8b5cf6;
+	--cs-success: #14b8a6;
+	--cs-radius-xl: 28px;
+	--cs-radius-lg: 20px;
+	--cs-shadow: 0 24px 70px rgba(2, 6, 23, 0.45);
+	--cs-font: Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+html,
+body {
+	height: 100%;
+}
+
+body {
+	margin: 0;
+	font-family: var(--cs-font);
+	background:
+		radial-gradient(circle at 10% 10%, rgba(139, 92, 246, 0.16), transparent 28%),
+		radial-gradient(circle at 86% 16%, rgba(20, 184, 166, 0.14), transparent 24%),
+		linear-gradient(180deg, #020617 0%, #0f172a 52%, #020617 100%);
+	color: var(--cs-text);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+button,
+input,
+textarea,
+select {
+	font: inherit;
+}

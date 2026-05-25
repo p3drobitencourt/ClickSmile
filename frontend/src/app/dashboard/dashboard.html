@@ -1,27 +1,190 @@
-<section class="dashboard">
-  <div class="summary">
-    <div>
-      <p class="eyebrow">Agenda semanal</p>
-      <h2>Appointment control</h2>
-      <p>
-        Click on an available slot to create a new booking. If the backend is not
-        available, a demo schedule stays on screen so the prototype still works.
-      </p>
+<section class="dashboard-shell" [class.is-collapsed]="sidebarCollapsed()">
+  <aside class="sidebar">
+    <div class="brand-row">
+      <button type="button" class="icon-button brand-icon" (click)="toggleSidebar()" aria-label="Alternar sidebar">
+        <span>CS</span>
+      </button>
+      <div class="brand-copy" [class.hidden]="sidebarCollapsed()">
+        <strong>ClickSmile</strong>
+        <span>Dental SaaS</span>
+      </div>
     </div>
 
-    <div class="stats">
-      <article>
-        <span>Visible events</span>
-        <strong>{{ events.length }}</strong>
-      </article>
-      <article>
-        <span>Default view</span>
-        <strong>Week</strong>
-      </article>
-    </div>
-  </div>
+    <nav class="menu" aria-label="Navegacao principal">
+      <a class="menu-item active" href="#">
+        <i class="pi pi-calendar"></i>
+        <span [class.hidden]="sidebarCollapsed()">Agenda</span>
+      </a>
+      <a class="menu-item" href="#">
+        <i class="pi pi-users"></i>
+        <span [class.hidden]="sidebarCollapsed()">Pacientes</span>
+      </a>
+      <a class="menu-item" href="#">
+        <i class="pi pi-comments"></i>
+        <span [class.hidden]="sidebarCollapsed()">Chat</span>
+      </a>
+      <a class="menu-item" href="#">
+        <i class="pi pi-chart-bar"></i>
+        <span [class.hidden]="sidebarCollapsed()">Insights</span>
+      </a>
+      <a class="menu-item" href="#">
+        <i class="pi pi-cog"></i>
+        <span [class.hidden]="sidebarCollapsed()">Configurações</span>
+      </a>
+    </nav>
 
-  <div class="calendar-shell">
-    <p-fullCalendar [options]="calendarOptions"></p-fullCalendar>
-  </div>
+    <div class="sidebar-card" [class.hidden]="sidebarCollapsed()">
+      <p class="sidebar-kicker">Status da unidade</p>
+      <strong>99.2% uptime</strong>
+      <span>Sincronização ativa com Redis Pub/Sub e WebSocket.</span>
+    </div>
+  </aside>
+
+  <main class="workspace">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Dashboard do dentista</p>
+        <h1>Agenda semanal com foco operacional e conversão</h1>
+        <p class="subtitle">
+          Um cockpit premium para controlar horários, pacientes e comunicação em tempo real sem ruído visual.
+        </p>
+      </div>
+
+      <div class="topbar-actions">
+        <button type="button" class="ghost-button" (click)="toggleBooking()">
+          <i class="pi pi-calendar-plus"></i>
+          {{ bookingOpen() ? 'Ocultar agendamento' : 'Novo agendamento' }}
+        </button>
+        <button type="button" class="ghost-button" (click)="toggleChat()">
+          <i class="pi pi-comments"></i>
+          {{ chatOpen() ? 'Ocultar chat' : 'Abrir chat' }}
+        </button>
+      </div>
+    </header>
+
+    <section class="metrics-grid" aria-label="Métricas do dia">
+      <article class="metric-card" *ngFor="let metric of metrics(); trackBy: trackByIndex">
+        <span>{{ metric.label }}</span>
+        <strong>{{ metric.value }}</strong>
+        <em [class.success]="metric.tone === 'success'" [class.primary]="metric.tone === 'primary'" [class.teal]="metric.tone === 'teal'">
+          {{ metric.delta }}
+        </em>
+      </article>
+    </section>
+
+    <section class="content-grid">
+      <article class="calendar-panel">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker">TimeGrid semanal</p>
+            <h2>{{ selectedDentist() }}</h2>
+          </div>
+          <span class="panel-chip">{{ selectedRangeLabel() }}</span>
+        </div>
+
+        <div class="calendar-shell">
+          <full-calendar [options]="calendarOptions"></full-calendar>
+        </div>
+      </article>
+
+      <aside class="right-rail">
+        <article class="booking-panel" [class.is-hidden]="!bookingOpen()">
+          <div class="panel-head compact">
+            <div>
+              <p class="panel-kicker">Novo agendamento</p>
+              <h3>Criação guiada</h3>
+            </div>
+            <button type="button" class="icon-button" (click)="toggleBooking()" aria-label="Recolher agendamento">
+              <i class="pi pi-angle-right"></i>
+            </button>
+          </div>
+
+          <label>
+            <span>Paciente</span>
+            <select [ngModel]="booking().patientId" (ngModelChange)="setPatient($event)">
+              <option value="">Selecione</option>
+              <option *ngFor="let patient of patients(); trackBy: trackByIndex" [value]="patient.id">{{ patient.nome }}</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Dentista</span>
+            <select [ngModel]="booking().dentistId" (ngModelChange)="setDentist($event)">
+              <option *ngFor="let dentist of dentists(); trackBy: trackByIndex" [value]="dentist.id">{{ dentist.nome }}</option>
+            </select>
+          </label>
+
+          <div class="split-row">
+            <label>
+              <span>Data</span>
+              <input type="date" [ngModel]="booking().date" (ngModelChange)="setBookingDate($event)" />
+            </label>
+            <label>
+              <span>Hora</span>
+              <input type="time" [ngModel]="booking().time" (ngModelChange)="setBookingTime($event)" />
+            </label>
+          </div>
+
+          <label>
+            <span>Observação</span>
+            <textarea rows="3" [ngModel]="booking().notes" (ngModelChange)="setNotes($event)" placeholder="Detalhes clínicos, preparação ou lembretes"></textarea>
+          </label>
+
+          <button type="button" class="primary-button" (click)="criarAgendamento()">
+            <i class="pi pi-check"></i>
+            Salvar agendamento
+          </button>
+
+          <p class="feedback" [class.success]="saveState() === 'saved'" [class.error]="saveState() === 'error'">
+            {{ saveMessage() }}
+          </p>
+        </article>
+
+        <article class="insight-card">
+          <p class="panel-kicker">Operação do dia</p>
+          <h3>Próximos marcos</h3>
+          <ul class="timeline">
+            <li>
+              <strong>09:00</strong>
+              <span>Consulta inicial com revisão de anamnese.</span>
+            </li>
+            <li>
+              <strong>11:30</strong>
+              <span>Retorno com confirmação de orçamento.</span>
+            </li>
+            <li>
+              <strong>14:00</strong>
+              <span>Slot reservado para procedimento rápido.</span>
+            </li>
+          </ul>
+        </article>
+
+        <article class="chat-panel" [class.is-hidden]="!chatOpen()">
+          <div class="panel-head compact">
+            <div>
+              <p class="panel-kicker">Comunicação ao vivo</p>
+              <h3>Pacientes em atendimento</h3>
+            </div>
+            <button type="button" class="icon-button" (click)="toggleChat()" aria-label="Recolher widget de chat">
+              <i class="pi pi-angle-right"></i>
+            </button>
+          </div>
+
+          <div class="chat-list">
+            <article class="chat-item" *ngFor="let chat of activeChats(); trackBy: trackByIndex">
+              <div class="avatar">{{ chat.name.charAt(0) }}</div>
+              <div class="chat-copy">
+                <strong>{{ chat.name }}</strong>
+                <p>{{ chat.preview }}</p>
+              </div>
+              <div class="chat-meta">
+                <span>{{ chat.time }}</span>
+                <em *ngIf="chat.unread">{{ chat.badge }}</em>
+              </div>
+            </article>
+          </div>
+        </article>
+      </aside>
+    </section>
+  </main>
 </section>

@@ -7,10 +7,10 @@ import projetosSpringcom.example.ClickSmile.domain.Agendamento;
 import projetosSpringcom.example.ClickSmile.dto.AgendamentoRequestDTO;
 import projetosSpringcom.example.ClickSmile.service.AgendamentoService;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/agendamentos")
-@CrossOrigin(origins = "http://localhost:4200") // CORS liberação para Angular
 public class AgendamentoController {
 
     private final AgendamentoService service;
@@ -26,7 +26,7 @@ public class AgendamentoController {
     }
 
     @GetMapping("/dentista/{dentistaId}")
-    public List<Agendamento> listarPorDentista(@PathVariable Long dentistaId) {
+    public List<Agendamento> listarPorDentista(@PathVariable UUID dentistaId) {
         return service.listarPorDentista(dentistaId);
     }
 }

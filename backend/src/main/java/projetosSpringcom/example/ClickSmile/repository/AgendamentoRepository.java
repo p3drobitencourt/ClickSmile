@@ -9,12 +9,18 @@ import projetosSpringcom.example.ClickSmile.domain.Agendamento;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {
+public interface AgendamentoRepository extends JpaRepository<Agendamento, UUID> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT a FROM Agendamento a WHERE a.dentista.id = :dentistaId AND a.dataHora = :dataHora")
-    Optional<Agendamento> findByDentistaAndDataHoraForUpdate(@Param("dentistaId") Long dentistaId, @Param("dataHora") LocalDateTime dataHora);
+    @Query("SELECT a FROM Agendamento a WHERE a.dentista.id = :dentistaId AND a.inicioAt = :inicioAt")
+    Optional<Agendamento> findByDentistaAndInicioAtForUpdate(@Param("dentistaId") UUID dentistaId, @Param("inicioAt") LocalDateTime inicioAt);
 
-    List<Agendamento> findByDentistaId(Long dentistaId);
+    // Backwards-compatible alias: older code referenced dataHora; keep an overload to avoid startup errors.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT a FROM Agendamento a WHERE a.dentista.id = :dentistaId AND a.inicioAt = :dataHora")
+    Optional<Agendamento> findByDentistaAndDataHoraForUpdate(@Param("dentistaId") UUID dentistaId, @Param("dataHora") LocalDateTime dataHora);
+
+    List<Agendamento> findByDentistaId(UUID dentistaId);
 }

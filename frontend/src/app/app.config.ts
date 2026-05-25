@@ -1,11 +1,16 @@
 import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { AuthInterceptor } from './auth/auth.interceptor';
+import { APP_INITIALIZER } from '@angular/core';
+import { AuthService } from './auth/auth.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes), 
-    provideHttpClient() // Instancia o cliente REST na memória da JVM/V8 do navegador
+    provideHttpClient(withInterceptorsFromDi()),
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+    ,{ provide: APP_INITIALIZER, useFactory: (auth: AuthService) => () => auth.refreshOnce().catch(() => {}), deps: [AuthService], multi: true }
   ]
 };
