@@ -31,9 +31,9 @@ public class ChatController {
     public void send(@Valid ChatMessageRequestDTO request) {
         Mensagem msg = new Mensagem();
         msg.setRoomId(request.roomId());
-        msg.setSenderId(UUID.fromString(request.senderId()));
+        msg.setSenderId(request.senderId());
         msg.setSenderName(request.senderName());
-        msg.setRecipientId(UUID.fromString(request.recipientId()));
+        msg.setRecipientId(request.recipientId());
         msg.setContent(request.message());
         msg.setSentAt(request.sentAt() != null ? request.sentAt() : java.time.OffsetDateTime.now());
         
@@ -42,9 +42,9 @@ public class ChatController {
         ChatMessageDTO response = new ChatMessageDTO(
             msg.getId(),
             msg.getRoomId(),
-            msg.getSenderId().toString(),
+            msg.getSenderId(),
             msg.getSenderName(),
-            msg.getRecipientId().toString(),
+            msg.getRecipientId(),
             msg.getContent(),
             msg.getSentAt()
         );
@@ -59,9 +59,9 @@ public class ChatController {
             .map(msg -> new ChatMessageDTO(
                 msg.getId(),
                 msg.getRoomId(),
-                msg.getSenderId().toString(),
+                msg.getSenderId(),
                 msg.getSenderName(),
-                msg.getRecipientId().toString(),
+                msg.getRecipientId(),
                 msg.getContent(),
                 msg.getSentAt()
             ))

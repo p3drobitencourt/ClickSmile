@@ -5,11 +5,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://clicksmile-production.up.railway.app/api/$1"
+      "destination": "https://clicksmile-backend.onrender.com/api/$1"
     },
     {
       "source": "/ws/(.*)",
-      "destination": "https://clicksmile-production.up.railway.app/ws/$1"
+      "destination": "https://clicksmile-backend.onrender.com/ws/$1"
     },
     {
       "source": "/(.*)",
