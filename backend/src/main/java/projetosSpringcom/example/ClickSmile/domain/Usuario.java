@@ -28,7 +28,7 @@ public abstract class Usuario {
 
     @NotBlank(message = "A senha não pode estar vazia.")
     @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres.")
-    @Column(nullable = false)
+    @Column(name = "senha_hash", nullable = false)
     private String senha;
 
     @Column(name = "tenant_id", nullable = false)
