@@ -1,12 +1,17 @@
 # Stage 1: Build
 FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
-COPY gradle/ gradle/
-COPY gradlew build.gradle settings.gradle ./
+
+# Copy gradle wrapper and config from backend folder
+COPY backend/gradle/ gradle/
+COPY backend/gradlew backend/build.gradle backend/settings.gradle ./
+
 # Download dependencies first
 RUN ./gradlew dependencies --no-daemon
 
-COPY src ./src
+# Copy source code
+COPY backend/src ./src
+
 # Build the application
 RUN ./gradlew build -x test --no-daemon
 
