@@ -11,6 +11,7 @@ import projetosSpringcom.example.ClickSmile.domain.Usuario;
 import projetosSpringcom.example.ClickSmile.repository.UsuarioRepository;
 import projetosSpringcom.example.ClickSmile.security.dto.LoginRequest;
 import projetosSpringcom.example.ClickSmile.security.dto.LoginResponse;
+import projetosSpringcom.example.ClickSmile.security.dto.RegisterRequest;
 
 import java.util.Optional;
 
@@ -22,15 +23,26 @@ public class AuthController {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final UsuarioRepository usuarioRepository;
+    private final RegistrationService registrationService;
 
     public AuthController(AuthenticationManager authenticationManager,
                           JwtService jwtService,
                           RefreshTokenService refreshTokenService,
-                          UsuarioRepository usuarioRepository) {
+                          UsuarioRepository usuarioRepository,
+                          RegistrationService registrationService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
         this.usuarioRepository = usuarioRepository;
+        this.registrationService = registrationService;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<LoginResponse> register(@RequestBody RegisterRequest request, HttpServletResponse response) {
+        Usuario usuario = registrationService.register(request);
+        String access = jwtService.createAccessToken(usuario);
+        refreshTokenService.createRefreshToken(usuario, response);
+        return ResponseEntity.ok(new LoginResponse(access, usuario.getEmail(), usuario.getPerfil()));
     }
 
     @PostMapping("/login")

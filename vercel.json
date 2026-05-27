@@ -1,11 +1,12 @@
 {
-  "installCommand": "npm --prefix frontend install",
-  "buildCommand": "npm --prefix frontend run build",
-  "outputDirectory": "frontend/dist/click-smile-web",
-  "rewrites": [
+  "builds": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist/click-smile-web/browser" }
     }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

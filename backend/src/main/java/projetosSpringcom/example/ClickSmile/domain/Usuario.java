@@ -31,6 +31,9 @@ public abstract class Usuario {
     @Column(nullable = false)
     private String senha;
 
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Perfil perfil;

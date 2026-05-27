@@ -1,0 +1,31 @@
+<section class="dentist-shell">
+  <header class="panel-head">
+    <h1>Dashboard do dentista</h1>
+    <p>Edite sua agenda e regras semanais</p>
+  </header>
+
+  <div class="controls">
+    <label>Dentista ID
+      <input [(ngModel)]="dentistaId" />
+    </label>
+    <label>Fuso horário
+      <input [(ngModel)]="payload.timezone" />
+    </label>
+    <label>Slot (min)
+      <input type="number" [(ngModel)]="payload.slotDurationMin" />
+    </label>
+  </div>
+
+  <div class="week-grid">
+    <div *ngFor="let d of weekdays" class="day-card">
+      <h3>{{ d }}</h3>
+      <label>
+        <input type="checkbox" [checked]="payload.regras.find(r => r.diaSemana === d)" (change)="toggleDay(d)" /> Ativo
+      </label>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button (click)="save()" [disabled]="saving">Salvar agenda</button>
+  </div>
+</section>

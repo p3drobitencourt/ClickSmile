@@ -1,0 +1,215 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  color: #e5eefb;
+  background:
+    radial-gradient(circle at 10% 8%, rgba(14, 165, 233, 0.26), transparent 24%),
+    radial-gradient(circle at 88% 16%, rgba(34, 197, 94, 0.18), transparent 20%),
+    linear-gradient(180deg, #010314 0%, #07111f 46%, #020617 100%);
+}
+
+.onboarding-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
+  gap: 22px;
+  align-items: center;
+  padding: 24px clamp(16px, 4vw, 40px);
+}
+
+.onboarding-hero,
+.onboarding-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(2, 6, 23, 0.72));
+  backdrop-filter: blur(22px);
+  box-shadow: 0 28px 80px rgba(2, 6, 23, 0.42);
+  border-radius: 34px;
+}
+
+.onboarding-hero::before,
+.onboarding-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(125, 211, 252, 0.08), transparent 34%),
+    radial-gradient(circle at 20% 18%, rgba(34, 197, 94, 0.12), transparent 24%),
+    radial-gradient(circle at 88% 8%, rgba(14, 165, 233, 0.1), transparent 20%);
+}
+
+.onboarding-hero {
+  padding: 32px;
+  display: grid;
+  gap: 22px;
+}
+
+.brand-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.brand-mark {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #34d399 0%, #0ea5e9 55%, #38bdf8 100%);
+  color: #00111f;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.08em;
+  box-shadow: 0 18px 28px rgba(14, 165, 233, 0.22);
+}
+
+.eyebrow,
+.card-kicker,
+.hero-grid span {
+  margin: 0;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #7dd3fc;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  margin-top: 10px;
+  max-width: 12ch;
+  font-size: clamp(2.7rem, 5vw, 4.65rem);
+  line-height: 0.94;
+  letter-spacing: -0.075em;
+}
+
+.hero-copy {
+  margin-top: 15px;
+  max-width: 54ch;
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: rgba(226, 232, 240, 0.82);
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hero-grid article {
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(15, 23, 42, 0.74);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.hero-grid strong {
+  display: block;
+  margin-top: 8px;
+  color: #f8fafc;
+  line-height: 1.4;
+}
+
+.hero-grid p {
+  margin-top: 8px;
+  color: rgba(226, 232, 240, 0.72);
+  line-height: 1.6;
+}
+
+.onboarding-card {
+  padding: 30px;
+}
+
+.card-header {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.card-header h2 {
+  font-size: 1.9rem;
+  letter-spacing: -0.05em;
+}
+
+.card-header p {
+  color: rgba(226, 232, 240, 0.72);
+  line-height: 1.6;
+}
+
+.setup-form {
+  display: grid;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.setup-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.setup-form span {
+  font-size: 0.9rem;
+  color: #cbd5e1;
+}
+
+.setup-form input {
+  width: 100%;
+  min-height: 52px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(2, 6, 23, 0.55);
+  color: #f8fafc;
+  padding: 0 16px;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.setup-form input::placeholder {
+  color: rgba(148, 163, 184, 0.7);
+}
+
+.setup-form input:focus {
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.12);
+}
+
+.setup-form button {
+  min-height: 52px;
+  margin-top: 6px;
+  border: 0;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #04111f;
+  background: linear-gradient(135deg, #22c55e 0%, #0ea5e9 100%);
+  box-shadow: 0 16px 36px rgba(14, 165, 233, 0.22);
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.setup-form button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+@media (max-width: 1024px) {
+  .onboarding-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+}

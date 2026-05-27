@@ -10,7 +10,13 @@ export class AuthInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Auth endpoints should not trigger refresh-on-401 recursion.
-    const isAuthEndpoint = req.url.includes('/api/auth/login') || req.url.includes('/api/auth/refresh') || req.url.includes('/api/auth/logout');
+    const isAuthEndpoint =
+      req.url.includes('/api/auth/login') ||
+      req.url.includes('/api/auth/refresh') ||
+      req.url.includes('/api/auth/logout') ||
+      req.url.includes('/auth/login') ||
+      req.url.includes('/auth/refresh') ||
+      req.url.includes('/auth/logout');
 
     const token = this.auth.getAccessToken();
     const authReq = token ? req.clone({ headers: req.headers.set('Authorization', 'Bearer ' + token) }) : req;

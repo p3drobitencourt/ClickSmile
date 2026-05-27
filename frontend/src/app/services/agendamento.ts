@@ -2,15 +2,17 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AgendamentoRequest, AgendamentoResumo } from './agendamento.models';
-import { environment } from '../../environments/environment';
+import { RuntimeConfigService } from './runtime-config.service';
 
 @Injectable({ providedIn: 'root' })
 export class AgendamentoService {
-  private apiUrl = `${environment.apiUrl}/agendamentos`;
+  private apiUrl: string;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private runtime: RuntimeConfigService) {
+    this.apiUrl = this.runtime.api('/api/agendamentos');
+  }
 
-  listarPorDentista(dentistaId: number): Observable<AgendamentoResumo[]> {
+  listarPorDentista(dentistaId: number | string): Observable<AgendamentoResumo[]> {
     return this.http.get<AgendamentoResumo[]>(`${this.apiUrl}/dentista/${dentistaId}`);
   }
 

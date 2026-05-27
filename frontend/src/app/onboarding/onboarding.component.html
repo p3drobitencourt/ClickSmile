@@ -1,0 +1,59 @@
+<section class="onboarding-shell">
+  <div class="onboarding-hero">
+    <div class="brand-row">
+      <div class="brand-mark">CS</div>
+      <div>
+        <p class="eyebrow">Setup inicial</p>
+        <h1>Prepare a clínica para operar em minutos.</h1>
+        <p class="hero-copy">
+          Complete os dados principais para finalizar a camada operacional e liberar o dashboard com a identidade da clínica.
+        </p>
+      </div>
+    </div>
+
+    <div class="hero-grid">
+      <article>
+        <span>Passo 01</span>
+        <strong>Nome oficial da clínica</strong>
+        <p>Base para o tenant, relatórios e identidade visual.</p>
+      </article>
+      <article>
+        <span>Passo 02</span>
+        <strong>Documento fiscal</strong>
+        <p>CNPJ para estruturação administrativa da unidade.</p>
+      </article>
+      <article>
+        <span>Passo 03</span>
+        <strong>Contato de operação</strong>
+        <p>Telefone para comunicações rápidas e confirmação.</p>
+      </article>
+    </div>
+  </div>
+
+  <div class="onboarding-card">
+    <div class="card-header">
+      <p class="card-kicker">Onboarding da Clínica</p>
+      <h2>Finalize a configuração inicial</h2>
+      <p>Essa etapa alimenta a base da clínica e te leva direto ao dashboard.</p>
+    </div>
+
+    <form class="setup-form" (ngSubmit)="concluir()">
+      <label>
+        <span>Nome da clínica</span>
+        <input [(ngModel)]="clinica" name="clinica" required placeholder="Clínica Sorria Bem" />
+      </label>
+
+      <label>
+        <span>CNPJ</span>
+        <input [(ngModel)]="cnpj" name="cnpj" required placeholder="00.000.000/0001-00" />
+      </label>
+
+      <label>
+        <span>Telefone</span>
+        <input [(ngModel)]="telefone" name="telefone" required placeholder="(11) 99999-9999" />
+      </label>
+
+      <button type="submit">Concluir e ir para Dashboard</button>
+    </form>
+  </div>
+</section>
