@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
@@ -33,11 +33,11 @@ public class Agendamento {
     @NotNull(message = "A data de início é obrigatória.")
     @Future(message = "A data do agendamento deve ser no futuro.")
     @Column(name = "inicio_at", nullable = false)
-    private LocalDateTime inicioAt;
+    private OffsetDateTime inicioAt;
 
     @NotNull(message = "A data de término é obrigatória.")
     @Column(name = "fim_at", nullable = false)
-    private LocalDateTime fimAt;
+    private OffsetDateTime fimAt;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

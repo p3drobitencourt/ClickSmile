@@ -1,24 +1,18 @@
-FROM eclipse-temurin:21-jdk-alpine AS build
-
-WORKDIR /workspace
-
-COPY gradlew .
-COPY gradle ./gradle
-COPY build.gradle settings.gradle .
-COPY src ./src
-
-RUN chmod +x gradlew && ./gradlew clean bootJar -x test
-
-FROM eclipse-temurin:21-jre-alpine
-
+# Stage 1: Build
+FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+# Download dependencies first
+RUN ./mvnw dependency:go-offline
 
-RUN addgroup -S clicksmile && adduser -S clicksmile -G clicksmile
+COPY src ./src
+# Build the application
+RUN ./mvnw package -DskipTests
 
-COPY --from=build /workspace/build/libs/*.jar /app/app.jar
-
-USER clicksmile
-
+# Stage 2: Run
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
-
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

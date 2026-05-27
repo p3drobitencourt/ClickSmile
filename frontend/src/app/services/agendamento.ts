@@ -16,6 +16,10 @@ export class AgendamentoService {
     return this.http.get<AgendamentoResumo[]>(`${this.apiUrl}/dentista/${dentistaId}`);
   }
 
+  listarPorPaciente(pacienteId: string): Observable<AgendamentoResumo[]> {
+    return this.http.get<AgendamentoResumo[]>(`${this.apiUrl}/paciente/${pacienteId}`);
+  }
+
   criar(agendamento: AgendamentoRequest): Observable<AgendamentoResumo> {
     return this.http.post<AgendamentoResumo>(this.apiUrl, agendamento);
   }

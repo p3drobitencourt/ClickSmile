@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthBannerComponent } from './auth-banner.component';
 import { AuthService } from './auth.service';
@@ -17,7 +17,7 @@ export class RegisterComponent {
   loading = false;
   erro = '';
 
-  form: any;
+  form: FormGroup;
 
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
     this.form = this.fb.nonNullable.group({
@@ -60,8 +60,9 @@ export class RegisterComponent {
       });
 
       await this.router.navigateByUrl('/onboarding');
-    } catch (err: any) {
-      this.erro = err?.error?.detail || err?.error?.message || 'Não foi possível concluir o cadastro.';
+    } catch (err: unknown) {
+      const e = err as { error?: { detail?: string; message?: string }, message?: string };
+      this.erro = e?.error?.detail || e?.error?.message || e?.message || 'Não foi possível concluir o cadastro.';
     } finally {
       this.loading = false;
     }

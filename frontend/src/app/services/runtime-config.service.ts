@@ -1,11 +1,21 @@
 import { Injectable } from '@angular/core';
 
+interface RuntimeConfig {
+  backendUrl?: string;
+  [key: string]: unknown;
+}
+
+interface CustomWindow extends Window {
+  __RUNTIME__?: RuntimeConfig;
+}
+
 @Injectable({ providedIn: 'root' })
 export class RuntimeConfigService {
-  private runtime: any;
+  private runtime: RuntimeConfig;
 
   constructor() {
-    this.runtime = (window as any).__RUNTIME__ || {};
+    const win = window as unknown as CustomWindow;
+    this.runtime = win.__RUNTIME__ || {};
   }
 
   get backendUrl(): string {

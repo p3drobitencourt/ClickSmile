@@ -12,6 +12,15 @@ import java.util.UUID;
 import projetosSpringcom.example.ClickSmile.repository.AgendamentoRepository;
 import projetosSpringcom.example.ClickSmile.repository.PacienteRepository;
 import projetosSpringcom.example.ClickSmile.repository.UsuarioRepository;
+import projetosSpringcom.example.ClickSmile.dto.AgendaResponseDTO;
+import projetosSpringcom.example.ClickSmile.dto.RegraHorarioDTO;
+import projetosSpringcom.example.ClickSmile.dto.SlotResponseDTO;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -59,5 +68,70 @@ public class AgendamentoService {
     @Transactional(readOnly = true)
     public List<Agendamento> listarPorDentista(UUID dentistaId) {
         return agendamentoRepository.findByDentistaId(dentistaId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Agendamento> listarPorPaciente(UUID pacienteId) {
+        return agendamentoRepository.findByPacienteId(pacienteId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SlotResponseDTO> buscarSlotsLivres(UUID dentistaId, LocalDate inicio, LocalDate fim) {
+        AgendaResponseDTO agenda = agendaService.buscarPorDentista(dentistaId);
+        List<RegraHorarioDTO> regras = agenda.regras();
+        if (regras == null || regras.isEmpty()) {
+            return List.of();
+        }
+
+        ZoneId zone = ZoneId.of(agenda.timezone() != null ? agenda.timezone() : "America/Sao_Paulo");
+        int slotDuration = agenda.slotDurationMin() != null ? agenda.slotDurationMin() : 30;
+
+        OffsetDateTime rangeStart = inicio.atStartOfDay(zone).toOffsetDateTime();
+        OffsetDateTime rangeEnd = fim.plusDays(1).atStartOfDay(zone).toOffsetDateTime();
+
+        List<Agendamento> agendamentos = agendamentoRepository.findByDentistaIdAndDataRange(dentistaId, rangeStart, rangeEnd);
+        List<SlotResponseDTO> slots = new ArrayList<>();
+
+        for (LocalDate date = inicio; !date.isAfter(fim); date = date.plusDays(1)) {
+            String dayOfWeek = date.getDayOfWeek().name();
+            RegraHorarioDTO rule = regras.stream()
+                .filter(r -> r.ativo() && dayOfWeek.equalsIgnoreCase(r.diaSemana()))
+                .findFirst().orElse(null);
+
+            if (rule == null) continue;
+
+            LocalTime cursor = rule.inicio();
+            LocalTime end = rule.fim();
+
+            while (cursor.plusMinutes(slotDuration).compareTo(end) <= 0) {
+                LocalTime next = cursor.plusMinutes(slotDuration);
+                
+                boolean insidePause = rule.pausaInicio() != null && rule.pausaFim() != null &&
+                        (cursor.compareTo(rule.pausaInicio()) >= 0 && cursor.compareTo(rule.pausaFim()) < 0 ||
+                         next.compareTo(rule.pausaInicio()) > 0 && next.compareTo(rule.pausaFim()) <= 0 ||
+                         cursor.compareTo(rule.pausaInicio()) <= 0 && next.compareTo(rule.pausaFim()) >= 0);
+
+                if (insidePause) {
+                    cursor = rule.pausaFim();
+                    continue;
+                }
+
+                OffsetDateTime slotStart = date.atTime(cursor).atZone(zone).toOffsetDateTime();
+                OffsetDateTime slotEnd = date.atTime(next).atZone(zone).toOffsetDateTime();
+
+                boolean isOccupied = agendamentos.stream().anyMatch(a ->
+                    a.getInicioAt().compareTo(slotStart) == 0 ||
+                    (a.getInicioAt().isBefore(slotEnd) && a.getFimAt().isAfter(slotStart))
+                );
+
+                if (!isOccupied && slotStart.isAfter(OffsetDateTime.now())) {
+                    slots.add(new SlotResponseDTO(slotStart, slotEnd, "Disponível", "success"));
+                }
+
+                cursor = next;
+            }
+        }
+
+        return slots;
     }
 }

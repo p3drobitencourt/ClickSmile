@@ -442,12 +442,26 @@
   color: rgba(226, 232, 240, 0.78);
 }
 
+.calendar-shell ::ng-deep .fc-timegrid-slot:hover {
+  background-color: rgba(56, 189, 248, 0.1);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
 .calendar-shell ::ng-deep .fc-event,
 .calendar-shell ::ng-deep .fc-v-event {
   border-radius: 14px;
   padding: 6px 8px;
   font-weight: 700;
   box-shadow: 0 10px 20px rgba(2, 6, 23, 0.35);
+  border: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.calendar-shell ::ng-deep .fc-event:hover,
+.calendar-shell ::ng-deep .fc-v-event:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.45);
 }
 
 @media (max-width: 1180px) {

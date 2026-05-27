@@ -18,28 +18,14 @@ function goHome(router: Router, role?: string | null): UrlTree {
   return router.parseUrl('/login');
 }
 
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
   return auth.isAuthenticated() ? true : goLogin(router);
 };
 
-export const clienteGuard: CanActivateFn = () => {
-  const auth = inject(AuthService);
-  const router = inject(Router);
-
-  return auth.isAuthenticated() && auth.getRole() === 'CLIENTE' ? true : goHome(router, auth.getRole());
-};
-
-export const dentistaGuard: CanActivateFn = () => {
-  const auth = inject(AuthService);
-  const router = inject(Router);
-
-  return auth.isAuthenticated() && auth.getRole() === 'DENTISTA' ? true : goHome(router, auth.getRole());
-};
-
-export const homeGuard: CanActivateFn = () => {
+export const clienteGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
@@ -47,5 +33,30 @@ export const homeGuard: CanActivateFn = () => {
     return goLogin(router);
   }
 
-  return goHome(router, auth.getRole());
+  const profile = await auth.getProfile();
+  return profile?.perfil === 'CLIENTE' ? true : goHome(router, profile?.perfil);
+};
+
+export const dentistaGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (!auth.isAuthenticated()) {
+    return goLogin(router);
+  }
+
+  const profile = await auth.getProfile();
+  return profile?.perfil === 'DENTISTA' ? true : goHome(router, profile?.perfil);
+};
+
+export const homeGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (!auth.isAuthenticated()) {
+    return goLogin(router);
+  }
+
+  const profile = await auth.getProfile();
+  return goHome(router, profile?.perfil);
 };

@@ -1,7 +1,8 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { DateSelectArg, EventInput } from '@fullcalendar/core';
+import { CalendarOptions, DateSelectArg, EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -93,7 +94,7 @@ export class DashboardComponent implements OnInit {
   readonly saveState = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
   readonly saveMessage = signal('');
 
-  calendarOptions: any = {
+  calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
     initialView: 'timeGridWeek',
     headerToolbar: {
@@ -114,6 +115,8 @@ export class DashboardComponent implements OnInit {
     events: this.events(),
   };
 
+  private destroyRef = inject(DestroyRef);
+
   constructor(private agendamentoService: AgendamentoService) {}
 
   ngOnInit() {
@@ -121,7 +124,9 @@ export class DashboardComponent implements OnInit {
   }
 
   carregarAgendamentos(dentistaId: number) {
-    this.agendamentoService.listarPorDentista(dentistaId).subscribe({
+    this.agendamentoService.listarPorDentista(dentistaId).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: (res) => {
         const events = res.map((agendamento) => this.toCalendarEvent(agendamento));
         this.events.set(events.length > 0 ? events : this.criarEventosDemo());
@@ -205,6 +210,7 @@ export class DashboardComponent implements OnInit {
         dentistaId: Number(draft.dentistId),
         dataHora: new Date(dateTime).toISOString(),
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.saveState.set('saved');

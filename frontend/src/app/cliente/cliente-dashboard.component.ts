@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { CalendarOptions, EventClickArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -12,11 +13,12 @@ import { AgendamentoService } from '../services/agendamento';
 import { ChatMessageView, ChatService } from '../services/chat.service';
 import { DentistDirectoryService, DentistSummary, ScheduleSlot } from '../services/dentist-directory.service';
 import { LogoComponent } from '../shared/logo.component';
+import { MeusAgendamentosComponent } from './meus-agendamentos.component';
 
 @Component({
   selector: 'app-cliente-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, FullCalendarModule, LogoComponent],
+  imports: [CommonModule, FormsModule, FullCalendarModule, LogoComponent, MeusAgendamentosComponent],
   templateUrl: './cliente-dashboard.component.html',
   styleUrl: './cliente-dashboard.component.scss',
 })
@@ -57,11 +59,13 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     private chatService: ChatService
   ) {}
 
+  private destroyRef = inject(DestroyRef);
+
   ngOnInit(): void {
     this.currentUserId = this.auth.getSubject() ?? crypto.randomUUID();
     this.currentUserLabel = this.auth.getEmail() ?? 'Cliente';
 
-    this.dentistDirectory.listDentists().subscribe((dentists) => {
+    this.dentistDirectory.listDentists().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((dentists) => {
       this.dentists = dentists;
       if (dentists.length > 0) {
         this.selectDentist(dentists[0]);
@@ -105,7 +109,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
       clienteId: this.currentUserId,
       dentistaId: this.selectedDentist.id,
       dataHora: startIso,
-    }).subscribe({
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.bookingStatus = `Consulta agendada para ${new Date(startIso).toLocaleString('pt-BR')}.`;
         this.loadSlots(this.selectedDentist?.id ?? '');
@@ -135,7 +139,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadSlots(dentistId: string): void {
-    this.dentistDirectory.getSlots(dentistId).subscribe((slots) => {
+    this.dentistDirectory.getSlots(dentistId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((slots) => {
       this.calendarSlots = slots;
       this.calendarOptions = {
         ...this.calendarOptions,
@@ -156,6 +160,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     this.chatSubscription?.unsubscribe();
     this.chatSubscription = this.chatService
       .connect(this.roomId, this.currentUserId, dentist.nome)
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((messages) => (this.messages = messages));
   }
 }

@@ -11,7 +11,7 @@ import projetosSpringcom.example.ClickSmile.dto.RegraHorarioDTO;
 import projetosSpringcom.example.ClickSmile.repository.AgendaRepository;
 
 import java.time.DayOfWeek;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,7 +50,7 @@ public class AgendaService {
     }
 
     @Transactional(readOnly = true)
-    public boolean slotPermitido(UUID dentistaId, LocalDateTime inicio, LocalDateTime fim) {
+    public boolean slotPermitido(UUID dentistaId, OffsetDateTime inicio, OffsetDateTime fim) {
         Agenda agenda = agendaRepository.findByDentistaUsuarioId(dentistaId)
             .orElseGet(() -> defaultAgenda(dentistaId));
         List<RegraHorarioDTO> regras = readRules(agenda.getRegraSemanaJson());

@@ -2,10 +2,18 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { App } from './app/app';
 
-async function reportClientError(payload: any) {
+interface CustomWindow extends Window {
+  __RUNTIME__?: {
+    backendUrl?: string;
+    [key: string]: unknown;
+  };
+}
+
+async function reportClientError(payload: Record<string, unknown>) {
   try {
     const body = JSON.stringify(payload);
-    const runtimeBase = (window as any).__RUNTIME__?.backendUrl || '';
+    const win = window as unknown as CustomWindow;
+    const runtimeBase = win.__RUNTIME__?.backendUrl || '';
     const endpoint = runtimeBase
       ? `${runtimeBase.replace(/\/+$/, '')}/api/internal/client-error`
       : '/api/internal/client-error';
@@ -24,10 +32,10 @@ window.addEventListener('error', (evt) => {
   const payload = {
     type: 'error',
     message: evt.message,
-    filename: (evt as ErrorEvent).filename,
-    lineno: (evt as ErrorEvent).lineno,
-    colno: (evt as ErrorEvent).colno,
-    stack: (evt.error && (evt.error as any).stack) || null,
+    filename: evt.filename,
+    lineno: evt.lineno,
+    colno: evt.colno,
+    stack: evt.error instanceof Error ? evt.error.stack : null,
     userAgent: navigator.userAgent,
     url: location.href,
   };
@@ -48,17 +56,18 @@ window.addEventListener('unhandledrejection', (evt) => {
 });
 
 async function loadRuntimeConfig() {
+  const win = window as unknown as CustomWindow;
   try {
     const res = await fetch('/assets/runtime.json', { cache: 'no-cache' });
     if (res.ok) {
       // attach to window for app code to read synchronously
-      (window as any).__RUNTIME__ = await res.json();
+      win.__RUNTIME__ = await res.json();
       return;
     }
   } catch (e) {
     // ignore
   }
-  (window as any).__RUNTIME__ = {};
+  win.__RUNTIME__ = {};
 }
 
 (async () => {

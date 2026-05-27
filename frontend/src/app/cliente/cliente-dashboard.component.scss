@@ -161,13 +161,32 @@
   color: #94a3b8;
 }
 
-.calendar-panel :global(.fc) {
+.calendar-panel ::ng-deep .fc {
   --fc-border-color: rgba(148, 163, 184, 0.12);
   --fc-page-bg-color: transparent;
   --fc-neutral-bg-color: rgba(15, 23, 42, 0.58);
   --fc-today-bg-color: rgba(56, 189, 248, 0.08);
   --fc-list-event-hover-bg-color: rgba(56, 189, 248, 0.1);
   color: #e2e8f0;
+}
+
+.calendar-panel ::ng-deep .fc-timegrid-slot:hover {
+  background-color: rgba(56, 189, 248, 0.1);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.calendar-panel ::ng-deep .fc-event,
+.calendar-panel ::ng-deep .fc-v-event {
+  border-radius: 14px;
+  border: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.calendar-panel ::ng-deep .fc-event:hover,
+.calendar-panel ::ng-deep .fc-v-event:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(2, 6, 23, 0.4);
 }
 
 .chat-panel {

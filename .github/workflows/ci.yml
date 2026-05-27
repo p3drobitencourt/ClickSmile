@@ -1,31 +1,47 @@
-name: CI
+name: CI Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
 
 jobs:
-  build:
+  test-backend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-      - name: Set up Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: '24'
-      - name: Build backend
-        working-directory: backend
-        run: |
-          ./gradlew clean build
-      - name: Build frontend
-        working-directory: frontend
-        run: |
-          npm ci
-          npm run build --if-present
+    - uses: actions/checkout@v4
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+    - name: Start PostgreSQL (Testcontainers)
+      run: echo "Testcontainers will start Postgres automatically during the tests"
+    - name: Build and test with Maven
+      working-directory: ./backend
+      run: ./mvnw verify
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: './frontend/package-lock.json'
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: npm ci
+    - name: Run Linter/Build
+      working-directory: ./frontend
+      run: npm run build
+    - name: Install Playwright Browsers
+      working-directory: ./frontend
+      run: npx playwright install --with-deps
+    - name: Run E2E tests
+      working-directory: ./frontend
+      run: npx playwright test

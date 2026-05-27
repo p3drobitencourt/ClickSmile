@@ -20,6 +20,20 @@ export interface ScheduleSlot {
   tone: 'primary' | 'success' | 'warning';
 }
 
+export interface RegraDto {
+  ativo: boolean;
+  diaSemana: string;
+  inicio: string;
+  fim: string;
+  pausaInicio?: string;
+  pausaFim?: string;
+}
+
+export interface AgendaDto {
+  regras?: RegraDto[];
+  slotDurationMin?: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DentistDirectoryService {
   private fallbackDentists: DentistSummary[] = [
@@ -62,66 +76,10 @@ export class DentistDirectoryService {
   }
 
   getSlots(dentistId: string): Observable<ScheduleSlot[]> {
-    const url = this.runtime.api(`/api/agendas/dentista/${dentistId}`);
-    return this.http.get<any>(url).pipe(
-      map((agenda) => this.buildSlotsFromAgenda(agenda, dentistId)),
+    const url = this.runtime.api(`/api/agendamentos/dentista/${dentistId}/slots`);
+    return this.http.get<ScheduleSlot[]>(url).pipe(
       catchError(() => of(this.buildMockSlots(dentistId)))
     );
-  }
-
-  private buildSlotsFromAgenda(agenda: any, dentistId: string): ScheduleSlot[] {
-    if (!agenda?.regras?.length) {
-      return this.buildMockSlots(dentistId);
-    }
-
-    return this.buildEventsFromRules(agenda.regras, agenda.slotDurationMin || 30);
-  }
-
-  private buildEventsFromRules(regras: any[], slotDuration: number): ScheduleSlot[] {
-    const slots: ScheduleSlot[] = [];
-    const now = new Date();
-    const horizon = 7;
-
-    for (let dayOffset = 0; dayOffset < horizon; dayOffset += 1) {
-      const day = new Date(now);
-      day.setDate(now.getDate() + dayOffset);
-      const weekday = day.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
-      const rule = regras.find((item) => item.ativo && item.diaSemana === weekday);
-
-      if (!rule) {
-        continue;
-      }
-
-      const start = this.composeDate(day, rule.inicio);
-      const end = this.composeDate(day, rule.fim);
-      const pauseStart = rule.pausaInicio ? this.composeDate(day, rule.pausaInicio) : null;
-      const pauseEnd = rule.pausaFim ? this.composeDate(day, rule.pausaFim) : null;
-
-      let cursor = new Date(start);
-      while (cursor < end) {
-        const next = new Date(cursor);
-        next.setMinutes(next.getMinutes() + slotDuration);
-        if (next > end) {
-          break;
-        }
-
-        if (pauseStart && pauseEnd && cursor < pauseEnd && next > pauseStart) {
-          cursor = new Date(pauseEnd);
-          continue;
-        }
-
-        slots.push({
-          start: cursor.toISOString(),
-          end: next.toISOString(),
-          title: 'Slot disponível',
-          tone: 'success',
-        });
-
-        cursor = next;
-      }
-    }
-
-    return slots;
   }
 
   private buildMockSlots(dentistId: string): ScheduleSlot[] {
@@ -145,12 +103,5 @@ export class DentistDirectoryService {
     }
 
     return slots;
-  }
-
-  private composeDate(day: Date, localTime: string) {
-    const [hours, minutes] = localTime.split(':').map((value) => Number(value));
-    const result = new Date(day);
-    result.setHours(hours, minutes, 0, 0);
-    return result;
   }
 }

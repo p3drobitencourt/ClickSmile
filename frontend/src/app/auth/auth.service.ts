@@ -8,6 +8,13 @@ export interface LoginResponse {
   perfil: string;
 }
 
+export interface UserProfile {
+  id: string;
+  email: string;
+  perfil: string;
+  tenantId: string;
+}
+
 export interface RegisterRequest {
   perfil: 'CLIENTE' | 'DENTISTA';
   nome: string;
@@ -90,6 +97,15 @@ export class AuthService {
     this.role = localStorage.getItem('clicksmile.role');
     this.email = localStorage.getItem('clicksmile.email');
     return this.refreshOnce().catch(() => undefined);
+  }
+
+  getProfile(): Promise<UserProfile | null> {
+    if (!this.accessToken) {
+      return Promise.resolve(null);
+    }
+    return firstValueFrom(this.http.get<UserProfile>('/api/usuarios/me', {
+      headers: { Authorization: `Bearer ${this.accessToken}` }
+    })).catch(() => null);
   }
 
   private setSession(response: LoginResponse) {

@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgendaAdminService, AgendaFormPayload, AgendaRule } from '../services/agenda-admin.service';
@@ -28,6 +29,8 @@ export class DentistaDashboardComponent implements OnInit {
 
   constructor(private service: AgendaAdminService, private runtime: RuntimeConfigService) {}
 
+  private destroyRef = inject(DestroyRef);
+
   ngOnInit(): void {
     // tentamos inferir dentistaId do runtime (dev) ou gerar um placeholder
     // RuntimeConfigService expõe variáveis em window.__RUNTIME__, usamos acesso direto
@@ -40,7 +43,7 @@ export class DentistaDashboardComponent implements OnInit {
 
   load() {
     this.loading = true;
-    this.service.getByDentist(this.dentistaId).subscribe({
+    this.service.getByDentist(this.dentistaId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (a) => {
         this.payload = {
           dentistaId: a.dentistaId,
@@ -71,7 +74,7 @@ export class DentistaDashboardComponent implements OnInit {
   save() {
     this.saving = true;
     this.payload.dentistaId = this.dentistaId;
-    this.service.save(this.payload).subscribe({
+    this.service.save(this.payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => { this.saving = false; },
       error: () => { this.saving = false; }
     });
