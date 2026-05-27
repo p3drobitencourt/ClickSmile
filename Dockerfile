@@ -6,6 +6,8 @@ WORKDIR /app
 COPY backend/gradle/ gradle/
 COPY backend/gradlew backend/build.gradle backend/settings.gradle ./
 
+RUN chmod +x ./gradlew
+
 # Download dependencies first
 RUN ./gradlew dependencies --no-daemon
 
