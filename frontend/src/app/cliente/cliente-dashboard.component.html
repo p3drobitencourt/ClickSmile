@@ -1,0 +1,90 @@
+<section class="client-shell">
+  <header class="hero-panel">
+    <div class="brand-stack">
+      <app-logo [size]="44" label="ClickSmile" />
+      <div>
+        <p class="eyebrow">Portal do cliente</p>
+        <h1>Escolha o especialista, reserve o horário e converse sem sair da tela.</h1>
+      </div>
+    </div>
+    <div class="status-card">
+      <span class="status-label">Status</span>
+      <strong>{{ bookingStatus }}</strong>
+    </div>
+  </header>
+
+  <div class="workspace-grid">
+    <section class="left-column">
+      <article class="surface-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Especialistas</p>
+            <h2>Disponíveis agora</h2>
+          </div>
+          <span class="pill">{{ dentists.length }} perfis</span>
+        </div>
+
+        <div class="dentist-grid">
+          <button
+            type="button"
+            class="dentist-card"
+            *ngFor="let dentist of dentists"
+            [class.active]="selectedDentist?.id === dentist.id"
+            (click)="selectDentist(dentist)"
+          >
+            <span class="dentist-avatar" [style.background]="dentist.color">{{ initials(dentist.nome) }}</span>
+            <span class="dentist-copy">
+              <strong>{{ dentist.nome }}</strong>
+              <small>{{ dentist.especialidade }}</small>
+              <small>{{ dentist.cro }}</small>
+              <small>{{ dentist.agendaResumo }}</small>
+            </span>
+          </button>
+        </div>
+      </article>
+
+      <app-meus-agendamentos></app-meus-agendamentos>
+
+      <article class="surface-panel calendar-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">FullCalendar</p>
+            <h2>Slots disponíveis</h2>
+          </div>
+          <span class="pill pill-quiet">Clique em um slot livre para agendar</span>
+        </div>
+        <full-calendar [options]="calendarOptions" />
+      </article>
+    </section>
+
+    <aside class="chat-panel surface-panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Chat bidirecional</p>
+          <h2>{{ selectedDentist?.nome || 'Selecione um dentista' }}</h2>
+        </div>
+        <span class="pill">Sala {{ roomId || 'pendente' }}</span>
+      </div>
+
+      <div class="chat-thread">
+        <article class="chat-bubble" *ngFor="let message of messages" [class.mine]="message.mine">
+          <span class="bubble-meta">
+            <strong>{{ message.senderName }}</strong>
+            <small>{{ message.sentAt | date : 'shortTime' }}</small>
+          </span>
+          <p>{{ message.message }}</p>
+        </article>
+      </div>
+
+      <form class="chat-composer" (ngSubmit)="sendMessage()">
+        <textarea
+          name="draftMessage"
+          [(ngModel)]="draftMessage"
+          rows="4"
+          placeholder="Escreva uma mensagem para a clínica"
+        ></textarea>
+        <button type="submit">Enviar mensagem</button>
+      </form>
+    </aside>
+  </div>
+</section>

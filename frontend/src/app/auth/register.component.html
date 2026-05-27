@@ -1,0 +1,80 @@
+<section class="auth-shell">
+  <div class="auth-panel auth-panel--hero">
+    <div class="auth-brand">
+      <app-logo [size]="56"></app-logo>
+      <div>
+        <p class="kicker">ClickSmile</p>
+        <h1>Crie o primeiro acesso com visual premium.</h1>
+      </div>
+    </div>
+
+    <app-auth-banner />
+  </div>
+
+  <div class="auth-panel auth-panel--form">
+    <div class="auth-topbar">
+      <app-logo [size]="40"></app-logo>
+      <a routerLink="/login">Já tenho conta</a>
+    </div>
+
+    <div class="auth-card-head">
+      <p class="kicker">Novo cadastro</p>
+      <h2>Criar acesso</h2>
+      <p>Crie um usuário, vincule a clínica e entre no onboarding com a sessão pronta.</p>
+    </div>
+
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()">
+      <label>
+        <span>Perfil</span>
+        <select formControlName="perfil">
+          <option value="CLIENTE">Cliente</option>
+          <option value="DENTISTA">Dentista</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Nome completo</span>
+        <input type="text" formControlName="nome" placeholder="Seu nome" />
+      </label>
+
+      <label>
+        <span>Email</span>
+        <input type="email" formControlName="email" placeholder="voce@clinica.com" />
+      </label>
+
+      <label>
+        <span>Senha</span>
+        <input type="password" formControlName="senha" placeholder="Crie uma senha forte" />
+      </label>
+
+      <label>
+        <span>Nome da clínica</span>
+        <input type="text" formControlName="nomeClinica" placeholder="Clínica Sorria Bem" />
+      </label>
+
+      @if (perfil === 'CLIENTE') {
+        <label>
+          <span>Telefone</span>
+          <input type="text" formControlName="telefone" placeholder="(11) 99999-9999" />
+        </label>
+      } @else {
+        <div class="grid-two">
+          <label>
+            <span>CRO</span>
+            <input type="text" formControlName="cro" placeholder="CRO-12345" />
+          </label>
+          <label>
+            <span>Especialidade</span>
+            <input type="text" formControlName="especialidade" placeholder="Ortodontia" />
+          </label>
+        </div>
+      }
+
+      <p *ngIf="erro" class="error-box">{{ erro }}</p>
+
+      <button type="submit" [disabled]="loading">
+        {{ loading ? 'Criando acesso...' : 'Cadastrar e entrar' }}
+      </button>
+    </form>
+  </div>
+</section>

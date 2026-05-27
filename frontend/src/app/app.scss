@@ -110,12 +110,9 @@
 }
 
 .hero-copy,
-.hero-panel,
-.feature-grid article {
-	border: 1px solid rgba(148, 163, 184, 0.14);
-	background: rgba(15, 23, 42, 0.5);
-	backdrop-filter: blur(18px);
-	box-shadow: 0 24px 60px rgba(2, 6, 23, 0.24);
+.hero-panel {
+  display: block;
+  min-height: 100dvh;
 }
 
 .hero-copy {

@@ -1,0 +1,33 @@
+<article class="surface-panel">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">Minha Agenda</p>
+      <h2>Meus Agendamentos</h2>
+    </div>
+    <span class="pill">{{ agendamentos.length }} consultas</span>
+  </div>
+
+  <div *ngIf="loading" class="empty-state">
+    <p>Carregando agendamentos...</p>
+  </div>
+
+  <div *ngIf="!loading && agendamentos.length === 0" class="empty-state">
+    <p>Você ainda não possui consultas agendadas.</p>
+  </div>
+
+  <div class="agendamentos-list" *ngIf="agendamentos.length > 0">
+    <div class="agendamento-card" *ngFor="let item of agendamentos">
+      <div class="date-badge">
+        <span class="month">{{ item.inicioAt | date: 'MMM' }}</span>
+        <span class="day">{{ item.inicioAt | date: 'dd' }}</span>
+      </div>
+      <div class="card-details">
+        <strong>{{ item.inicioAt | date: 'EEEE, HH:mm' }}</strong>
+        <p>Dentista ID: {{ item.dentistaId }}</p>
+        <span class="status" [class.confirmed]="item.status === 'CONFIRMADO'">
+          {{ item.status }}
+        </span>
+      </div>
+    </div>
+  </div>
+</article>

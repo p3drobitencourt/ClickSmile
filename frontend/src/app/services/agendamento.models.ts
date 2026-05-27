@@ -1,6 +1,6 @@
 export interface AgendamentoRequest {
-  clienteId: number;
-  dentistaId: number;
+  clienteId: number | string;
+  dentistaId: number | string;
   dataHora: string;
 }
 
@@ -17,11 +17,11 @@ export interface AgendamentoResumo {
 }
 
 export interface AgendaProfissionalOption {
-  id: number;
+  id: number | string;
   nome: string;
 }
 
 export interface AgendaPacienteOption {
-  id: number;
+  id: number | string;
   nome: string;
 }

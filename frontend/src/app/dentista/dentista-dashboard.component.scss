@@ -1,0 +1,8 @@
+:host { display:block; padding:24px; color: #e6eef6; }
+
+.panel-head { margin-bottom: 16px; }
+.controls { display:flex; gap:12px; margin-bottom:16px; }
+.week-grid { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.day-card { background: rgba(10,18,33,0.6); padding:12px; border-radius:8px; min-width:120px; }
+.actions { margin-top:12px; }
+button[disabled] { opacity:0.6 }

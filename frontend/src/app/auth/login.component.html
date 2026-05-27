@@ -1,0 +1,44 @@
+<section class="auth-shell">
+  <div class="auth-panel auth-panel--hero">
+    <div class="auth-brand">
+      <app-logo [size]="56"></app-logo>
+      <div>
+        <p class="kicker">ClickSmile</p>
+        <h1>Operação clínica com presença premium.</h1>
+      </div>
+    </div>
+
+    <app-auth-banner />
+  </div>
+
+  <div class="auth-panel auth-panel--form">
+    <div class="auth-topbar">
+      <app-logo [size]="40"></app-logo>
+      <a routerLink="/register">Criar conta</a>
+    </div>
+
+    <div class="auth-card-head">
+      <p class="kicker">Acesso ao sistema</p>
+      <h2>Entrar</h2>
+      <p>Use seu acesso autenticado para abrir o painel correspondente ao seu perfil.</p>
+    </div>
+
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()">
+      <label>
+        <span>Email</span>
+        <input type="email" formControlName="email" placeholder="voce@clinica.com" />
+      </label>
+
+      <label>
+        <span>Senha</span>
+        <input type="password" formControlName="senha" placeholder="Digite sua senha" />
+      </label>
+
+      <p *ngIf="erro" class="error-box">{{ erro }}</p>
+
+      <button type="submit" [disabled]="loading">
+        {{ loading ? 'Entrando...' : 'Entrar' }}
+      </button>
+    </form>
+  </div>
+</section>

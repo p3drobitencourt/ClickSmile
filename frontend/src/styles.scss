@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&display=swap');
 @import "primeicons/primeicons.css";
 
 :root {
@@ -17,7 +18,7 @@
 	--cs-radius-xl: 28px;
 	--cs-radius-lg: 20px;
 	--cs-shadow: 0 24px 70px rgba(2, 6, 23, 0.45);
-	--cs-font: Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+	--cs-font: "Space Grotesk", Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 html,
@@ -44,4 +45,26 @@ input,
 textarea,
 select {
 	font: inherit;
+}
+
+/* Global fullcalendar overrides to match Tailwind design */
+.fc .fc-daygrid-event, .fc .fc-timegrid-event {
+	border: none !important;
+	border-radius: 0.75rem !important; /* rounded-xl */
+	box-shadow: 0 6px 18px rgba(2,6,23,0.08) !important; /* shadow-sm-ish */
+	background-color: rgba(139, 92, 246, 0.06) !important; /* subtle accent, will be overridden by theme */
+	padding: 6px 8px !important;
+}
+
+/* Remove default fullcalendar borders */
+.fc .fc-daygrid-event-harness, .fc .fc-timegrid-slot {
+	border: 0 !important;
+}
+
+/* Make empty states use the smile icon styles */
+.cs-empty-state {
+	display:flex;
+	gap:12px;
+	align-items:center;
+	color:var(--cs-text-muted);
 }
