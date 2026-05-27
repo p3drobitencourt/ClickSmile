@@ -18,12 +18,12 @@
   <div class="agendamentos-list" *ngIf="agendamentos.length > 0">
     <div class="agendamento-card" *ngFor="let item of agendamentos">
       <div class="date-badge">
-        <span class="month">{{ item.inicioAt | date: 'MMM' }}</span>
-        <span class="day">{{ item.inicioAt | date: 'dd' }}</span>
+        <span class="month">{{ item.dataHora | date: 'MMM' }}</span>
+        <span class="day">{{ item.dataHora | date: 'dd' }}</span>
       </div>
       <div class="card-details">
-        <strong>{{ item.inicioAt | date: 'EEEE, HH:mm' }}</strong>
-        <p>Dentista ID: {{ item.dentistaId }}</p>
+        <strong>{{ item.dataHora | date: 'EEEE, HH:mm' }}</strong>
+        <p>Dentista ID: {{ item.dentistaId || 'N/A' }}</p>
         <span class="status" [class.confirmed]="item.status === 'CONFIRMADO'">
           {{ item.status }}
         </span>

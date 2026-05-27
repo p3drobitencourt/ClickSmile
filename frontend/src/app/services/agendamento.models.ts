@@ -11,6 +11,7 @@ export interface AgendamentoClienteResumo {
 
 export interface AgendamentoResumo {
   id?: number;
+  dentistaId?: number;
   dataHora: string;
   cliente?: AgendamentoClienteResumo;
   status?: string;

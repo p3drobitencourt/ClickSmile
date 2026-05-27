@@ -37,7 +37,7 @@ export class MeusAgendamentosComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
-          this.agendamentos = data.sort((a, b) => new Date(a.inicioAt).getTime() - new Date(b.inicioAt).getTime());
+          this.agendamentos = data.sort((a, b) => new Date(a.dataHora).getTime() - new Date(b.dataHora).getTime());
           this.loading = false;
         },
         error: () => {

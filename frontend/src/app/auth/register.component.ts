@@ -33,7 +33,7 @@ export class RegisterComponent {
   }
 
   get perfil() {
-    return this.form.controls.perfil.value;
+    return this.form.get('perfil')?.value;
   }
 
   async submit() {
