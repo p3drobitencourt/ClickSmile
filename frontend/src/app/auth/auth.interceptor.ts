@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, Injector } from '@angular/core';
 import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpErrorResponse } from '@angular/common/http';
 import { Observable, from, throwError } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
@@ -7,8 +7,16 @@ import { MessageService } from 'primeng/api';
 
 @Injectable({ providedIn: 'root' })
 export class AuthInterceptor implements HttpInterceptor {
-  private auth = inject(AuthService);
+  private injector = inject(Injector);
   private messageService = inject(MessageService);
+  private _auth?: AuthService;
+
+  private get auth(): AuthService {
+    if (!this._auth) {
+      this._auth = this.injector.get(AuthService);
+    }
+    return this._auth;
+  }
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     // Auth endpoints should not trigger refresh-on-401 recursion.
