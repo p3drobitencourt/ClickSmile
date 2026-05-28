@@ -49,6 +49,8 @@ export class ChatService implements OnDestroy {
     this.client = new Client({
       webSocketFactory: () => new SockJS(this.runtime.api('/ws')),
       reconnectDelay: 1000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
     });
 
     this.client.beforeConnect = () => {

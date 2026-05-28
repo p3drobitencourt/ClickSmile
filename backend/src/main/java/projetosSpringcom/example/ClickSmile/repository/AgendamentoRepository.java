@@ -1,5 +1,6 @@
 package projetosSpringcom.example.ClickSmile.repository;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -25,7 +26,9 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, UUID> 
     @Query("SELECT a FROM Agendamento a WHERE a.dentista.id = :dentistaId AND a.inicioAt >= :inicio AND a.inicioAt < :fim")
     List<Agendamento> findByDentistaIdAndDataRange(@Param("dentistaId") UUID dentistaId, @Param("inicio") OffsetDateTime inicio, @Param("fim") OffsetDateTime fim);
 
+    @EntityGraph(attributePaths = {"paciente", "dentista"})
     List<Agendamento> findByDentistaId(UUID dentistaId);
 
+    @EntityGraph(attributePaths = {"paciente", "dentista"})
     List<Agendamento> findByPacienteId(UUID pacienteId);
 }

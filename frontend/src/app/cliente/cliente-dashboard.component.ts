@@ -105,6 +105,16 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Optimistic UI Update
+    const originalEvents = this.calendarOptions.events;
+    const optimisticEvents = (Array.isArray(originalEvents) ? originalEvents : []).map((evt: any) => {
+      if (evt.start === startIso) {
+        return { ...evt, title: 'Reservando...', backgroundColor: '#f59e0b', borderColor: '#f59e0b' };
+      }
+      return evt;
+    });
+    this.calendarOptions = { ...this.calendarOptions, events: optimisticEvents };
+
     this.agendamentoService.criar({
       clienteId: this.currentUserId,
       dentistaId: this.selectedDentist.id,
@@ -115,6 +125,8 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
         this.loadSlots(this.selectedDentist?.id ?? '');
       },
       error: () => {
+        // Revert Optimistic UI
+        this.calendarOptions = { ...this.calendarOptions, events: originalEvents };
         this.bookingStatus = 'Não foi possível reservar esse horário. Tente outro slot.';
       },
     });
