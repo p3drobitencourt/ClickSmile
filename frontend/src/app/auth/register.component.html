@@ -1,16 +1,4 @@
-<section class="auth-shell">
-  <div class="auth-panel auth-panel--hero">
-    <div class="auth-brand">
-      <app-logo [size]="56"></app-logo>
-      <div>
-        <p class="kicker">ClickSmile</p>
-        <h1>Crie o primeiro acesso com visual premium.</h1>
-      </div>
-    </div>
-
-    <app-auth-banner />
-  </div>
-
+<section class="auth-shell auth-shell--simple">
   <div class="auth-panel auth-panel--form">
     <div class="auth-topbar">
       <app-logo [size]="40"></app-logo>
@@ -44,12 +32,7 @@
 
       <label>
         <span>Senha</span>
-        <input type="password" formControlName="senha" placeholder="Crie uma senha forte" />
-      </label>
-
-      <label>
-        <span>Nome da clínica</span>
-        <input type="text" formControlName="nomeClinica" placeholder="Clínica Sorria Bem" />
+        <input type="password" formControlName="senha" placeholder="Crie uma senha forte (mínimo 8 caracteres)" />
       </label>
 
       @if (perfil === 'CLIENTE') {
@@ -58,6 +41,10 @@
           <input type="text" formControlName="telefone" placeholder="(11) 99999-9999" />
         </label>
       } @else {
+        <label>
+          <span>Nome da clínica</span>
+          <input type="text" formControlName="nomeClinica" placeholder="Clínica Sorria Bem" />
+        </label>
         <div class="grid-two">
           <label>
             <span>CRO</span>

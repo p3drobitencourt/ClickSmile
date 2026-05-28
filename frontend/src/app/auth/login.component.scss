@@ -18,6 +18,11 @@
   padding: 24px clamp(16px, 4vw, 40px);
 }
 
+.auth-shell--simple {
+  grid-template-columns: minmax(360px, 480px);
+  justify-content: center;
+}
+
 .auth-panel {
   position: relative;
   overflow: hidden;
