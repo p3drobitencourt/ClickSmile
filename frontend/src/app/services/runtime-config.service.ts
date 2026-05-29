@@ -4,7 +4,9 @@ import { environment } from '../../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class RuntimeConfigService {
   get backendUrl(): string {
-    return environment.apiUrl || 'http://localhost:8080';
+    return environment.apiUrl !== undefined && environment.apiUrl !== null 
+      ? environment.apiUrl 
+      : 'http://localhost:8080';
   }
 
   // helper to build API urls
