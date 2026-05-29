@@ -2,25 +2,25 @@ import { TestBed } from '@angular/core/testing';
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpEvent, HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { authInterceptor } from './auth.interceptor';
 import { AuthService } from './auth.service';
-import { MessageService } from 'primeng/api';
+import { ToastService } from '../shared/toast.service';
 import { of, throwError, Observable } from 'rxjs';
 import { Router } from '@angular/router';
 
 describe('authInterceptor', () => {
   let authServiceSpy: jasmine.SpyObj<AuthService>;
   let routerSpy: jasmine.SpyObj<Router>;
-  let messageServiceSpy: jasmine.SpyObj<MessageService>;
+  let toastServiceSpy: jasmine.SpyObj<ToastService>;
 
   beforeEach(() => {
     authServiceSpy = jasmine.createSpyObj('AuthService', ['getAccessToken', 'refresh']);
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
-    messageServiceSpy = jasmine.createSpyObj('MessageService', ['add']);
+    toastServiceSpy = jasmine.createSpyObj('ToastService', ['show']);
 
     TestBed.configureTestingModule({
       providers: [
         { provide: AuthService, useValue: authServiceSpy },
         { provide: Router, useValue: routerSpy },
-        { provide: MessageService, useValue: messageServiceSpy }
+        { provide: ToastService, useValue: toastServiceSpy }
       ]
     });
   });
@@ -50,10 +50,11 @@ describe('authInterceptor', () => {
     TestBed.runInInjectionContext(() => {
       authInterceptor(req, next).subscribe({
         error: (err) => {
-          expect(messageServiceSpy.add).toHaveBeenCalledWith(jasmine.objectContaining({
-            severity: 'error',
-            summary: 'Conflito de Horário'
-          }));
+          expect(toastServiceSpy.show).toHaveBeenCalledWith(
+            'Este horário acabou de ser reservado por outra pessoa. Por favor, escolha outro.',
+            'Conflito de Agendamento',
+            'warning'
+          );
           done();
         }
       });

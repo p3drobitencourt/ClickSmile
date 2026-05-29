@@ -3,11 +3,11 @@ import { inject } from '@angular/core';
 import { Observable, from, throwError } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
-import { MessageService } from 'primeng/api';
+import { ToastService } from '../shared/toast.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
-  const messageService = inject(MessageService);
+  const toastService = inject(ToastService);
 
   // Auth endpoints should not trigger refresh-on-401 recursion.
   const isAuthEndpoint =
@@ -35,19 +35,18 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             catchError(e => throwError(() => e))
           );
         } else if (err.status === 409) {
-          messageService.add({
-            severity: 'warn',
-            summary: 'Conflito de Agendamento',
-            detail: 'Este horário acabou de ser reservado por outra pessoa. Por favor, escolha outro.',
-            life: 5000
-          });
+          toastService.show(
+            'Este horário acabou de ser reservado por outra pessoa. Por favor, escolha outro.',
+            'Conflito de Agendamento',
+            'warning'
+          );
         } else if (err.status >= 500) {
           const traceId = err.headers.get('X-Trace-Id');
-          messageService.add({
-            severity: 'error',
-            summary: 'Erro Interno',
-            detail: `Ocorreu um erro inesperado no servidor.${traceId ? ' (Trace ID: ' + traceId + ')' : ''}`
-          });
+          toastService.show(
+            `Ocorreu um erro inesperado no servidor.${traceId ? ' (Trace ID: ' + traceId + ')' : ''}`,
+            'Erro Interno',
+            'error'
+          );
         }
       }
       return throwError(() => err);
