@@ -30,7 +30,6 @@ export class HttpErrorInterceptor implements HttpInterceptor {
             // Conflito de agendamento (concorrência)
             this.toast.show('Horário já reservado', 'Conflito', 'warning');
           } else if (err.status >= 500) {
-          } else if (err.status >= 500) {
             this.toast.show(detail, 'Erro no servidor', 'error');
           } else {
             this.toast.show(detail, 'Operação não concluída', 'warning');
