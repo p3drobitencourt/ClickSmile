@@ -13,9 +13,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true) // Instrui o Lombok a considerar os campos da classe pai (Usuario) no equals/hashCode.
 public class Cliente extends Usuario {
 
-    @NotBlank(message = "O nome é obrigatório.")
-    @Column(nullable = false)
-    private String nome;
+
 
     @NotBlank(message = "O telefone é obrigatório.")
     @Column(nullable = false, length = 15)

@@ -13,9 +13,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class Dentista extends Usuario {
 
-    @NotBlank(message = "O nome é obrigatório.")
-    @Column(nullable = false)
-    private String nome;
+
 
     @NotBlank(message = "O CRO é obrigatório.")
     @Column(nullable = false, unique = true, length = 20)

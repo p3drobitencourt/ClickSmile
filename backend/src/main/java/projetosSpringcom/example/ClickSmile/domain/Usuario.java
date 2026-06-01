@@ -37,4 +37,8 @@ public abstract class Usuario {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Perfil perfil;
+
+    @NotBlank(message = "O nome é obrigatório.")
+    @Column(nullable = false)
+    private String nome;
 }
