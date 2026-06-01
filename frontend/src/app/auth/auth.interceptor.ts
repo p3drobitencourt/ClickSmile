@@ -34,13 +34,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             }),
             catchError(e => throwError(() => e))
           );
-        } else if (err.status === 409) {
-          toastService.show(
-            'Este horário acabou de ser reservado por outra pessoa. Por favor, escolha outro.',
-            'Conflito de Agendamento',
-            'warning'
-          );
-        } else if (err.status >= 500) {
+            } else if (err.status === 409 && req.url.includes('/agendamentos')) {
+              toastService.show(
+                'Este horário acabou de ser reservado por outra pessoa. Por favor, escolha outro.',
+                'Conflito de Agendamento',
+                'warning'
+              );
+            } else if (err.status === 409 && !req.url.includes('/agendamentos')) {
+               // Let the component handle it (e.g. Register component showing 'Email already exists')
+            } else if (err.status >= 500) {
           const traceId = err.headers.get('X-Trace-Id');
           toastService.show(
             `Ocorreu um erro inesperado no servidor.${traceId ? ' (Trace ID: ' + traceId + ')' : ''}`,

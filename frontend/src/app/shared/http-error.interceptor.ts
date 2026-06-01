@@ -26,7 +26,7 @@ export class HttpErrorInterceptor implements HttpInterceptor {
               this.auth.logout().catch(() => undefined);
             }
             this.router.navigateByUrl('/login');
-          } else if (err.status === 409) {
+          } else if (err.status === 409 && req.url.includes('/agendamentos')) {
             // Conflito de agendamento (concorrência)
             this.toast.show('Horário já reservado', 'Conflito', 'warning');
           } else if (err.status >= 500) {
