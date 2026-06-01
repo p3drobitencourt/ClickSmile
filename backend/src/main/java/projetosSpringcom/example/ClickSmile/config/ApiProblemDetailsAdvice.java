@@ -64,7 +64,9 @@ public class ApiProblemDetailsAdvice {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
         problem.setTitle("Conflito de dados");
         problem.setType(URI.create("https://clicksmile.local/problems/conflict"));
-        problem.setDetail("O registro já existe ou conflita com outra operação.");
+        String cause = ex.getCause() != null ? ex.getCause().getMessage() : "";
+        String mostSpecific = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : "";
+        problem.setDetail("O registro já existe ou conflita com outra operação. " + ex.getMessage() + " | " + cause + " | " + mostSpecific);
         problem.setInstance(URI.create(request.getRequestURI()));
         return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
     }
