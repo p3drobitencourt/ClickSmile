@@ -2,6 +2,8 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { App } from './app/app';
 
+(window as any).global = window;
+
 interface CustomWindow extends Window {
   __RUNTIME__?: {
     backendUrl?: string;
