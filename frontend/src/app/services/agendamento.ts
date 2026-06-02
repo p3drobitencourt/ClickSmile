@@ -23,4 +23,12 @@ export class AgendamentoService {
   criar(agendamento: AgendamentoRequest): Observable<AgendamentoResumo> {
     return this.http.post<AgendamentoResumo>(this.apiUrl, agendamento);
   }
+
+  cancelar(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  reagendar(id: string, novoInicioAt: string): Observable<AgendamentoResumo> {
+    return this.http.put<AgendamentoResumo>(`${this.apiUrl}/${id}`, { novoInicioAt });
+  }
 }

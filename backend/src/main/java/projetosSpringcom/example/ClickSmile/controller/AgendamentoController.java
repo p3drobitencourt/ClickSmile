@@ -27,6 +27,21 @@ public class AgendamentoController {
         return service.criar(dto);
     }
 
+    @PutMapping("/{id}")
+    public Agendamento reagendar(@PathVariable UUID id, @RequestBody java.util.Map<String, String> body) {
+        String novoInicioStr = body.get("novoInicioAt");
+        if (novoInicioStr == null) {
+            throw new IllegalArgumentException("O campo 'novoInicioAt' é obrigatório.");
+        }
+        return service.reagendar(id, java.time.OffsetDateTime.parse(novoInicioStr));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancelar(@PathVariable UUID id) {
+        service.cancelar(id);
+    }
+
     @GetMapping("/dentista/{dentistaId}")
     public List<Agendamento> listarPorDentista(@PathVariable UUID dentistaId) {
         return service.listarPorDentista(dentistaId);

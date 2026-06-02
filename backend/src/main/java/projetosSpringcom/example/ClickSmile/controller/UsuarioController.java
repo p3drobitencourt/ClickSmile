@@ -41,4 +41,23 @@ public class UsuarioController {
             "tenantId", usuario.getTenantId()
         );
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Usuario> findById(@PathVariable UUID id) {
+        return usuarioRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> atualizarCadastro(@PathVariable UUID id, @RequestBody java.util.Map<String, String> body) {
+        Usuario usuario = usuarioRepository.findById(id).orElse(null);
+        if (usuario == null) return ResponseEntity.notFound().build();
+
+        if (body.containsKey("nome")) usuario.setNome(body.get("nome"));
+        if (body.containsKey("email")) usuario.setEmail(body.get("email"));
+
+        usuarioRepository.save(usuario);
+        return ResponseEntity.ok().build();
+    }
 }

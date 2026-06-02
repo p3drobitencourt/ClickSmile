@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../auth/auth.service';
 import { AgendamentoService } from '../services/agendamento';
 import { AgendamentoResumo } from '../services/agendamento.models';
+import { ToastService } from '../shared/toast.service';
 
 @Component({
   selector: 'app-meus-agendamentos',
@@ -15,6 +16,12 @@ import { AgendamentoResumo } from '../services/agendamento.models';
 export class MeusAgendamentosComponent implements OnInit {
   agendamentos: AgendamentoResumo[] = [];
   loading = true;
+
+  showCancelModal = false;
+  selectedCancelId: string | null = null;
+  cancelLoading = false;
+
+  private toast = inject(ToastService);
 
   constructor(
     private auth: AuthService,
@@ -44,5 +51,35 @@ export class MeusAgendamentosComponent implements OnInit {
           this.loading = false;
         }
       });
+  }
+
+  confirmCancel(id: string) {
+    this.selectedCancelId = id;
+    this.showCancelModal = true;
+  }
+
+  closeModal() {
+    this.showCancelModal = false;
+    this.selectedCancelId = null;
+  }
+
+  executeCancel() {
+    if (!this.selectedCancelId) return;
+    this.cancelLoading = true;
+    
+    this.agendamentoService.cancelar(this.selectedCancelId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+         const item = this.agendamentos.find(a => a.id === this.selectedCancelId);
+         if (item) item.status = 'CANCELADO';
+         this.toast.show('Agendamento cancelado com sucesso.', 'success');
+         this.cancelLoading = false;
+         this.closeModal();
+      },
+      error: () => {
+         this.toast.show('Erro ao cancelar agendamento.', 'error');
+         this.cancelLoading = false;
+         this.closeModal();
+      }
+    });
   }
 }

@@ -24,9 +24,26 @@
       <div class="card-details">
         <strong>{{ item.dataHora | date: 'EEEE, HH:mm' }}</strong>
         <p>Dentista ID: {{ item.dentistaId || 'N/A' }}</p>
-        <span class="status" [class.confirmed]="item.status === 'CONFIRMADO'">
+        <span class="status" [class.confirmed]="item.status === 'CONFIRMADO'" [class.cancelled]="item.status === 'CANCELADO'">
           {{ item.status }}
         </span>
+      </div>
+      <div class="actions" *ngIf="item.status !== 'CANCELADO'">
+        <button class="btn-cancel" (click)="confirmCancel(item.id!)">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Cancelamento -->
+  <div class="modal-overlay" *ngIf="showCancelModal">
+    <div class="modal-content">
+      <h3>Cancelar Agendamento</h3>
+      <p>Tem certeza que deseja cancelar esta consulta? O horário voltará a ficar disponível para outros clientes.</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="closeModal()" [disabled]="cancelLoading">Voltar</button>
+        <button class="btn-danger" (click)="executeCancel()" [disabled]="cancelLoading">
+          {{ cancelLoading ? 'Cancelando...' : 'Sim, cancelar' }}
+        </button>
       </div>
     </div>
   </div>

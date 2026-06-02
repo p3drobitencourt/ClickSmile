@@ -65,6 +65,42 @@ public class AgendamentoService {
         return agendamentoRepository.save(agendamento);
     }
 
+    @Transactional
+    public void cancelar(UUID id) {
+        Agendamento agendamento = agendamentoRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Agendamento não encontrado."));
+        
+        agendamento.setStatus(StatusAgendamento.CANCELADO);
+        agendamentoRepository.save(agendamento);
+    }
+
+    @Transactional
+    public Agendamento reagendar(UUID id, OffsetDateTime novoInicio) {
+        Agendamento agendamento = agendamentoRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Agendamento não encontrado."));
+
+        if (agendamento.getStatus() == StatusAgendamento.CANCELADO) {
+            throw new IllegalStateException("Não é possível reagendar um agendamento cancelado.");
+        }
+
+        var fimAt = novoInicio.plusMinutes(30);
+
+        if (!agendaService.slotPermitido(agendamento.getDentista().getId(), novoInicio, fimAt)) {
+            throw new IllegalStateException("Novo horário indisponível para a agenda desse dentista.");
+        }
+
+        agendamentoRepository.findByDentistaAndInicioAtForUpdate(agendamento.getDentista().getId(), novoInicio)
+            .ifPresent(a -> {
+                if (!a.getId().equals(agendamento.getId())) {
+                    throw new AgendamentoConflictException("Horário indisponível (concorrência detectada).");
+                }
+            });
+
+        agendamento.setInicioAt(novoInicio);
+        agendamento.setFimAt(fimAt);
+        return agendamentoRepository.save(agendamento);
+    }
+
     @Transactional(readOnly = true)
     public List<Agendamento> listarPorDentista(UUID dentistaId) {
         return agendamentoRepository.findByDentistaId(dentistaId);
