@@ -1,0 +1,33 @@
+<div class="corporate-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <h2>ClickSmile</h2>
+      <p class="role-badge">{{ isDentista ? 'Dentista' : 'Cliente' }}</p>
+    </div>
+    
+    <nav class="nav-links">
+      <ng-container *ngIf="isDentista; else clienteLinks">
+        <a routerLink="/dentista" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Painel de Atendimento</a>
+        <!-- placeholders para futuras rotas do dentista -->
+      </ng-container>
+
+      <ng-template #clienteLinks>
+        <a routerLink="/cliente" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Buscar Dentistas</a>
+        <!-- placeholders para futuras rotas do cliente -->
+      </ng-template>
+    </nav>
+    
+    <div class="user-profile">
+      <div class="avatar">{{ userEmail.charAt(0).toUpperCase() }}</div>
+      <div class="info">
+        <strong>Meu Perfil</strong>
+        <small>{{ userEmail }}</small>
+        <a href="#" (click)="logout($event)" class="logout-link">Sair</a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

@@ -1,280 +1,259 @@
 :host {
   display: block;
-  min-height: 100vh;
 }
 
-.client-shell {
-  min-height: 100vh;
-  padding: 32px;
-  background:
-    radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 32%),
-    radial-gradient(circle at right center, rgba(16, 185, 129, 0.14), transparent 28%),
-    linear-gradient(180deg, #07111f 0%, #081525 38%, #040915 100%);
-  color: #e2e8f0;
-}
-
-.hero-panel,
-.surface-panel {
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(10, 18, 33, 0.78);
-  backdrop-filter: blur(18px);
-  box-shadow: 0 28px 80px rgba(2, 8, 23, 0.45);
+.dashboard-container {
+  padding: 2rem;
+  background-color: transparent;
 }
 
 .hero-panel {
-  border-radius: 28px;
-  padding: 24px 28px;
+  border-radius: 16px;
+  padding: 1.5rem 2rem;
   display: flex;
   justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-.brand-stack {
-  display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 24px;
+  margin-bottom: 2rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+
+  h1 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.5rem;
+  }
 }
 
 .eyebrow {
   margin: 0 0 6px;
   text-transform: uppercase;
-  letter-spacing: 0.22em;
-  font-size: 0.72rem;
-  color: #7dd3fc;
-}
-
-.hero-panel h1,
-.panel-head h2 {
-  margin: 0;
-  line-height: 1.05;
-}
-
-.hero-panel h1 {
-  max-width: 700px;
-  font-size: clamp(2rem, 4vw, 3.5rem);
+  letter-spacing: 0.1em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
 }
 
 .status-card {
-  min-width: 260px;
-  border-radius: 24px;
-  padding: 18px 20px;
-  background: linear-gradient(135deg, rgba(12, 74, 110, 0.5), rgba(15, 23, 42, 0.92));
-  border: 1px solid rgba(125, 211, 252, 0.2);
-  display: grid;
-  align-content: center;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+
+  .status-label {
+    color: #64748b;
+    font-size: 0.75rem;
+    margin-bottom: 4px;
+  }
+
+  strong {
+    color: #0f172a;
+  }
 }
 
-.status-label {
-  color: #94a3b8;
-  font-size: 0.82rem;
-  margin-bottom: 8px;
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  align-items: start;
 }
 
-.workspace-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(320px, 0.95fr);
-  gap: 22px;
-}
-
-.left-column,
-.chat-panel {
-  display: grid;
-  gap: 22px;
+.span-full {
+  grid-column: 1 / -1;
 }
 
 .surface-panel {
-  border-radius: 24px;
-  padding: 22px;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
 }
 
 .panel-head {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 18px;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+
+  h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.25rem;
+  }
 }
 
 .pill {
-  padding: 8px 14px;
+  padding: 4px 12px;
   border-radius: 999px;
-  background: rgba(15, 118, 110, 0.18);
-  color: #99f6e4;
-  font-size: 0.84rem;
+  background: #e0f2fe;
+  color: #0284c7;
+  font-size: 0.75rem;
+  font-weight: 600;
   white-space: nowrap;
 }
 
 .pill-quiet {
-  background: rgba(15, 23, 42, 0.68);
-  color: #cbd5e1;
+  background: #f1f5f9;
+  color: #64748b;
 }
 
-.dentist-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
+.list-panel {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.dentist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .dentist-card {
   display: flex;
   gap: 14px;
   align-items: flex-start;
-  padding: 16px;
-  border-radius: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(15, 23, 42, 0.64);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: white;
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
-}
+  transition: all 0.2s;
 
-.dentist-card:hover,
-.dentist-card.active {
-  transform: translateY(-2px);
-  border-color: rgba(56, 189, 248, 0.38);
-  background: rgba(15, 118, 110, 0.18);
+  &:hover, &.active {
+    border-color: #38bdf8;
+    background: #f0f9ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
 }
 
 .dentist-avatar {
   width: 46px;
   height: 46px;
-  flex: 0 0 46px;
-  border-radius: 16px;
+  border-radius: 12px;
   display: grid;
   place-items: center;
   font-weight: 700;
   color: #fff;
+  flex-shrink: 0;
 }
 
 .dentist-copy {
-  display: grid;
-  gap: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  strong {
+    color: #0f172a;
+    font-size: 0.95rem;
+  }
+
+  small {
+    color: #64748b;
+  }
 }
 
-.dentist-copy strong {
-  font-size: 0.98rem;
+.map-panel {
+  height: 600px;
+  
+  .map-container {
+    flex: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+  }
 }
 
-.dentist-copy small {
-  color: #94a3b8;
+.calendar-panel {
+  grid-column: span 2; /* takes 2 columns if space permits */
 }
 
-.calendar-panel ::ng-deep .fc {
-  --fc-border-color: rgba(148, 163, 184, 0.12);
-  --fc-page-bg-color: transparent;
-  --fc-neutral-bg-color: rgba(15, 23, 42, 0.58);
-  --fc-today-bg-color: rgba(56, 189, 248, 0.08);
-  --fc-list-event-hover-bg-color: rgba(56, 189, 248, 0.1);
-  color: #e2e8f0;
-}
-
-.calendar-panel ::ng-deep .fc-timegrid-slot:hover {
-  background-color: rgba(56, 189, 248, 0.1);
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.calendar-panel ::ng-deep .fc-event,
-.calendar-panel ::ng-deep .fc-v-event {
-  border-radius: 14px;
-  border: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.calendar-panel ::ng-deep .fc-event:hover,
-.calendar-panel ::ng-deep .fc-v-event:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(2, 6, 23, 0.4);
+@media (max-width: 800px) {
+  .calendar-panel {
+    grid-column: 1 / -1;
+  }
 }
 
 .chat-panel {
-  position: sticky;
-  top: 20px;
-  align-self: start;
-  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  height: 600px;
 }
 
 .chat-thread {
-  display: grid;
-  gap: 12px;
-  min-height: 420px;
-  max-height: 64vh;
-  overflow: auto;
-  padding-right: 2px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-right: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .chat-bubble {
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: rgba(15, 23, 42, 0.72);
-  border: 1px solid rgba(148, 163, 184, 0.12);
-}
+  padding: 1rem;
+  border-radius: 12px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  max-width: 90%;
+  
+  &.mine {
+    background: #e0f2fe;
+    border-color: #bae6fd;
+    align-self: flex-end;
+  }
 
-.chat-bubble.mine {
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.22), rgba(15, 23, 42, 0.7));
-  border-color: rgba(56, 189, 248, 0.32);
+  p { margin: 0; color: #0f172a; }
 }
 
 .bubble-meta {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 6px;
-  color: #94a3b8;
-}
-
-.bubble-meta strong {
-  color: #e2e8f0;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  
+  strong { color: #0f172a; font-size: 0.85rem; }
+  small { color: #64748b; font-size: 0.75rem; }
 }
 
 .chat-composer {
-  display: grid;
-  gap: 12px;
-}
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 
-.chat-composer textarea {
-  width: 100%;
-  border-radius: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(15, 23, 42, 0.8);
-  color: #e2e8f0;
-  padding: 14px 16px;
-  resize: vertical;
-  min-height: 120px;
-}
-
-.chat-composer button {
-  border: 0;
-  border-radius: 16px;
-  padding: 14px 18px;
-  font-weight: 700;
-  color: #04111c;
-  background: linear-gradient(135deg, #7dd3fc, #34d399);
-}
-
-@media (max-width: 1100px) {
-  .workspace-grid {
-    grid-template-columns: 1fr;
+  textarea {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    padding: 0.75rem;
+    font-family: inherit;
+    resize: vertical;
+    
+    &:focus {
+      outline: none;
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56,189,248,0.2);
+    }
   }
 
-  .chat-panel {
-    position: static;
-  }
-}
+  button {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
 
-@media (max-width: 720px) {
-  .client-shell {
-    padding: 18px;
-  }
-
-  .hero-panel {
-    flex-direction: column;
-  }
-
-  .panel-head {
-    flex-direction: column;
-    align-items: flex-start;
+    &:hover { background: #059669; }
   }
 }

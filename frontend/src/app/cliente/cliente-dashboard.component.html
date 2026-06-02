@@ -1,87 +1,95 @@
-<section class="client-shell">
+<div class="dashboard-container">
   <header class="hero-panel">
-    <div class="brand-stack">
-      <app-logo [size]="44" label="ClickSmile" />
-      <div>
-        <p class="eyebrow">Portal do cliente</p>
-        <h1>Escolha o especialista, reserve o horário e converse sem sair da tela.</h1>
-      </div>
+    <div>
+      <p class="eyebrow">Portal do cliente</p>
+      <h1>Escolha o especialista, reserve o horário e converse sem sair da tela.</h1>
     </div>
     <div class="status-card">
-      <span class="status-label">Status</span>
+      <span class="status-label">Status do Agendamento</span>
       <strong>{{ bookingStatus }}</strong>
     </div>
   </header>
 
-  <div class="workspace-grid">
-    <section class="left-column">
-      <article class="surface-panel">
-        <div class="panel-head">
-          <div>
-            <p class="eyebrow">Especialistas</p>
-            <h2>Disponíveis agora</h2>
-          </div>
-          <span class="pill">{{ dentists.length }} perfis</span>
-        </div>
-
-        <div class="dentist-grid">
-          <button
-            type="button"
-            class="dentist-card"
-            *ngFor="let dentist of dentists"
-            [class.active]="selectedDentist?.id === dentist.id"
-            (click)="selectDentist(dentist)"
-          >
-            <span class="dentist-avatar" [style.background]="dentist.color || '#38bdf8'">{{ initials(dentist.nome) }}</span>
-            <span class="dentist-copy">
-              <strong>{{ dentist.nome }}</strong>
-              <small>{{ dentist.especialidade }} <span *ngIf="dentist.distanciaKm">({{ dentist.distanciaKm | number:'1.1-1' }} km)</span></small>
-              <small>{{ dentist.cro }}</small>
-              <small>{{ dentist.agendaResumo }}</small>
-              <a *ngIf="dentist.latitude && dentist.longitude"
-                 href="https://www.google.com/maps/dir/?api=1&destination={{dentist.latitude}},{{dentist.longitude}}"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 style="display: inline-block; margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #e0f2fe; color: #0284c7; border-radius: 4px; font-weight: 500; font-size: 0.8rem; text-decoration: none;"
-                 (click)="$event.stopPropagation()">
-                 📍 Abrir no Google Maps
-              </a>
-            </span>
-          </button>
-        </div>
-
-        <div class="map-container" *ngIf="userLocation" style="margin-top: 1rem; border-radius: 8px; overflow: hidden; height: 300px;">
-          <google-map [center]="userLocation" [options]="mapOptions" height="300px" width="100%">
-            <map-marker [position]="userLocation" title="Você está aqui" [options]="{icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'}"></map-marker>
-            <ng-container *ngFor="let dentist of dentists">
-              <map-marker 
-                *ngIf="dentist.latitude && dentist.longitude"
-                [position]="{lat: dentist.latitude, lng: dentist.longitude}" 
-                [title]="dentist.nome">
-              </map-marker>
-            </ng-container>
-          </google-map>
-        </div>
-      </article>
-
-      <app-meus-agendamentos></app-meus-agendamentos>
-
-      <article class="surface-panel calendar-panel">
-        <div class="panel-head">
-          <div>
-            <p class="eyebrow">FullCalendar</p>
-            <h2>Slots disponíveis</h2>
-          </div>
-          <span class="pill pill-quiet">Clique em um slot livre para agendar</span>
-        </div>
-        <full-calendar [options]="calendarOptions" />
-      </article>
-    </section>
-
-    <aside class="chat-panel surface-panel">
+  <div class="responsive-grid">
+    <!-- Panel: Especialistas -->
+    <article class="surface-panel list-panel">
       <div class="panel-head">
         <div>
-          <p class="eyebrow">Chat bidirecional</p>
+          <p class="eyebrow">Especialistas</p>
+          <h2>Disponíveis agora</h2>
+        </div>
+        <span class="pill">{{ dentists.length }} perfis</span>
+      </div>
+
+      <div class="dentist-list">
+        <button
+          type="button"
+          class="dentist-card"
+          *ngFor="let dentist of dentists"
+          [class.active]="selectedDentist?.id === dentist.id"
+          (click)="selectDentist(dentist)"
+        >
+          <span class="dentist-avatar" [style.background]="dentist.color || '#38bdf8'">{{ initials(dentist.nome) }}</span>
+          <span class="dentist-copy">
+            <strong>{{ dentist.nome }}</strong>
+            <small>{{ dentist.especialidade }} <span *ngIf="dentist.distanciaKm">({{ dentist.distanciaKm | number:'1.1-1' }} km)</span></small>
+            <small>{{ dentist.cro }}</small>
+            <small>{{ dentist.agendaResumo }}</small>
+            <a *ngIf="dentist.latitude && dentist.longitude"
+               href="https://www.google.com/maps/dir/?api=1&destination={{dentist.latitude}},{{dentist.longitude}}"
+               target="_blank"
+               rel="noopener noreferrer"
+               style="display: inline-block; margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #e0f2fe; color: #0284c7; border-radius: 4px; font-weight: 500; font-size: 0.8rem; text-decoration: none;"
+               (click)="$event.stopPropagation()">
+               📍 Abrir no Google Maps
+            </a>
+          </span>
+        </button>
+      </div>
+    </article>
+
+    <!-- Panel: Mapa -->
+    <article class="surface-panel map-panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Localização</p>
+          <h2>Mapa de Proximidade</h2>
+        </div>
+      </div>
+      <div class="map-container" *ngIf="userLocation">
+        <google-map [center]="userLocation" [options]="mapOptions" height="100%" width="100%">
+          <map-marker [position]="userLocation" title="Você está aqui" [options]="{icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'}"></map-marker>
+          <ng-container *ngFor="let dentist of dentists">
+            <map-marker 
+              *ngIf="dentist.latitude && dentist.longitude"
+              [position]="{lat: dentist.latitude, lng: dentist.longitude}" 
+              [title]="dentist.nome">
+            </map-marker>
+          </ng-container>
+        </google-map>
+      </div>
+      <div *ngIf="!userLocation" style="padding: 2rem; text-align: center; color: #64748b;">
+        Carregando mapa...
+      </div>
+    </article>
+
+    <!-- Panel: Agendamentos -->
+    <article class="surface-panel calendar-panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Agendar</p>
+          <h2>Horários Disponíveis</h2>
+        </div>
+        <span class="pill pill-quiet">Selecione no calendário</span>
+      </div>
+      <full-calendar [options]="calendarOptions" />
+    </article>
+
+    <!-- Panel: Chat -->
+    <article class="surface-panel chat-panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Chat Online</p>
           <h2>{{ selectedDentist?.nome || 'Selecione um dentista' }}</h2>
         </div>
         <div style="display:flex; gap:0.5rem">
@@ -91,7 +99,7 @@
       </div>
 
       <div class="chat-thread" *ngIf="sessionStatus === SessaoChatStatus.ACTIVE">
-        <article class="chat-bubble" *ngFor="let message of messages" [class.mine]="message.mine" [class.system]="message.isSystem" [class.invite-card]="message.isInvite">
+        <div class="chat-bubble" *ngFor="let message of messages" [class.mine]="message.mine" [class.system]="message.isSystem" [class.invite-card]="message.isInvite">
           <span class="bubble-meta" *ngIf="!message.isSystem">
             <strong>{{ message.senderName }}</strong>
             <small>{{ message.sentAt | date : 'shortTime' }}</small>
@@ -106,7 +114,7 @@
           </ng-container>
 
           <p *ngIf="!message.isInvite" [style.textAlign]="message.isSystem ? 'center' : 'left'" [style.color]="message.isSystem ? '#6b7280' : 'inherit'" [style.fontSize]="message.isSystem ? '0.85rem' : 'inherit'">{{ message.message }}</p>
-        </article>
+        </div>
       </div>
 
       <div class="chat-placeholder" *ngIf="!sessionStatus" style="padding: 2rem; text-align: center;">
@@ -123,11 +131,14 @@
         <textarea
           name="draftMessage"
           [(ngModel)]="draftMessage"
-          rows="4"
-          placeholder="Escreva uma mensagem para a clínica"
+          rows="2"
+          placeholder="Digite sua mensagem..."
         ></textarea>
-        <button type="submit">Enviar mensagem</button>
+        <button type="submit">Enviar</button>
       </form>
-    </aside>
+    </article>
+    
+    <!-- Componente Meus Agendamentos -->
+    <app-meus-agendamentos class="span-full"></app-meus-agendamentos>
   </div>
-</section>
+</div>

@@ -5,12 +5,16 @@ import { FormsModule } from '@angular/forms';
 import { AgendaAdminService, AgendaFormPayload, AgendaRule } from '../services/agenda-admin.service';
 import { RuntimeConfigService } from '../services/runtime-config.service';
 
+import { DentistaAgendaComponent } from './components/dentista-agenda.component';
+import { DentistaMetricsComponent } from './components/dentista-metrics.component';
+import { DentistaChatRequestsComponent } from './components/dentista-chat-requests.component';
+
 @Component({
   selector: 'app-dentista-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DentistaAgendaComponent, DentistaMetricsComponent, DentistaChatRequestsComponent],
   templateUrl: './dentista-dashboard.component.html',
-  styleUrl: './dentista-dashboard.component.scss',
+  styleUrl: '../cliente/cliente-dashboard.component.scss', // Reuse the grid container styles
 })
 export class DentistaDashboardComponent implements OnInit {
   loading = true;
@@ -27,13 +31,16 @@ export class DentistaDashboardComponent implements OnInit {
 
   weekdays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
 
+  mockRequests = [
+    { roomId: 'req-001', clienteId: 'pac1000' },
+    { roomId: 'req-002', clienteId: 'pac1001' }
+  ];
+
   constructor(private service: AgendaAdminService, private runtime: RuntimeConfigService) {}
 
   private destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
-    // tentamos inferir dentistaId do runtime (dev) ou gerar um placeholder
-    // RuntimeConfigService expõe variáveis em window.__RUNTIME__, usamos acesso direto
     this.dentistaId = (this.runtime as any)['DENTISTA_ID'] || '';
     if (!this.dentistaId) {
       this.dentistaId = crypto.randomUUID();
@@ -61,50 +68,17 @@ export class DentistaDashboardComponent implements OnInit {
     });
   }
 
-  toggleDay(dia: string) {
-    const idx = this.payload.regras.findIndex(r => r.diaSemana === dia);
-    if (idx >= 0) {
-      this.payload.regras.splice(idx, 1);
-    } else {
-      const r: AgendaRule = { diaSemana: dia, ativo: true, inicio: '08:00', fim: '18:00' };
-      this.payload.regras.push(r);
-    }
-  }
-
-  isDayActive(dia: string): boolean {
-    return !!this.payload.regras.find(r => r.diaSemana === dia);
-  }
-
-  getRule(dia: string): AgendaRule | undefined {
-    return this.payload.regras.find(r => r.diaSemana === dia);
-  }
-
-  updateTime(dia: string, field: 'inicio' | 'fim', event: any) {
-    const r = this.getRule(dia);
-    if (r) {
-      r[field] = event.target.value;
-    }
-  }
-
-  translateDay(dia: string): string {
-    const map: Record<string, string> = {
-      'MONDAY': 'Segunda-feira',
-      'TUESDAY': 'Terça-feira',
-      'WEDNESDAY': 'Quarta-feira',
-      'THURSDAY': 'Quinta-feira',
-      'FRIDAY': 'Sexta-feira',
-      'SATURDAY': 'Sábado',
-      'SUNDAY': 'Domingo'
-    };
-    return map[dia] || dia;
-  }
-
-  save() {
+  saveAgenda(updatedPayload: AgendaFormPayload) {
     this.saving = true;
+    this.payload = updatedPayload;
     this.payload.dentistaId = this.dentistaId;
     this.service.save(this.payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => { this.saving = false; },
       error: () => { this.saving = false; }
     });
+  }
+
+  acceptChat(roomId: string) {
+    console.log('Accepted chat:', roomId);
   }
 }
