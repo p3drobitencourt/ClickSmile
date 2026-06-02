@@ -58,7 +58,11 @@ export class RegisterComponent {
         nomeClinica: value.nomeClinica,
       });
 
-      await this.router.navigateByUrl('/onboarding');
+      if (value.perfil === 'CLIENTE') {
+        await this.router.navigateByUrl('/cliente');
+      } else {
+        await this.router.navigateByUrl('/onboarding');
+      }
     } catch (err: unknown) {
       const e = err as { error?: { detail?: string; message?: string }, message?: string };
       this.erro = e?.error?.detail || e?.error?.message || e?.message || 'Não foi possível concluir o cadastro.';
