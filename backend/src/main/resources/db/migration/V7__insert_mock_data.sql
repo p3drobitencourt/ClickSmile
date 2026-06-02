@@ -6,6 +6,7 @@
 =========================================
 | Perfil   | Email                   | Senha  |
 |----------|-------------------------|--------|
+| Admin    | admin@mock.local        | 123456 |
 | Dentista | dentista1@mock.local    | 123456 |
 | Dentista | dentista2@mock.local    | 123456 |
 | Paciente | paciente1@mock.local    | 123456 |
@@ -17,6 +18,11 @@ INSERT INTO tenant_clinica (id, cnpj, razao_social, nome_fantasia, latitude, lon
 ('11111111-1111-1111-1111-111111111111', '11111111000111', 'Clinica Paulista S.A.', 'ClickSmile Paulista', -23.561684, -46.655981),
 ('22222222-2222-2222-2222-222222222222', '22222222000122', 'Clinica Ibirapuera S.A.', 'ClickSmile Ibirapuera', -23.587416, -46.657634)
 ON CONFLICT (cnpj) DO NOTHING;
+
+-- Usuário Administrador
+INSERT INTO usuario (id, tenant_id, email, senha_hash, nome, perfil, status) VALUES
+('a0000000-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'admin@mock.local', '$2a$10$wE7/L1p2j.zR9Lg9YvG/dOiS8.e4U.0r4aZ/2x1uO1b/Z2y5.23/q', 'Administrador Global', 'ADMIN', 'ACTIVE')
+ON CONFLICT (tenant_id, email) DO NOTHING;
 
 -- Usuários Dentistas (Senha: 123456 bcrypt: $2a$10$wE7/L1p2j.zR9Lg9YvG/dOiS8.e4U.0r4aZ/2x1uO1b/Z2y5.23/q)
 INSERT INTO usuario (id, tenant_id, email, senha_hash, nome, perfil) VALUES

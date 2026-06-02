@@ -1,0 +1,78 @@
+<div class="dashboard-container">
+  <header class="hero-panel">
+    <div>
+      <p class="eyebrow">Gestão Global</p>
+      <h1>Visão Panorâmica do ClickSmile</h1>
+    </div>
+  </header>
+
+  <!-- Metrics Grid -->
+  <div class="metrics-grid" *ngIf="metrics">
+    <div class="metric-card">
+      <p>Consultas Ativas</p>
+      <h3>{{ metrics.consultasAtivas }}</h3>
+    </div>
+    <div class="metric-card">
+      <p>Total de Dentistas</p>
+      <h3>{{ metrics.totalDentistas }}</h3>
+    </div>
+    <div class="metric-card">
+      <p>Volume de Cancelamentos</p>
+      <h3>{{ metrics.volumeCancelamentos }}</h3>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <article class="surface-panel table-panel">
+    <div class="panel-head">
+      <div>
+        <h2>Gerenciamento de Usuários</h2>
+      </div>
+      <span class="pill">{{ usuarios.length }} registros</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Perfil</th>
+            <th>Status</th>
+            <th class="text-right">Ação</th>
+          </tr>
+        </thead>
+        <tbody *ngIf="!loading; else loadingState">
+          <tr *ngFor="let u of usuarios">
+            <td><strong>{{ u.nome }}</strong></td>
+            <td>{{ u.email }}</td>
+            <td>
+              <span class="role-badge" [class.dentista]="u.perfil === 'DENTISTA'" [class.cliente]="u.perfil === 'CLIENTE'">
+                {{ u.perfil }}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge" [class.active]="u.status === 'ACTIVE'" [class.blocked]="u.status === 'BLOCKED'">
+                {{ u.status }}
+              </span>
+            </td>
+            <td class="text-right">
+              <button class="btn-action" 
+                      [class.btn-block]="u.status === 'ACTIVE'" 
+                      [class.btn-unblock]="u.status === 'BLOCKED'"
+                      *ngIf="u.perfil !== 'ADMIN'"
+                      (click)="toggleBlock(u)">
+                {{ u.status === 'ACTIVE' ? 'Bloquear' : 'Desbloquear' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+        <ng-template #loadingState>
+          <tr>
+            <td colspan="5" class="loading-cell">Carregando usuários...</td>
+          </tr>
+        </ng-template>
+      </table>
+    </div>
+  </article>
+</div>

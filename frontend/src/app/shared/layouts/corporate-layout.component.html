@@ -6,15 +6,17 @@
     </div>
     
     <nav class="nav-links">
-      <ng-container *ngIf="isDentista; else clienteLinks">
-        <a routerLink="/dentista" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Painel de Atendimento</a>
-        <!-- placeholders para futuras rotas do dentista -->
+      <ng-container *ngIf="isAdmin">
+        <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Gestão Global</a>
       </ng-container>
 
-      <ng-template #clienteLinks>
+      <ng-container *ngIf="isDentista && !isAdmin">
+        <a routerLink="/dentista" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Painel de Atendimento</a>
+      </ng-container>
+
+      <ng-container *ngIf="!isDentista && !isAdmin">
         <a routerLink="/cliente" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Buscar Dentistas</a>
-        <!-- placeholders para futuras rotas do cliente -->
-      </ng-template>
+      </ng-container>
     </nav>
     
     <div class="user-profile">

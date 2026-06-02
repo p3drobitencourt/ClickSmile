@@ -12,6 +12,7 @@ import { AuthService } from '../../auth/auth.service';
 })
 export class CorporateLayoutComponent implements OnInit {
   isDentista = false;
+  isAdmin = false;
   userEmail = '';
 
   private auth = inject(AuthService);
@@ -20,6 +21,7 @@ export class CorporateLayoutComponent implements OnInit {
   ngOnInit() {
     this.userEmail = this.auth.getEmail() || 'Usuário';
     this.isDentista = this.auth.getRole() === 'DENTISTA';
+    this.isAdmin = this.auth.getRole() === 'ADMIN';
   }
 
   logout(event: Event) {

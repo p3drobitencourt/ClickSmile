@@ -30,5 +30,8 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, UUID> 
     List<Agendamento> findByDentistaId(UUID dentistaId);
 
     @EntityGraph(attributePaths = {"paciente", "dentista"})
-    List<Agendamento> findByPacienteId(UUID pacienteId);
+    List<Agendamento> findByPacienteIdOrderByInicioAtDesc(UUID pacienteId);
+    
+    long countByStatusIn(List<String> statuses);
+    long countByStatus(String status);
 }

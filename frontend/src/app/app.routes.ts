@@ -9,6 +9,7 @@ import { HomeRedirectComponent } from './auth/home-redirect.component';
 const DentistaDashboardComponent = () => import('./dentista/dentista-dashboard.component').then((m) => m.DentistaDashboardComponent);
 const ClienteDashboardComponent = () => import('./cliente/cliente-dashboard.component').then((m) => m.ClienteDashboardComponent);
 const CorporateLayoutComponent = () => import('./shared/layouts/corporate-layout.component').then((m) => m.CorporateLayoutComponent);
+const AdminDashboardComponent = () => import('./admin/admin-dashboard.component').then((m) => m.AdminDashboardComponent);
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -19,7 +20,8 @@ export const routes: Routes = [
     loadComponent: CorporateLayoutComponent,
     children: [
       { path: 'cliente', loadComponent: ClienteDashboardComponent, canActivate: [clienteGuard] },
-      { path: 'dentista', loadComponent: DentistaDashboardComponent, canActivate: [dentistaGuard] }
+      { path: 'dentista', loadComponent: DentistaDashboardComponent, canActivate: [dentistaGuard] },
+      { path: 'admin', loadComponent: AdminDashboardComponent, canActivate: [adminGuard] }
     ]
   },
   { path: '', component: HomeRedirectComponent },

@@ -41,4 +41,7 @@ public abstract class Usuario {
     @NotBlank(message = "O nome é obrigatório.")
     @Column(nullable = false)
     private String nome;
+
+    @Column(nullable = false)
+    private String status = "ACTIVE";
 }

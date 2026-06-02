@@ -12,6 +12,8 @@ import java.util.UUID;
 
 public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
     Optional<Usuario> findByEmail(String email);
+    Optional<Usuario> findByTenantIdAndEmail(UUID tenantId, String email);
+    long countByPerfil(Perfil perfil);
     List<Usuario> findByPerfil(Perfil perfil);
 
     @Query(value = "SELECT CAST(d.id AS varchar) as id, u.nome, u.email, d.cro, d.especialidade, tc.latitude, tc.longitude, " +

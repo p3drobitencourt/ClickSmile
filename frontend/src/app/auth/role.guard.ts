@@ -15,6 +15,10 @@ function goHome(router: Router, role?: string | null): UrlTree {
     return router.parseUrl('/cliente');
   }
 
+  if (role === 'ADMIN') {
+    return router.parseUrl('/admin');
+  }
+
   return router.parseUrl('/login');
 }
 
@@ -47,6 +51,18 @@ export const dentistaGuard: CanActivateFn = async () => {
 
   const profile = await auth.getProfile();
   return profile?.perfil === 'DENTISTA' ? true : goLogin(router);
+};
+
+export const adminGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (!auth.isAuthenticated()) {
+    return goLogin(router);
+  }
+
+  const profile = await auth.getProfile();
+  return profile?.perfil === 'ADMIN' ? true : goLogin(router);
 };
 
 export const homeGuard: CanActivateFn = async () => {
