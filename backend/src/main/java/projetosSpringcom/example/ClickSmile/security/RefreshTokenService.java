@@ -61,13 +61,13 @@ public class RefreshTokenService {
     }
 
     public void revokeAllForUser(Usuario usuario) {
-        List<RefreshToken> tokens = repository.findByUsuarioIdAndRevokedFalse(usuario.getId());
-        tokens.forEach(t -> { t.setRevoked(true); });
+        List<RefreshToken> tokens = repository.findByUsuarioIdAndRevokedAtIsNull(usuario.getId());
+        tokens.forEach(t -> { t.setRevokedAt(Instant.now()); });
         repository.saveAll(tokens);
     }
 
     public void revokeToken(RefreshToken t) {
-        t.setRevoked(true);
+        t.setRevokedAt(Instant.now());
         repository.save(t);
     }
 

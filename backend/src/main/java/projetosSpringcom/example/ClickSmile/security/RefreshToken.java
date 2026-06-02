@@ -30,8 +30,8 @@ public class RefreshToken {
     @Column(nullable = false)
     private Instant expiresAt;
 
-    @Column(nullable = false)
-    private boolean revoked = false;
+    @Column(name = "revoked_at")
+    private Instant revokedAt;
 
     public RefreshToken() {}
 
@@ -46,8 +46,9 @@ public class RefreshToken {
     public String getTokenHash() { return tokenHash; }
     public Usuario getUsuario() { return usuario; }
     public Instant getExpiresAt() { return expiresAt; }
-    public boolean isRevoked() { return revoked; }
-    public void setRevoked(boolean revoked) { this.revoked = revoked; }
+    public Instant getRevokedAt() { return revokedAt; }
+    public void setRevokedAt(Instant revokedAt) { this.revokedAt = revokedAt; }
+    public boolean isRevoked() { return revokedAt != null; }
     public UUID getTenantId() { return tenantId; }
     public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
 }
