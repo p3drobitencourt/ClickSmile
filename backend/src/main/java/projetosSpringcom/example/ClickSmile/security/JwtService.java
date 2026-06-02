@@ -35,7 +35,7 @@ public class JwtService {
                 .expiresAt(now.plus(ttl))
                 .subject(String.valueOf(usuario.getId()))
                 .claim("email", usuario.getEmail())
-                .claim("roles", List.of(usuario.getPerfil().name()))
+                .claim("roles", List.of("ROLE_" + usuario.getPerfil().name()))
                 .build();
 
         return this.jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();

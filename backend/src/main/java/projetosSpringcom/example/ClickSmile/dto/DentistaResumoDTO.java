@@ -8,5 +8,8 @@ public record DentistaResumoDTO(
         String email,
         String cro,
         String especialidade,
-        String agendaResumo
+        String agendaResumo,
+        java.math.BigDecimal latitude,
+        java.math.BigDecimal longitude,
+        Double distanciaKm
 ) {}

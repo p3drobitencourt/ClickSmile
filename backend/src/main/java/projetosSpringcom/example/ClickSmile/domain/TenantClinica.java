@@ -37,4 +37,10 @@ public class TenantClinica {
 
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
+
+    @Column(precision = 10, scale = 8)
+    private java.math.BigDecimal latitude;
+
+    @Column(precision = 11, scale = 8)
+    private java.math.BigDecimal longitude;
 }

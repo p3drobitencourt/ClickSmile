@@ -11,6 +11,9 @@ export interface DentistSummary {
   especialidade: string;
   agendaResumo: string;
   color: string;
+  latitude?: number;
+  longitude?: number;
+  distanciaKm?: number;
 }
 
 export interface ScheduleSlot {
@@ -68,8 +71,11 @@ export class DentistDirectoryService {
 
   constructor(private http: HttpClient, private runtime: RuntimeConfigService) {}
 
-  listDentists(): Observable<DentistSummary[]> {
-    const url = this.runtime.api('/api/public/dentistas');
+  listDentists(lat?: number, lng?: number): Observable<DentistSummary[]> {
+    let url = this.runtime.api('/api/public/dentistas');
+    if (lat !== undefined && lng !== undefined) {
+      url += `?lat=${lat}&lng=${lng}`;
+    }
     return this.http.get<DentistSummary[]>(url).pipe(
       catchError(() => of(this.fallbackDentists))
     );

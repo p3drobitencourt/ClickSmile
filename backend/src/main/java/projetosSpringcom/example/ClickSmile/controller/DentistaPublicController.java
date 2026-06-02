@@ -25,7 +25,27 @@ public class DentistaPublicController {
     }
 
     @GetMapping
-    public ResponseEntity<List<DentistaResumoDTO>> listar() {
+    public ResponseEntity<List<DentistaResumoDTO>> listar(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Double lat,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Double lng
+    ) {
+        if (lat != null && lng != null) {
+            List<DentistaResumoDTO> dadosProximos = usuarioRepository.findDentistasProximos(lat, lng).stream()
+                .map(proj -> new DentistaResumoDTO(
+                    proj.getId(),
+                    proj.getNome(),
+                    proj.getEmail(),
+                    proj.getCro(),
+                    proj.getEspecialidade(),
+                    agendaService.buscarPorDentista(proj.getId()).slotDurationMin() + " min | " + agendaService.buscarPorDentista(proj.getId()).horaInicioPadrao() + " - " + agendaService.buscarPorDentista(proj.getId()).horaFimPadrao(),
+                    proj.getLatitude(),
+                    proj.getLongitude(),
+                    proj.getDistanciaKm()
+                ))
+                .toList();
+            return ResponseEntity.ok(dadosProximos);
+        }
+
         List<DentistaResumoDTO> dados = usuarioRepository.findByPerfil(Perfil.DENTISTA).stream()
             .filter(Dentista.class::isInstance)
             .map(Dentista.class::cast)
@@ -35,7 +55,10 @@ public class DentistaPublicController {
                 dentista.getEmail(),
                 dentista.getCro(),
                 dentista.getEspecialidade(),
-                agendaService.buscarPorDentista(dentista.getId()).slotDurationMin() + " min | " + agendaService.buscarPorDentista(dentista.getId()).horaInicioPadrao() + " - " + agendaService.buscarPorDentista(dentista.getId()).horaFimPadrao()
+                agendaService.buscarPorDentista(dentista.getId()).slotDurationMin() + " min | " + agendaService.buscarPorDentista(dentista.getId()).horaInicioPadrao() + " - " + agendaService.buscarPorDentista(dentista.getId()).horaFimPadrao(),
+                null,
+                null,
+                null
             ))
             .toList();
 

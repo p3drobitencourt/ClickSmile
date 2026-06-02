@@ -34,7 +34,7 @@ export const clienteGuard: CanActivateFn = async () => {
   }
 
   const profile = await auth.getProfile();
-  return profile?.perfil === 'CLIENTE' ? true : goHome(router, profile?.perfil);
+  return profile?.perfil === 'CLIENTE' ? true : goLogin(router);
 };
 
 export const dentistaGuard: CanActivateFn = async () => {
@@ -46,7 +46,7 @@ export const dentistaGuard: CanActivateFn = async () => {
   }
 
   const profile = await auth.getProfile();
-  return profile?.perfil === 'DENTISTA' ? true : goHome(router, profile?.perfil);
+  return profile?.perfil === 'DENTISTA' ? true : goLogin(router);
 };
 
 export const homeGuard: CanActivateFn = async () => {

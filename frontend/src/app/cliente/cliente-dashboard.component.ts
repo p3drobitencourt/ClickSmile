@@ -8,9 +8,10 @@ import interactionPlugin from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { Subscription } from 'rxjs';
+import { GoogleMapsModule } from '@angular/google-maps';
 import { AuthService } from '../auth/auth.service';
 import { AgendamentoService } from '../services/agendamento';
-import { ChatMessageView, ChatService } from '../services/chat.service';
+import { ChatMessageView, ChatService, SessaoChatStatus } from '../services/chat.service';
 import { DentistDirectoryService, DentistSummary, ScheduleSlot } from '../services/dentist-directory.service';
 import { LogoComponent } from '../shared/logo.component';
 import { MeusAgendamentosComponent } from './meus-agendamentos.component';
@@ -18,7 +19,7 @@ import { MeusAgendamentosComponent } from './meus-agendamentos.component';
 @Component({
   selector: 'app-cliente-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, FullCalendarModule, LogoComponent, MeusAgendamentosComponent],
+  imports: [CommonModule, FormsModule, FullCalendarModule, LogoComponent, MeusAgendamentosComponent, GoogleMapsModule],
   templateUrl: './cliente-dashboard.component.html',
   styleUrl: './cliente-dashboard.component.scss',
 })
@@ -32,7 +33,15 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   roomId = '';
   currentUserId = '';
   currentUserLabel = 'Cliente';
+  sessionStatus: SessaoChatStatus | null = null;
+  SessaoChatStatus = SessaoChatStatus; // Expose to template
+  userLocation: google.maps.LatLngLiteral | undefined;
+  mapOptions: google.maps.MapOptions = {
+    zoom: 12,
+    mapId: 'DEMO_MAP_ID',
+  };
   private chatSubscription?: Subscription;
+  private sessionStatusSub?: Subscription;
 
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
@@ -65,7 +74,23 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     this.currentUserId = this.auth.getSubject() ?? crypto.randomUUID();
     this.currentUserLabel = this.auth.getEmail() ?? 'Cliente';
 
-    this.dentistDirectory.listDentists().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((dentists) => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          this.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          this.loadDentists(pos.coords.latitude, pos.coords.longitude);
+        },
+        () => {
+          this.loadDentists(); // Fallback without location
+        }
+      );
+    } else {
+      this.loadDentists();
+    }
+  }
+
+  private loadDentists(lat?: number, lng?: number): void {
+    this.dentistDirectory.listDentists(lat, lng).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((dentists) => {
       this.dentists = dentists;
       if (dentists.length > 0) {
         this.selectDentist(dentists[0]);
@@ -75,14 +100,58 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.chatSubscription?.unsubscribe();
+    this.sessionStatusSub?.unsubscribe();
   }
 
   selectDentist(dentist: DentistSummary): void {
     this.selectedDentist = dentist;
     this.bookingStatus = `Agenda de ${dentist.nome} carregada.`;
-    this.roomId = `${this.currentUserId}:${dentist.id}`;
+    // We will establish the roomId after starting the chat
+    this.roomId = ''; 
+    this.sessionStatus = null;
+    this.chatService.sessionStatus$.next(null);
+    this.messages = [];
+    
     this.loadSlots(dentist.id);
-    this.bindChat(dentist);
+  }
+
+  iniciarChat(): void {
+    if (!this.selectedDentist) return;
+    this.chatService.solicitarChat(this.currentUserId, this.selectedDentist.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(response => {
+      this.roomId = response.id;
+      this.sessionStatus = response.status;
+      this.chatService.sessionStatus$.next(response.status);
+      this.bindChat(this.selectedDentist!);
+    });
+  }
+
+  // Developer Tool: Simulate dentist accept
+  devAceitarChat(): void {
+    if (!this.roomId) return;
+    this.chatService.aceitarChat(this.roomId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(response => {
+      this.sessionStatus = response.status;
+      this.chatService.sessionStatus$.next(response.status);
+    });
+  }
+
+  devEnviarConvite(): void {
+    if (!this.roomId || !this.selectedDentist) return;
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(10, 0, 0, 0);
+    this.chatService.enviarConviteDev(this.roomId, this.selectedDentist.id, this.selectedDentist.nome, this.currentUserId, tomorrow.toISOString());
+  }
+
+  aceitarConvite(dataHora: string): void {
+    if (!this.roomId) return;
+    this.chatService.aceitarConviteAgendamento(this.roomId, dataHora).subscribe({
+      next: () => {
+        this.bookingStatus = `Consulta aceita para ${new Date(dataHora).toLocaleString('pt-BR')}.`;
+      },
+      error: (err) => {
+        alert('Não foi possível agendar. O horário pode ter sido ocupado por outro cliente. Erro: ' + (err.error || err.message));
+      }
+    });
   }
 
   sendMessage(): void {
@@ -174,5 +243,14 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
       .connect(this.roomId, this.currentUserId, dentist.nome)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((messages) => (this.messages = messages));
+
+    this.sessionStatusSub?.unsubscribe();
+    this.sessionStatusSub = this.chatService.sessionStatus$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(status => {
+        if (status) {
+          this.sessionStatus = status;
+        }
+      });
   }
 }

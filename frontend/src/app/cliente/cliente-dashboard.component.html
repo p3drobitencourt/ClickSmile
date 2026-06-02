@@ -32,14 +32,27 @@
             [class.active]="selectedDentist?.id === dentist.id"
             (click)="selectDentist(dentist)"
           >
-            <span class="dentist-avatar" [style.background]="dentist.color">{{ initials(dentist.nome) }}</span>
+            <span class="dentist-avatar" [style.background]="dentist.color || '#38bdf8'">{{ initials(dentist.nome) }}</span>
             <span class="dentist-copy">
               <strong>{{ dentist.nome }}</strong>
-              <small>{{ dentist.especialidade }}</small>
+              <small>{{ dentist.especialidade }} <span *ngIf="dentist.distanciaKm">({{ dentist.distanciaKm | number:'1.1-1' }} km)</span></small>
               <small>{{ dentist.cro }}</small>
               <small>{{ dentist.agendaResumo }}</small>
             </span>
           </button>
+        </div>
+
+        <div class="map-container" *ngIf="userLocation" style="margin-top: 1rem; border-radius: 8px; overflow: hidden; height: 300px;">
+          <google-map [center]="userLocation" [options]="mapOptions" height="300px" width="100%">
+            <map-marker [position]="userLocation" title="Você está aqui" [options]="{icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'}"></map-marker>
+            <ng-container *ngFor="let dentist of dentists">
+              <map-marker 
+                *ngIf="dentist.latitude && dentist.longitude"
+                [position]="{lat: dentist.latitude, lng: dentist.longitude}" 
+                [title]="dentist.nome">
+              </map-marker>
+            </ng-container>
+          </google-map>
         </div>
       </article>
 
@@ -63,20 +76,42 @@
           <p class="eyebrow">Chat bidirecional</p>
           <h2>{{ selectedDentist?.nome || 'Selecione um dentista' }}</h2>
         </div>
-        <span class="pill">Sala {{ roomId || 'pendente' }}</span>
+        <div style="display:flex; gap:0.5rem">
+          <span class="pill">Sala {{ roomId || 'pendente' }}</span>
+          <button class="pill" style="cursor:pointer; background: #38bdf8; color:white; border:none;" *ngIf="sessionStatus === SessaoChatStatus.ACTIVE" (click)="devEnviarConvite()" title="Dev Tool">Convite Dev</button>
+        </div>
       </div>
 
-      <div class="chat-thread">
-        <article class="chat-bubble" *ngFor="let message of messages" [class.mine]="message.mine">
-          <span class="bubble-meta">
+      <div class="chat-thread" *ngIf="sessionStatus === SessaoChatStatus.ACTIVE">
+        <article class="chat-bubble" *ngFor="let message of messages" [class.mine]="message.mine" [class.system]="message.isSystem" [class.invite-card]="message.isInvite">
+          <span class="bubble-meta" *ngIf="!message.isSystem">
             <strong>{{ message.senderName }}</strong>
             <small>{{ message.sentAt | date : 'shortTime' }}</small>
           </span>
-          <p>{{ message.message }}</p>
+          
+          <ng-container *ngIf="message.isInvite">
+            <div style="padding: 1rem; background: #f0fdf4; border: 1px solid #16a34a; border-radius: 8px;">
+              <h4 style="margin: 0 0 0.5rem; color: #166534;">Convite de Agendamento</h4>
+              <p style="margin: 0 0 1rem; color: #15803d;">{{ message.inviteDataHora | date: 'dd/MM/yyyy HH:mm' }}</p>
+              <button type="button" class="btn btn-primary" style="width: 100%;" (click)="aceitarConvite(message.inviteDataHora!)">Aceitar Horário</button>
+            </div>
+          </ng-container>
+
+          <p *ngIf="!message.isInvite" [style.textAlign]="message.isSystem ? 'center' : 'left'" [style.color]="message.isSystem ? '#6b7280' : 'inherit'" [style.fontSize]="message.isSystem ? '0.85rem' : 'inherit'">{{ message.message }}</p>
         </article>
       </div>
 
-      <form class="chat-composer" (ngSubmit)="sendMessage()">
+      <div class="chat-placeholder" *ngIf="!sessionStatus" style="padding: 2rem; text-align: center;">
+        <p>Inicie o chat para tirar dúvidas com o especialista antes de agendar.</p>
+        <button type="button" class="btn btn-primary" (click)="iniciarChat()" style="margin-top: 1rem;">Iniciar Chat</button>
+      </div>
+
+      <div class="chat-placeholder" *ngIf="sessionStatus === SessaoChatStatus.PENDING" style="padding: 2rem; text-align: center;">
+        <p>Aguardando o dentista aceitar a solicitação...</p>
+        <button type="button" class="btn btn-warning" (click)="devAceitarChat()" style="margin-top: 1rem;" title="Ferramenta de Desenvolvedor">Simular Aceite (Dev)</button>
+      </div>
+
+      <form class="chat-composer" (ngSubmit)="sendMessage()" *ngIf="sessionStatus === SessaoChatStatus.ACTIVE">
         <textarea
           name="draftMessage"
           [(ngModel)]="draftMessage"
