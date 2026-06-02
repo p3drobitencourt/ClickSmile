@@ -42,6 +42,9 @@ export class ChatService implements OnDestroy {
   public solicitacoes$ = new BehaviorSubject<SessaoChatResponseDTO[]>([]);
   private reconnectAttempt = 0;
   private maxReconnectDelay = 30000;
+  private chatSubscription: any = null;
+  private statusSubscription: any = null;
+  private solicitacoesSubscription: any = null;
 
   constructor(private runtime: RuntimeConfigService, private http: HttpClient) {}
 
@@ -98,8 +101,12 @@ export class ChatService implements OnDestroy {
     this.client.onConnect = () => {
       this.reconnectAttempt = 0;
       
+      // Clean up previous subscriptions if any
+      if (this.chatSubscription) this.chatSubscription.unsubscribe();
+      if (this.statusSubscription) this.statusSubscription.unsubscribe();
+
       // Listen for chat messages
-      this.client?.subscribe(`/topic/chat.${roomId}`, (message: IMessage) => {
+      this.chatSubscription = this.client?.subscribe(`/topic/chat.${roomId}`, (message: IMessage) => {
         let payload = JSON.parse(message.body) as ChatMessageView;
         payload.mine = payload.senderId === currentUserId;
         
@@ -121,7 +128,7 @@ export class ChatService implements OnDestroy {
       });
 
       // Listen for session status updates
-      this.client?.subscribe(`/topic/chat.${roomId}.status`, (message: IMessage) => {
+      this.statusSubscription = this.client?.subscribe(`/topic/chat.${roomId}.status`, (message: IMessage) => {
         const payload = JSON.parse(message.body) as SessaoChatResponseDTO;
         this.sessionStatus$.next(payload.status);
       });
@@ -168,14 +175,16 @@ export class ChatService implements OnDestroy {
         reconnectDelay: 1000,
       });
       this.client.onConnect = () => {
-        this.client?.subscribe(`/topic/dentista.${dentistaId}.solicitacoes`, (message: IMessage) => {
+        if (this.solicitacoesSubscription) this.solicitacoesSubscription.unsubscribe();
+        this.solicitacoesSubscription = this.client?.subscribe(`/topic/dentista.${dentistaId}.solicitacoes`, (message: IMessage) => {
           const payload = JSON.parse(message.body) as SessaoChatResponseDTO;
           this.solicitacoes$.next([...this.solicitacoes$.value, payload]);
         });
       };
       this.client.activate();
     } else {
-      this.client?.subscribe(`/topic/dentista.${dentistaId}.solicitacoes`, (message: IMessage) => {
+      if (this.solicitacoesSubscription) this.solicitacoesSubscription.unsubscribe();
+      this.solicitacoesSubscription = this.client?.subscribe(`/topic/dentista.${dentistaId}.solicitacoes`, (message: IMessage) => {
         const payload = JSON.parse(message.body) as SessaoChatResponseDTO;
         this.solicitacoes$.next([...this.solicitacoes$.value, payload]);
       });
@@ -210,6 +219,9 @@ export class ChatService implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.chatSubscription) this.chatSubscription.unsubscribe();
+    if (this.statusSubscription) this.statusSubscription.unsubscribe();
+    if (this.solicitacoesSubscription) this.solicitacoesSubscription.unsubscribe();
     this.client?.deactivate();
   }
 }
