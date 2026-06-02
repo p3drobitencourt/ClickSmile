@@ -106,7 +106,7 @@ public class ApiProblemDetailsAdvice {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         problem.setTitle("Erro interno");
         problem.setType(URI.create("https://clicksmile.local/problems/internal-error"));
-        problem.setDetail("Ocorreu um erro inesperado ao processar a solicitação.");
+        problem.setDetail("Ocorreu um erro inesperado ao processar a solicitação. " + ex.getClass().getName() + ": " + ex.getMessage());
         problem.setInstance(URI.create(request.getRequestURI()));
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problem);
     }
