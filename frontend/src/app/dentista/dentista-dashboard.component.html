@@ -1,31 +1,82 @@
 <section class="dentist-shell">
-  <header class="panel-head">
-    <h1>Dashboard do dentista</h1>
-    <p>Edite sua agenda e regras semanais</p>
-  </header>
-
-  <div class="controls">
-    <label>Dentista ID
-      <input [(ngModel)]="dentistaId" />
-    </label>
-    <label>Fuso horário
-      <input [(ngModel)]="payload.timezone" />
-    </label>
-    <label>Slot (min)
-      <input type="number" [(ngModel)]="payload.slotDurationMin" />
-    </label>
-  </div>
-
-  <div class="week-grid">
-    <div *ngFor="let d of weekdays" class="day-card">
-      <h3>{{ d }}</h3>
-      <label>
-        <input type="checkbox" [checked]="payload.regras.find(r => r.diaSemana === d)" (change)="toggleDay(d)" /> Ativo
-      </label>
+  <aside class="sidebar">
+    <div class="brand">
+      <h2>ClickSmile</h2>
+      <p class="role-badge">Dentista</p>
     </div>
-  </div>
+    
+    <nav class="nav-links">
+      <a href="#" class="active">Agenda Semanal</a>
+      <a href="#">Meus Pacientes</a>
+      <a href="#">Configurações</a>
+    </nav>
+    
+    <div class="user-profile">
+      <div class="avatar">D</div>
+      <div class="info">
+        <strong>Dr. Dentista</strong>
+        <small>ID: {{ dentistaId | slice:0:8 }}...</small>
+      </div>
+    </div>
+  </aside>
 
-  <div class="actions">
-    <button (click)="save()" [disabled]="saving">Salvar agenda</button>
-  </div>
+  <main class="content">
+    <header class="panel-head">
+      <div>
+        <h1>Configuração de Agenda</h1>
+        <p>Defina seus dias de atendimento e preferências de horários</p>
+      </div>
+      <button class="btn-primary" (click)="save()" [disabled]="saving">
+        <span *ngIf="saving" class="spinner"></span>
+        {{ saving ? 'Salvando...' : 'Salvar Alterações' }}
+      </button>
+    </header>
+
+    <div class="settings-grid">
+      <article class="surface-panel config-panel">
+        <h3>Preferências Globais</h3>
+        
+        <div class="input-group">
+          <label>Fuso Horário</label>
+          <div class="select-wrapper">
+            <select [(ngModel)]="payload.timezone">
+              <option value="America/Sao_Paulo">America/Sao_Paulo (BRT)</option>
+              <option value="America/Manaus">America/Manaus (AMT)</option>
+              <option value="America/Fortaleza">America/Fortaleza (BRT)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Duração da Consulta (minutos)</label>
+          <input type="number" [(ngModel)]="payload.slotDurationMin" step="15" min="15" max="120" />
+        </div>
+      </article>
+
+      <article class="surface-panel schedule-panel">
+        <h3>Dias de Atendimento</h3>
+        
+        <div class="week-list">
+          <div *ngFor="let d of weekdays" class="day-row" [class.active]="isDayActive(d)">
+            <div class="day-toggle">
+              <label class="switch">
+                <input type="checkbox" [checked]="isDayActive(d)" (change)="toggleDay(d)" />
+                <span class="slider round"></span>
+              </label>
+              <span class="day-name">{{ translateDay(d) }}</span>
+            </div>
+            
+            <div class="time-range" *ngIf="isDayActive(d)">
+              <input type="time" [value]="getRule(d)?.inicio" (change)="updateTime(d, 'inicio', $event)" />
+              <span>até</span>
+              <input type="time" [value]="getRule(d)?.fim" (change)="updateTime(d, 'fim', $event)" />
+            </div>
+            <div class="time-range closed" *ngIf="!isDayActive(d)">
+              <span>Fechado</span>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </main>
 </section>

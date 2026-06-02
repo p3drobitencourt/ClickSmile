@@ -38,6 +38,14 @@
               <small>{{ dentist.especialidade }} <span *ngIf="dentist.distanciaKm">({{ dentist.distanciaKm | number:'1.1-1' }} km)</span></small>
               <small>{{ dentist.cro }}</small>
               <small>{{ dentist.agendaResumo }}</small>
+              <a *ngIf="dentist.latitude && dentist.longitude"
+                 href="https://www.google.com/maps/dir/?api=1&destination={{dentist.latitude}},{{dentist.longitude}}"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 style="display: inline-block; margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #e0f2fe; color: #0284c7; border-radius: 4px; font-weight: 500; font-size: 0.8rem; text-decoration: none;"
+                 (click)="$event.stopPropagation()">
+                 📍 Abrir no Google Maps
+              </a>
             </span>
           </button>
         </div>

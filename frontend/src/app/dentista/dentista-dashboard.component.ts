@@ -71,6 +71,34 @@ export class DentistaDashboardComponent implements OnInit {
     }
   }
 
+  isDayActive(dia: string): boolean {
+    return !!this.payload.regras.find(r => r.diaSemana === dia);
+  }
+
+  getRule(dia: string): AgendaRule | undefined {
+    return this.payload.regras.find(r => r.diaSemana === dia);
+  }
+
+  updateTime(dia: string, field: 'inicio' | 'fim', event: any) {
+    const r = this.getRule(dia);
+    if (r) {
+      r[field] = event.target.value;
+    }
+  }
+
+  translateDay(dia: string): string {
+    const map: Record<string, string> = {
+      'MONDAY': 'Segunda-feira',
+      'TUESDAY': 'Terça-feira',
+      'WEDNESDAY': 'Quarta-feira',
+      'THURSDAY': 'Quinta-feira',
+      'FRIDAY': 'Sexta-feira',
+      'SATURDAY': 'Sábado',
+      'SUNDAY': 'Domingo'
+    };
+    return map[dia] || dia;
+  }
+
   save() {
     this.saving = true;
     this.payload.dentistaId = this.dentistaId;

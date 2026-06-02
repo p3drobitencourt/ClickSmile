@@ -1,8 +1,330 @@
-:host { display:block; padding:24px; color: #e6eef6; }
+.dentist-shell {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  font-family: 'Inter', system-ui, sans-serif;
+}
 
-.panel-head { margin-bottom: 16px; }
-.controls { display:flex; gap:12px; margin-bottom:16px; }
-.week-grid { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
-.day-card { background: rgba(10,18,33,0.6); padding:12px; border-radius:8px; min-width:120px; }
-.actions { margin-top:12px; }
-button[disabled] { opacity:0.6 }
+.sidebar {
+  width: 280px;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  
+  .brand {
+    margin-bottom: 2.5rem;
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0;
+    }
+    .role-badge {
+      display: inline-block;
+      margin-top: 0.25rem;
+      padding: 0.15rem 0.5rem;
+      background: #e0f2fe;
+      color: #0284c7;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  .nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+
+    a {
+      text-decoration: none;
+      color: #64748b;
+      font-weight: 500;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+
+      &:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+      }
+      
+      &.active {
+        background: #f0fdf4;
+        color: #15803d;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .user-profile {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #10b981;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .info {
+      display: flex;
+      flex-direction: column;
+      strong { color: #0f172a; font-size: 0.9rem; }
+      small { color: #64748b; font-size: 0.75rem; }
+    }
+  }
+}
+
+.content {
+  flex: 1;
+  padding: 2.5rem;
+  max-width: 1000px;
+  
+  .panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+
+    h1 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 0.5rem 0;
+      letter-spacing: -0.025em;
+    }
+    
+    p {
+      color: #64748b;
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -1px rgba(16, 185, 129, 0.1);
+
+      &:hover:not([disabled]) {
+        background: #059669;
+        transform: translateY(-1px);
+        box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3), 0 4px 6px -2px rgba(16, 185, 129, 0.15);
+      }
+      
+      &[disabled] {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+.surface-panel {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+
+  h3 {
+    margin: 0 0 1.5rem 0;
+    color: #0f172a;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+}
+
+.settings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.input-group {
+  margin-bottom: 1.5rem;
+
+  label {
+    display: block;
+    color: #475569;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  input, select {
+    width: 100%;
+    max-width: 400px;
+    padding: 0.75rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #0f172a;
+    transition: all 0.2s;
+    background: #f8fafc;
+
+    &:focus {
+      outline: none;
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+      background: white;
+    }
+  }
+}
+
+.week-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  .day-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+
+    &.active {
+      background: white;
+      border-color: #10b981;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.05);
+    }
+
+    .day-toggle {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      width: 200px;
+      
+      .day-name {
+        font-weight: 500;
+        color: #0f172a;
+      }
+    }
+
+    .time-range {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+
+      span {
+        color: #64748b;
+        font-size: 0.9rem;
+      }
+
+      input[type="time"] {
+        padding: 0.5rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-family: inherit;
+        color: #0f172a;
+        background: white;
+        
+        &:focus {
+          outline: none;
+          border-color: #10b981;
+        }
+      }
+
+      &.closed {
+        span {
+          color: #94a3b8;
+          font-style: italic;
+        }
+      }
+    }
+  }
+}
+
+/* Toggle Switch Styles */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e1;
+    transition: .3s;
+
+    &:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+    }
+
+    &.round {
+      border-radius: 24px;
+      &:before { border-radius: 50%; }
+    }
+  }
+
+  input:checked + .slider {
+    background-color: #10b981;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(20px);
+  }
+}
+
+/* Spinner Animation */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
