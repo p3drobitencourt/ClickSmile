@@ -29,9 +29,9 @@ public class UsuarioController {
         }
 
         Jwt jwt = (Jwt) authentication.getPrincipal();
-        String email = jwt.getSubject();
+        java.util.UUID id = java.util.UUID.fromString(jwt.getSubject());
 
-        Usuario usuario = usuarioRepository.findByEmail(email)
+        Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
 
         return Map.of(
