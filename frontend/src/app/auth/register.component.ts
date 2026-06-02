@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
@@ -18,7 +18,7 @@ export class RegisterComponent {
 
   form: FormGroup;
 
-  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
+  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router, private cdr: ChangeDetectorRef) {
     this.form = this.fb.nonNullable.group({
       perfil: ['CLIENTE' as 'CLIENTE' | 'DENTISTA', Validators.required],
       nome: ['', [Validators.required, Validators.minLength(3)]],
@@ -64,6 +64,7 @@ export class RegisterComponent {
       this.erro = e?.error?.detail || e?.error?.message || e?.message || 'Não foi possível concluir o cadastro.';
     } finally {
       this.loading = false;
+      this.cdr.detectChanges();
     }
   }
 }

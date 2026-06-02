@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
@@ -18,7 +18,7 @@ export class LoginComponent {
 
   form: FormGroup;
 
-  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
+  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router, private cdr: ChangeDetectorRef) {
     this.form = this.fb.nonNullable.group({
       email: ['', [Validators.required, Validators.email]],
       senha: ['', [Validators.required, Validators.minLength(6)]],
@@ -45,6 +45,7 @@ export class LoginComponent {
       this.erro = e?.error?.detail || e?.error?.message || e?.message || 'Falha no login. Verifique os dados.';
     } finally {
       this.loading = false;
+      this.cdr.detectChanges();
     }
   }
 }
