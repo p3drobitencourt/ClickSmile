@@ -20,6 +20,9 @@ public class RefreshToken {
     @Column(nullable = false)
     private String tokenHash;
 
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
+
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
@@ -36,6 +39,7 @@ public class RefreshToken {
         this.tokenHash = tokenHash;
         this.usuario = usuario;
         this.expiresAt = expiresAt;
+        this.tenantId = usuario.getTenantId();
     }
 
     public UUID getId() { return id; }
@@ -44,4 +48,6 @@ public class RefreshToken {
     public Instant getExpiresAt() { return expiresAt; }
     public boolean isRevoked() { return revoked; }
     public void setRevoked(boolean revoked) { this.revoked = revoked; }
+    public UUID getTenantId() { return tenantId; }
+    public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
 }
