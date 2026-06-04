@@ -108,7 +108,7 @@ public class AgendamentoService {
 
     @Transactional(readOnly = true)
     public List<Agendamento> listarPorPaciente(UUID pacienteId) {
-        return agendamentoRepository.findByPacienteId(pacienteId);
+        return agendamentoRepository.findByPacienteIdOrderByInicioAtDesc(pacienteId);
     }
 
     @Transactional(readOnly = true)
