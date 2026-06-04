@@ -34,12 +34,12 @@ INSERT INTO usuario (id, tenant_id, email, senha_hash, nome, perfil) VALUES
 ON CONFLICT (tenant_id, email) DO NOTHING;
 
 -- Tabela Dentista Específica
-INSERT INTO dentista (id, nome, cro, especialidade) VALUES
-('d1000000-0000-0000-0000-000000000001', 'Dr. Carlos Mendes', 'CRO-SP-0001', 'Ortodontia'),
-('d2000000-0000-0000-0000-000000000002', 'Dra. Fernanda Lima', 'CRO-SP-0002', 'Implantodontia'),
-('d3000000-0000-0000-0000-000000000003', 'Dr. João Pedro', 'CRO-SP-0003', 'Clínica Geral'),
-('d4000000-0000-0000-0000-000000000004', 'Dra. Ana Souza', 'CRO-SP-0004', 'Odontopediatria'),
-('d5000000-0000-0000-0000-000000000005', 'Dr. Ricardo Gomes', 'CRO-SP-0005', 'Endodontia')
+INSERT INTO dentista (id, cro, especialidade) VALUES
+('d1000000-0000-0000-0000-000000000001', 'CRO-SP-0001', 'Ortodontia'),
+('d2000000-0000-0000-0000-000000000002', 'CRO-SP-0002', 'Implantodontia'),
+('d3000000-0000-0000-0000-000000000003', 'CRO-SP-0003', 'Clínica Geral'),
+('d4000000-0000-0000-0000-000000000004', 'CRO-SP-0004', 'Odontopediatria'),
+('d5000000-0000-0000-0000-000000000005', 'CRO-SP-0005', 'Endodontia')
 ON CONFLICT (id) DO NOTHING;
 
 -- Usuários Pacientes
