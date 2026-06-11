@@ -22,4 +22,16 @@ public class Dentista extends Usuario {
     @NotBlank(message = "A especialidade é obrigatória.")
     @Column(nullable = false)
     private String especialidade;
+
+    @Column(columnDefinition = "TEXT")
+    private String bio;
+
+    @Column(length = 255)
+    private String clinica;
+
+    @Column(length = 50)
+    private String telefone;
+
+    @Column(length = 255)
+    private String endereco;
 }

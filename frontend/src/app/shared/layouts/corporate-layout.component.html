@@ -11,7 +11,9 @@
       </ng-container>
 
       <ng-container *ngIf="isDentista && !isAdmin">
-        <a routerLink="/dentista" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Painel de Atendimento</a>
+        <a routerLink="/dentista/agenda" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Agenda Semanal</a>
+        <a routerLink="/dentista/pacientes" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Meus Pacientes</a>
+        <a routerLink="/dentista/configuracoes" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Configurações</a>
       </ng-container>
 
       <ng-container *ngIf="!isDentista && !isAdmin">

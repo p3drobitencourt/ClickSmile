@@ -1,14 +1,16 @@
 .corporate-shell {
   display: flex;
   min-height: 100vh;
-  background-color: #f8fafc;
+  /* background-color removed to let app.scss dark theme gradient show through */
   font-family: 'Inter', system-ui, sans-serif;
 }
 
 .sidebar {
   width: 260px;
-  background: #ffffff;
-  border-right: 1px solid #e2e8f0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(24px);
+  border-right: 1px solid rgba(148, 163, 184, 0.14);
+  box-shadow: 4px 0 24px rgba(2, 6, 23, 0.28);
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
@@ -21,20 +23,22 @@
   .brand {
     margin-bottom: 2.5rem;
     h2 {
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       font-weight: 700;
-      color: #0f172a;
+      color: #f8fafc;
       margin: 0;
+      letter-spacing: -0.02em;
     }
     .role-badge {
       display: inline-block;
       margin-top: 0.25rem;
-      padding: 0.15rem 0.5rem;
-      background: #e0f2fe;
-      color: #0284c7;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
+      padding: 0.15rem 0.6rem;
+      background: rgba(14, 165, 233, 0.15);
+      border: 1px solid rgba(14, 165, 233, 0.3);
+      color: #7dd3fc;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -43,26 +47,29 @@
   .nav-links {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.6rem;
     flex: 1;
 
     a {
       text-decoration: none;
-      color: #64748b;
+      color: rgba(226, 232, 240, 0.8);
       font-weight: 500;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      transition: all 0.2s;
+      padding: 0.85rem 1.1rem;
+      border-radius: 12px;
+      transition: all 0.25s ease;
+      font-size: 0.95rem;
 
       &:hover {
-        background: #f1f5f9;
-        color: #0f172a;
+        background: rgba(148, 163, 184, 0.08);
+        color: #ffffff;
       }
       
       &.active {
-        background: #f0fdf4;
-        color: #15803d;
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(14, 165, 233, 0.12));
+        color: #7dd3fc;
         font-weight: 600;
+        border: 1px solid rgba(125, 211, 252, 0.18);
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.08);
       }
     }
   }
@@ -72,33 +79,35 @@
     align-items: center;
     gap: 1rem;
     padding-top: 1.5rem;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid rgba(148, 163, 184, 0.14);
 
     .avatar {
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
-      background: #10b981;
-      color: white;
+      background: linear-gradient(135deg, #22c55e 0%, #0ea5e9 100%);
+      color: #04111f;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 700;
       font-size: 1.2rem;
+      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.22);
     }
 
     .info {
       display: flex;
       flex-direction: column;
-      strong { color: #0f172a; font-size: 0.9rem; }
-      small { color: #64748b; font-size: 0.75rem; word-break: break-all; }
+      strong { color: #f8fafc; font-size: 0.92rem; font-weight: 600; }
+      small { color: rgba(226, 232, 240, 0.68); font-size: 0.75rem; word-break: break-all; }
       
       .logout-link {
-        color: #ef4444;
+        color: #fca5a5;
         font-size: 0.75rem;
         text-decoration: none;
-        margin-top: 0.25rem;
-        &:hover { text-decoration: underline; }
+        margin-top: 0.35rem;
+        transition: color 0.2s;
+        &:hover { color: #f87171; text-decoration: underline; }
       }
     }
   }
