@@ -18,6 +18,10 @@ import { DentistaAgendaComponent } from './components/dentista-agenda.component'
         </div>
       </header>
       <div class="agenda-wrapper">
+        <div *ngIf="loading" class="loading-skeleton">
+          <span class="spinner" style="width: 32px; height: 32px; border-width: 3px; border-top-color: #38bdf8;"></span>
+          <p>Carregando informações...</p>
+        </div>
         <app-dentista-agenda 
           *ngIf="!loading"
           [loading]="loading" 
@@ -29,7 +33,7 @@ import { DentistaAgendaComponent } from './components/dentista-agenda.component'
       </div>
     </div>
   `,
-  styleUrl: '../cliente/cliente-dashboard.component.scss' // reusing the layout container styles
+  styleUrl: './dentista-theme.scss'
 })
 export class AgendaViewComponent implements OnInit {
   loading = true;

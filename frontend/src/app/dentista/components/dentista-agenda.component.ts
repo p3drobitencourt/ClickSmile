@@ -8,7 +8,7 @@ import { AgendaFormPayload, AgendaRule } from '../../services/agenda-admin.servi
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './dentista-agenda.component.html',
-  styleUrl: '../dentista-dashboard.component.scss'
+  styleUrl: '../dentista-theme.scss'
 })
 export class DentistaAgendaComponent {
   @Input() loading = false;

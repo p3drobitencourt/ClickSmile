@@ -17,6 +17,11 @@ import { AuthService } from '../auth/auth.service';
         </div>
       </header>
 
+      <div *ngIf="loading" class="loading-skeleton">
+        <span class="spinner" style="width: 32px; height: 32px; border-width: 3px; border-top-color: #38bdf8;"></span>
+        <p>Carregando informações do perfil...</p>
+      </div>
+
       <div class="settings-grid" *ngIf="!loading">
         <article class="surface-panel config-panel">
           <h3>Informações Pessoais</h3>
@@ -64,7 +69,7 @@ import { AuthService } from '../auth/auth.service';
       </div>
     </div>
   `,
-  styleUrl: '../cliente/cliente-dashboard.component.scss'
+  styleUrl: './dentista-theme.scss'
 })
 export class ConfigViewComponent implements OnInit {
   loading = true;
