@@ -18,7 +18,7 @@ export class MeusAgendamentosComponent implements OnInit {
   loading = true;
 
   showCancelModal = false;
-  selectedCancelId: string | null = null;
+  selectedCancelId: number | string | null = null;
   cancelLoading = false;
 
   private toast = inject(ToastService);
@@ -53,7 +53,7 @@ export class MeusAgendamentosComponent implements OnInit {
       });
   }
 
-  confirmCancel(id: string) {
+  confirmCancel(id: number | string) {
     this.selectedCancelId = id;
     this.showCancelModal = true;
   }
@@ -67,7 +67,7 @@ export class MeusAgendamentosComponent implements OnInit {
     if (!this.selectedCancelId) return;
     this.cancelLoading = true;
     
-    this.agendamentoService.cancelar(this.selectedCancelId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.agendamentoService.cancelar(this.selectedCancelId as string).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
          const item = this.agendamentos.find(a => a.id === this.selectedCancelId);
          if (item) item.status = 'CANCELADO';

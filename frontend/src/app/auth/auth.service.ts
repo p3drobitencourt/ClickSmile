@@ -117,7 +117,7 @@ export class AuthService {
     return response;
   }
 
-  private clearSession() {
+  clearSession() {
     this.accessToken = null;
     this.role = null;
     this.email = null;

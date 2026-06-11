@@ -13,13 +13,12 @@ import { AuthService } from '../auth/auth.service';
 import { AgendamentoService } from '../services/agendamento';
 import { ChatMessageView, ChatService, SessaoChatStatus } from '../services/chat.service';
 import { DentistDirectoryService, DentistSummary, ScheduleSlot } from '../services/dentist-directory.service';
-import { LogoComponent } from '../shared/logo.component';
 import { MeusAgendamentosComponent } from './meus-agendamentos.component';
 
 @Component({
   selector: 'app-cliente-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, FullCalendarModule, LogoComponent, MeusAgendamentosComponent, GoogleMapsModule],
+  imports: [CommonModule, FormsModule, FullCalendarModule, MeusAgendamentosComponent, GoogleMapsModule],
   templateUrl: './cliente-dashboard.component.html',
   styleUrl: './cliente-dashboard.component.scss',
 })

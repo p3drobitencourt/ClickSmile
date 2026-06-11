@@ -64,7 +64,7 @@ import { AuthService } from '../auth/auth.service';
       </div>
     </div>
   `,
-  styleUrl: '../components/dentista-agenda.component.scss'
+  styleUrl: '../cliente/cliente-dashboard.component.scss'
 })
 export class ConfigViewComponent implements OnInit {
   loading = true;
