@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { finalize } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { AgendaAdminService, AgendaFormPayload } from '../services/agenda-admin.service';
 import { RuntimeConfigService } from '../services/runtime-config.service';
@@ -62,20 +63,24 @@ export class AgendaViewComponent implements OnInit {
 
   load() {
     this.loading = true;
-    this.service.getByDentist(this.dentistaId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.service.getByDentist(this.dentistaId).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => { this.loading = false; })
+    ).subscribe({
       next: (a) => {
-        this.payload = {
-          dentistaId: a.dentistaId,
-          timezone: a.timezone || this.payload.timezone,
-          slotDurationMin: a.slotDurationMin || 30,
-          horaInicioPadrao: a.horaInicioPadrao || '08:00',
-          horaFimPadrao: a.horaFimPadrao || '18:00',
-          regras: a.regras || [],
-        };
-        this.loading = false;
+        if (a) {
+          this.payload = {
+            dentistaId: a.dentistaId || this.dentistaId,
+            timezone: a.timezone || this.payload.timezone,
+            slotDurationMin: a.slotDurationMin || 30,
+            horaInicioPadrao: a.horaInicioPadrao || '08:00',
+            horaFimPadrao: a.horaFimPadrao || '18:00',
+            regras: a.regras || [],
+          };
+        }
       },
-      error: () => {
-        this.loading = false;
+      error: (err) => {
+        console.error('Error fetching agenda:', err);
       }
     });
   }

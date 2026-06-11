@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { finalize } from 'rxjs/operators';
 import { FormsModule } from '@angular/forms';
 import { DentistaPerfilService, DentistaPerfilDTO } from './services/dentista-perfil.service';
 import { AuthService } from '../auth/auth.service';
@@ -91,15 +92,16 @@ export class ConfigViewComponent implements OnInit {
   async ngOnInit() {
     this.dentistaId = this.authService.getSubject() || '';
     if (this.dentistaId) {
-      this.perfilService.getPerfil(this.dentistaId).subscribe({
+      this.perfilService.getPerfil(this.dentistaId).pipe(
+        finalize(() => { this.loading = false; })
+      ).subscribe({
         next: (data) => {
           if (data) {
             this.perfil = { ...this.perfil, ...data };
           }
-          this.loading = false;
         },
-        error: () => {
-          this.loading = false;
+        error: (err) => {
+          console.error('Error fetching perfil:', err);
         }
       });
     } else {
