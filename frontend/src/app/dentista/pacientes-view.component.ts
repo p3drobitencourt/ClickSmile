@@ -30,7 +30,7 @@ import { DentistaMetricsComponent } from './components/dentista-metrics.componen
       </div>
     </div>
   `,
-  styleUrl: '../cliente/cliente-dashboard.component.scss' // reusing the layout container styles
+  styleUrl: './dentista-theme.scss'
 })
 export class PacientesViewComponent {
   mockRequests = [
