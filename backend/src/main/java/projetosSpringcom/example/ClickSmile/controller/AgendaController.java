@@ -21,7 +21,9 @@ public class AgendaController {
 
     @GetMapping("/dentista/{dentistaId}")
     public ResponseEntity<AgendaResponseDTO> get(@PathVariable UUID dentistaId) {
-        return ResponseEntity.ok(agendaService.buscarPorDentista(dentistaId));
+        return agendaService.buscarPorDentista(dentistaId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @PutMapping

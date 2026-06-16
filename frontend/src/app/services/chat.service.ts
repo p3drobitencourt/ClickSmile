@@ -45,6 +45,8 @@ export class ChatService implements OnDestroy {
   private chatSubscription: any = null;
   private statusSubscription: any = null;
   private solicitacoesSubscription: any = null;
+  public agendamentos$ = new BehaviorSubject<any[]>([]);
+  private agendamentosSubscription: any = null;
 
   constructor(private runtime: RuntimeConfigService, private http: HttpClient) {}
 
@@ -191,6 +193,35 @@ export class ChatService implements OnDestroy {
     }
   }
 
+  escutarAgendamentos(dentistaId: string): void {
+    const subscribeToTopic = () => {
+      if (this.agendamentosSubscription) this.agendamentosSubscription.unsubscribe();
+      this.agendamentosSubscription = this.client?.subscribe(`/topic/dentista.${dentistaId}.agendamentos`, (message: IMessage) => {
+        try {
+          const payload = JSON.parse(message.body);
+          if (payload.dentistaId === dentistaId) {
+            this.agendamentos$.next([...this.agendamentos$.value, payload]);
+          }
+        } catch (e) {
+          console.error('Failed to parse agendamento payload', e);
+        }
+      });
+    };
+
+    if (!this.client?.connected) {
+      this.client = new Client({
+        webSocketFactory: () => new SockJS(this.runtime.api('/ws')),
+        reconnectDelay: 1000,
+      });
+      this.client.onConnect = () => {
+        subscribeToTopic();
+      };
+      this.client.activate();
+    } else {
+      subscribeToTopic();
+    }
+  }
+
   send(roomId: string, senderId: string, senderName: string, recipientId: string, message: string) {
     const payload: ChatMessageView = {
       id: crypto.randomUUID(),
@@ -222,6 +253,7 @@ export class ChatService implements OnDestroy {
     if (this.chatSubscription) this.chatSubscription.unsubscribe();
     if (this.statusSubscription) this.statusSubscription.unsubscribe();
     if (this.solicitacoesSubscription) this.solicitacoesSubscription.unsubscribe();
+    if (this.agendamentosSubscription) this.agendamentosSubscription.unsubscribe();
     this.client?.deactivate();
   }
 }

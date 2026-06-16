@@ -33,5 +33,11 @@
         (onAccept)="acceptChat($event)">
       </app-dentista-chat-requests>
     </div>
+
+    <!-- Calendar View -->
+    <div class="calendar-wrapper" style="grid-column: span 3; background: var(--surface-bg, #0f172a); border-radius: 12px; border: 1px solid var(--border-color, #1e293b); padding: 24px; margin-top: 24px;">
+      <h3 style="margin-top: 0; margin-bottom: 24px; font-size: 1.1rem; color: #f8fafc; font-weight: 500;">Agenda Semanal</h3>
+      <full-calendar [options]="calendarOptions"></full-calendar>
+    </div>
   </div>
 </div>

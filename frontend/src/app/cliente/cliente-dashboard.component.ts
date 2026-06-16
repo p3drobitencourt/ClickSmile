@@ -70,7 +70,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
-    this.currentUserId = this.auth.getSubject() ?? crypto.randomUUID();
+    this.currentUserId = this.auth.getSubject() ?? '';
     this.currentUserLabel = this.auth.getEmail() ?? 'Cliente';
 
     if (navigator.geolocation) {

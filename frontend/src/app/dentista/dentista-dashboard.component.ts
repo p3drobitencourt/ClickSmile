@@ -4,6 +4,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgendaAdminService, AgendaFormPayload, AgendaRule } from '../services/agenda-admin.service';
 import { RuntimeConfigService } from '../services/runtime-config.service';
+import { AuthService } from '../auth/auth.service';
+import { ChatService } from '../services/chat.service';
+
+import { CalendarOptions } from '@fullcalendar/core';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import { FullCalendarModule } from '@fullcalendar/angular';
 
 import { DentistaAgendaComponent } from './components/dentista-agenda.component';
 import { DentistaMetricsComponent } from './components/dentista-metrics.component';
@@ -12,7 +19,14 @@ import { DentistaChatRequestsComponent } from './components/dentista-chat-reques
 @Component({
   selector: 'app-dentista-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, DentistaAgendaComponent, DentistaMetricsComponent, DentistaChatRequestsComponent],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    FullCalendarModule,
+    DentistaAgendaComponent, 
+    DentistaMetricsComponent, 
+    DentistaChatRequestsComponent
+  ],
   templateUrl: './dentista-dashboard.component.html',
   styleUrl: '../cliente/cliente-dashboard.component.scss', // Reuse the grid container styles
 })
@@ -31,20 +45,50 @@ export class DentistaDashboardComponent implements OnInit {
 
   weekdays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
 
-  mockRequests = [
-    { roomId: 'req-001', clienteId: 'pac1000' },
-    { roomId: 'req-002', clienteId: 'pac1001' }
-  ];
+  mockRequests: any[] = [];
 
-  constructor(private service: AgendaAdminService, private runtime: RuntimeConfigService) {}
+  calendarOptions: CalendarOptions = {
+    plugins: [dayGridPlugin, timeGridPlugin],
+    initialView: 'timeGridWeek',
+    height: 'auto',
+    headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridWeek' },
+    slotMinTime: '07:00:00',
+    slotMaxTime: '20:00:00',
+    nowIndicator: true,
+    editable: false,
+    selectable: false,
+    events: [],
+  };
+
+  constructor(
+    private service: AgendaAdminService, 
+    private runtime: RuntimeConfigService,
+    private auth: AuthService,
+    private chat: ChatService
+  ) {}
 
   private destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
-    this.dentistaId = (this.runtime as any)['DENTISTA_ID'] || '';
-    if (!this.dentistaId) {
-      this.dentistaId = crypto.randomUUID();
+    this.dentistaId = this.auth.getSubject() ?? '';
+
+    if (this.dentistaId) {
+      this.chat.escutarAgendamentos(this.dentistaId);
+      this.chat.agendamentos$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(agendamentos => {
+        this.calendarOptions = {
+          ...this.calendarOptions,
+          events: agendamentos.map(a => ({
+            title: `Consulta: ${a.clienteNome}`,
+            start: a.inicioAt,
+            end: a.fimAt,
+            backgroundColor: '#3b82f6',
+            borderColor: '#2563eb',
+            textColor: '#ffffff'
+          }))
+        };
+      });
     }
+
     this.load();
   }
 
@@ -52,14 +96,16 @@ export class DentistaDashboardComponent implements OnInit {
     this.loading = true;
     this.service.getByDentist(this.dentistaId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (a) => {
-        this.payload = {
-          dentistaId: a.dentistaId,
-          timezone: a.timezone || this.payload.timezone,
-          slotDurationMin: a.slotDurationMin || 30,
-          horaInicioPadrao: a.horaInicioPadrao || '08:00',
-          horaFimPadrao: a.horaFimPadrao || '18:00',
-          regras: a.regras || [],
-        };
+        if (a) {
+          this.payload = {
+            dentistaId: a.dentistaId || this.dentistaId,
+            timezone: a.timezone || this.payload.timezone,
+            slotDurationMin: a.slotDurationMin || 30,
+            horaInicioPadrao: a.horaInicioPadrao || '08:00',
+            horaFimPadrao: a.horaFimPadrao || '18:00',
+            regras: a.regras || [],
+          };
+        }
         this.loading = false;
       },
       error: () => {

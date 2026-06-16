@@ -16,6 +16,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -43,16 +44,18 @@ public class AgendaService {
     }
 
     @Transactional(readOnly = true)
-    public AgendaResponseDTO buscarPorDentista(UUID dentistaId) {
+    public Optional<AgendaResponseDTO> buscarPorDentista(UUID dentistaId) {
         return agendaRepository.findByDentistaUsuarioId(dentistaId)
-            .map(this::toDto)
-            .orElseGet(() -> toDto(defaultAgenda(dentistaId)));
+            .map(this::toDto);
     }
 
     @Transactional(readOnly = true)
     public boolean slotPermitido(UUID dentistaId, OffsetDateTime inicio, OffsetDateTime fim) {
-        Agenda agenda = agendaRepository.findByDentistaUsuarioId(dentistaId)
-            .orElseGet(() -> defaultAgenda(dentistaId));
+        Optional<Agenda> agendaOpt = agendaRepository.findByDentistaUsuarioId(dentistaId);
+        if (agendaOpt.isEmpty()) {
+            return false;
+        }
+        Agenda agenda = agendaOpt.get();
         List<RegraHorarioDTO> regras = readRules(agenda.getRegraSemanaJson());
         DayOfWeek dia = inicio.getDayOfWeek();
 
@@ -83,12 +86,7 @@ public class AgendaService {
         return true;
     }
 
-    private Agenda defaultAgenda(UUID dentistaId) {
-        Agenda agenda = new Agenda();
-        agenda.setDentistaUsuarioId(dentistaId);
-        agenda.setRegraSemanaJson(writeRules(defaultRules()));
-        return agenda;
-    }
+
 
     private AgendaResponseDTO toDto(Agenda agenda) {
         return new AgendaResponseDTO(
@@ -114,24 +112,14 @@ public class AgendaService {
     private List<RegraHorarioDTO> readRules(String json) {
         try {
             if (json == null || json.isBlank()) {
-                return defaultRules();
+                return List.of();
             }
             RegraHorarioDTO[] array = objectMapper.readValue(json, RegraHorarioDTO[].class);
             List<RegraHorarioDTO> regras = new ArrayList<>();
             Collections.addAll(regras, array);
             return regras;
         } catch (Exception e) {
-            return defaultRules();
+            return List.of();
         }
-    }
-
-    private List<RegraHorarioDTO> defaultRules() {
-        return List.of(
-            new RegraHorarioDTO("MONDAY", true, LocalTime.of(8, 0), LocalTime.of(12, 0), LocalTime.of(13, 0), LocalTime.of(18, 0)),
-            new RegraHorarioDTO("TUESDAY", true, LocalTime.of(8, 0), LocalTime.of(12, 0), LocalTime.of(13, 0), LocalTime.of(18, 0)),
-            new RegraHorarioDTO("WEDNESDAY", true, LocalTime.of(8, 0), LocalTime.of(12, 0), LocalTime.of(13, 0), LocalTime.of(18, 0)),
-            new RegraHorarioDTO("THURSDAY", true, LocalTime.of(8, 0), LocalTime.of(12, 0), LocalTime.of(13, 0), LocalTime.of(18, 0)),
-            new RegraHorarioDTO("FRIDAY", true, LocalTime.of(8, 0), LocalTime.of(12, 0), LocalTime.of(13, 0), LocalTime.of(18, 0))
-        );
     }
 }

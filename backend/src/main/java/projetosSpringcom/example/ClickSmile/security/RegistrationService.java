@@ -45,7 +45,7 @@ public class RegistrationService {
 
         TenantClinica tenant = new TenantClinica();
         tenant.setId(UUID.randomUUID());
-        tenant.setCnpj(generateCnpj());
+        tenant.setCnpj(null);
         tenant.setRazaoSocial(resolveRazaoSocial(request));
         tenant.setNomeFantasia(resolveNomeFantasia(request));
         tenant.setStatus("ACTIVE");
@@ -89,7 +89,7 @@ public class RegistrationService {
         if (!isBlank(nomeClinica)) {
             return nomeClinica.trim();
         }
-        return request.nome() + " - ClickSmile";
+        return "";
     }
 
     private String resolveNomeFantasia(RegisterRequest request) {
@@ -97,15 +97,7 @@ public class RegistrationService {
         if (!isBlank(nomeClinica)) {
             return nomeClinica.trim();
         }
-        return request.nome() + " ClickSmile";
-    }
-
-    private String generateCnpj() {
-        StringBuilder digits = new StringBuilder();
-        while (digits.length() < 14) {
-            digits.append(secureRandom.nextInt(10));
-        }
-        return digits.substring(0, 14);
+        return "";
     }
 
     private boolean isBlank(String value) {

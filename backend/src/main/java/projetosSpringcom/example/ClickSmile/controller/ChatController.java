@@ -201,7 +201,7 @@ public class ChatController {
 
             java.time.OffsetDateTime dataHora = java.time.OffsetDateTime.parse(payload.get("dataHora"), DateTimeFormatter.ISO_OFFSET_DATE_TIME);
             AgendamentoRequestDTO req = new AgendamentoRequestDTO(sessao.getClienteId(), sessao.getDentistaId(), dataHora);
-            agendamentoService.criar(req);
+            projetosSpringcom.example.ClickSmile.domain.Agendamento agendamento = agendamentoService.criar(req);
 
             // Enviar mensagem automática de sucesso para o chat
             Mensagem msg = new Mensagem();
@@ -217,6 +217,16 @@ public class ChatController {
                 msg.getId(), msg.getRoomId(), msg.getSenderId(), msg.getSenderName(), msg.getRecipientId(), msg.getContent(), msg.getSentAt()
             );
             messagingTemplate.convertAndSend("/topic/chat." + roomId, responseMsg);
+
+            java.util.Map<String, Object> dtoAgendamento = new java.util.HashMap<>();
+            dtoAgendamento.put("id", agendamento.getId());
+            dtoAgendamento.put("dentistaId", agendamento.getDentista().getId());
+            dtoAgendamento.put("clienteId", agendamento.getPaciente().getId());
+            dtoAgendamento.put("clienteNome", agendamento.getPaciente().getNome());
+            dtoAgendamento.put("inicioAt", agendamento.getInicioAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+            dtoAgendamento.put("fimAt", agendamento.getFimAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+
+            messagingTemplate.convertAndSend("/topic/dentista." + agendamento.getDentista().getId() + ".agendamentos", dtoAgendamento);
 
             return ResponseEntity.status(HttpStatus.CREATED).build();
         } catch (Exception e) {
