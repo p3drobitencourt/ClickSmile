@@ -73,6 +73,10 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     this.currentUserId = this.auth.getSubject() ?? '';
     this.currentUserLabel = this.auth.getEmail() ?? 'Cliente';
 
+    if (!this.currentUserId) {
+      return; // Stop execution if no valid identity is found
+    }
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {

@@ -75,21 +75,26 @@ export class DentistaDashboardComponent implements OnInit {
     if (this.dentistaId) {
       this.chat.escutarAgendamentos(this.dentistaId);
       this.chat.agendamentos$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(agendamentos => {
+        const novosEventos = agendamentos.map(a => ({
+          title: `Consulta: ${a.clienteNome || 'Agendada'}`,
+          start: a.inicioAt,
+          end: a.fimAt,
+          backgroundColor: '#3b82f6',
+          borderColor: '#2563eb',
+          textColor: '#ffffff'
+        }));
+        
+        // Push diretamente no array de eventos
         this.calendarOptions = {
           ...this.calendarOptions,
-          events: agendamentos.map(a => ({
-            title: `Consulta: ${a.clienteNome}`,
-            start: a.inicioAt,
-            end: a.fimAt,
-            backgroundColor: '#3b82f6',
-            borderColor: '#2563eb',
-            textColor: '#ffffff'
-          }))
+          events: [...(this.calendarOptions.events as any[]), ...novosEventos]
         };
       });
-    }
 
-    this.load();
+      this.load();
+    } else {
+      this.loading = false;
+    }
   }
 
   load() {

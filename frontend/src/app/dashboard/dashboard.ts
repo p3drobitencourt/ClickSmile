@@ -13,6 +13,9 @@ import {
   AgendaPacienteOption,
   AgendaProfissionalOption,
 } from '../services/agendamento.models';
+import { AuthService } from '../auth/auth.service';
+import { Router } from '@angular/router';
+import { ChatService } from '../services/chat.service';
 
 type MetricTone = 'primary' | 'success' | 'teal';
 
@@ -50,43 +53,16 @@ export class DashboardComponent implements OnInit {
   readonly sidebarCollapsed = signal(false);
   readonly chatOpen = signal(true);
   readonly bookingOpen = signal(true);
-  readonly selectedDentist = signal('Dra. Marina Santos');
+  readonly selectedDentist = signal('');
   readonly selectedRangeLabel = signal('Segunda a sexta, 08:00 - 18:00');
-  readonly events = signal<EventInput[]>(this.criarEventosDemo());
-  readonly metrics = signal<MetricCard[]>([
-    { label: 'Consultas hoje', value: 18, delta: '+12%', tone: 'primary' },
-    { label: 'Pacientes novos', value: 7, delta: '+3', tone: 'success' },
-    { label: 'Faturamento', value: 'R$ 24,8k', delta: '+18%', tone: 'teal' },
-  ]);
-  readonly activeChats = signal<ChatItem[]>([
-    {
-      name: 'Ana Pereira',
-      preview: 'Posso remarcar a limpeza para quinta?',
-      time: '2 min',
-      badge: '2',
-      unread: true,
-    },
-    {
-      name: 'Lucas Mendes',
-      preview: 'Confirmei a consulta de hoje às 14h.',
-      time: '11 min',
-      badge: '',
-      unread: false,
-    },
-  ]);
-  readonly dentists = signal<AgendaProfissionalOption[]>([
-    { id: 1, nome: 'Dra. Marina Santos' },
-    { id: 2, nome: 'Dr. Felipe Rocha' },
-    { id: 3, nome: 'Dra. Camila Nunes' },
-  ]);
-  readonly patients = signal<AgendaPacienteOption[]>([
-    { id: 2, nome: 'Ana Pereira' },
-    { id: 7, nome: 'Lucas Mendes' },
-    { id: 11, nome: 'Juliana Costa' },
-  ]);
+  readonly events = signal<EventInput[]>([]);
+  readonly metrics = signal<MetricCard[]>([]);
+  readonly activeChats = signal<ChatItem[]>([]);
+  readonly dentists = signal<AgendaProfissionalOption[]>([]);
+  readonly patients = signal<AgendaPacienteOption[]>([]);
   readonly booking = signal<BookingDraft>({
     patientId: '',
-    dentistId: '1',
+    dentistId: '',
     date: '',
     time: '',
     notes: '',
@@ -116,25 +92,71 @@ export class DashboardComponent implements OnInit {
   };
 
   private destroyRef = inject(DestroyRef);
+  private auth = inject(AuthService);
+  private router = inject(Router);
+  private chat = inject(ChatService);
 
   constructor(private agendamentoService: AgendamentoService) {}
 
   ngOnInit() {
-    this.carregarAgendamentos(1);
+    const userId = this.auth.getSubject();
+    if (!userId) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    
+    // Assumindo que este ID é validado, buscamos os agendamentos dele.
+    // Como os IDs agora são strings UUID, vamos tratar.
+    this.carregarAgendamentosEPopulate(userId);
   }
 
-  carregarAgendamentos(dentistaId: number) {
+  carregarAgendamentosEPopulate(dentistaId: string) {
     this.agendamentoService.listarPorDentista(dentistaId).pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: (res) => {
+        // Render events
         const events = res.map((agendamento) => this.toCalendarEvent(agendamento));
-        this.events.set(events.length > 0 ? events : this.criarEventosDemo());
+        this.events.set(events);
         this.syncCalendarEvents();
+
+        // Extract Patients
+        const uniquePatients = new Map<number, AgendaPacienteOption>();
+        res.forEach(agendamento => {
+          if (agendamento.cliente && !uniquePatients.has(agendamento.cliente.id!)) {
+             uniquePatients.set(agendamento.cliente.id!, { 
+               id: agendamento.cliente.id!, 
+               nome: agendamento.cliente.nome || 'Paciente Sem Nome'
+             });
+          }
+        });
+        this.patients.set(Array.from(uniquePatients.values()));
+
+        // Computar metricas básicas (ex: consultas de hoje)
+        const todayStr = new Date().toISOString().split('T')[0];
+        const consultasHoje = res.filter(a => a.dataHora?.startsWith(todayStr)).length;
+        
+        this.metrics.set([
+          { label: 'Consultas hoje', value: consultasHoje, delta: '-', tone: 'primary' },
+          { label: 'Total de Pacientes', value: uniquePatients.size, delta: '-', tone: 'success' },
+          { label: 'Total Agendamentos', value: res.length, delta: '-', tone: 'teal' },
+        ]);
+
+        // Assinar WebSocket de chats do dentista para mockar chat real
+        this.chat.escutarSolicitacoes(dentistaId);
+        this.chat.solicitacoes$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(solicitacoes => {
+           this.activeChats.set(solicitacoes.map((s, idx) => ({
+             name: `Cliente #${s.clienteId.substring(0, 5)}`,
+             preview: `Status: ${s.status}`,
+             time: 'Agora',
+             badge: '1',
+             unread: true
+           })));
+        });
       },
       error: (err) => {
         console.error('Erro na comunicacao com o backend Java:', err);
-        this.events.set(this.criarEventosDemo());
+        this.events.set([]);
         this.syncCalendarEvents();
       },
     });
@@ -216,7 +238,8 @@ export class DashboardComponent implements OnInit {
           this.saveState.set('saved');
           this.saveMessage.set('Agendamento criado com sucesso.');
           this.booking.update((current) => ({ ...current, notes: '' }));
-          this.carregarAgendamentos(Number(draft.dentistId));
+          const userId = this.auth.getSubject();
+          if (userId) this.carregarAgendamentosEPopulate(userId);
         },
         error: () => {
           this.saveState.set('error');
@@ -273,41 +296,5 @@ export class DashboardComponent implements OnInit {
 
   private formatTime(date: Date): string {
     return date.toTimeString().slice(0, 5);
-  }
-
-  private criarEventosDemo(): EventInput[] {
-    const hoje = new Date();
-    const amanha = new Date(hoje);
-    amanha.setDate(hoje.getDate() + 1);
-
-    const depoisDeAmanha = new Date(hoje);
-    depoisDeAmanha.setDate(hoje.getDate() + 2);
-
-    const criarHorario = (data: Date, horas: number, minutos: number) => {
-      const instante = new Date(data);
-      instante.setHours(horas, minutos, 0, 0);
-      return instante.toISOString();
-    };
-
-    return [
-      {
-        title: 'Consulta inicial - Ana Pereira',
-        start: criarHorario(amanha, 9, 0),
-        backgroundColor: '#8b5cf6',
-        borderColor: '#8b5cf6',
-      },
-      {
-        title: 'Retorno - Bruno Lima',
-        start: criarHorario(amanha, 11, 30),
-        backgroundColor: '#14b8a6',
-        borderColor: '#14b8a6',
-      },
-      {
-        title: 'Limpeza - Juliana Costa',
-        start: criarHorario(depoisDeAmanha, 14, 0),
-        backgroundColor: '#0ea5e9',
-        borderColor: '#0ea5e9',
-      },
-    ];
   }
 }
