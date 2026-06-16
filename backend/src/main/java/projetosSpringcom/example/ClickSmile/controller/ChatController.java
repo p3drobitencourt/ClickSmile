@@ -38,12 +38,14 @@ public class ChatController {
     private final MensagemRepository mensagemRepository;
     private final SessaoChatRepository sessaoChatRepository;
     private final AgendamentoService agendamentoService;
+    private final projetosSpringcom.example.ClickSmile.repository.UsuarioRepository usuarioRepository;
 
-    public ChatController(SimpMessagingTemplate messagingTemplate, MensagemRepository mensagemRepository, SessaoChatRepository sessaoChatRepository, AgendamentoService agendamentoService) {
+    public ChatController(SimpMessagingTemplate messagingTemplate, MensagemRepository mensagemRepository, SessaoChatRepository sessaoChatRepository, AgendamentoService agendamentoService, projetosSpringcom.example.ClickSmile.repository.UsuarioRepository usuarioRepository) {
         this.messagingTemplate = messagingTemplate;
         this.mensagemRepository = mensagemRepository;
         this.sessaoChatRepository = sessaoChatRepository;
         this.agendamentoService = agendamentoService;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @MessageMapping("/chat.send")
@@ -222,7 +224,8 @@ public class ChatController {
             dtoAgendamento.put("id", agendamento.getId());
             dtoAgendamento.put("dentistaId", agendamento.getDentista().getId());
             dtoAgendamento.put("clienteId", agendamento.getPaciente().getId());
-            dtoAgendamento.put("clienteNome", agendamento.getPaciente().getNome());
+            projetosSpringcom.example.ClickSmile.domain.Usuario cliente = usuarioRepository.findById(agendamento.getPaciente().getId()).orElse(null);
+            dtoAgendamento.put("clienteNome", cliente != null ? cliente.getNome() : "Desconhecido");
             dtoAgendamento.put("inicioAt", agendamento.getInicioAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
             dtoAgendamento.put("fimAt", agendamento.getFimAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
 

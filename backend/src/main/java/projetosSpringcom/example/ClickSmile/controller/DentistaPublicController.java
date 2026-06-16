@@ -31,17 +31,22 @@ public class DentistaPublicController {
     ) {
         if (lat != null && lng != null) {
             List<DentistaResumoDTO> dadosProximos = usuarioRepository.findDentistasProximos(lat, lng).stream()
-                .map(proj -> new DentistaResumoDTO(
-                    proj.getId(),
-                    proj.getNome(),
-                    proj.getEmail(),
-                    proj.getCro(),
-                    proj.getEspecialidade(),
-                    agendaService.buscarPorDentista(proj.getId()).slotDurationMin() + " min | " + agendaService.buscarPorDentista(proj.getId()).horaInicioPadrao() + " - " + agendaService.buscarPorDentista(proj.getId()).horaFimPadrao(),
-                    proj.getLatitude(),
-                    proj.getLongitude(),
-                    proj.getDistanciaKm()
-                ))
+                .map(proj -> {
+                    String agendaInfo = agendaService.buscarPorDentista(proj.getId())
+                        .map(a -> a.slotDurationMin() + " min | " + a.horaInicioPadrao() + " - " + a.horaFimPadrao())
+                        .orElse("Não configurado");
+                    return new DentistaResumoDTO(
+                        proj.getId(),
+                        proj.getNome(),
+                        proj.getEmail(),
+                        proj.getCro(),
+                        proj.getEspecialidade(),
+                        agendaInfo,
+                        proj.getLatitude(),
+                        proj.getLongitude(),
+                        proj.getDistanciaKm()
+                    );
+                })
                 .toList();
             return ResponseEntity.ok(dadosProximos);
         }
@@ -49,17 +54,22 @@ public class DentistaPublicController {
         List<DentistaResumoDTO> dados = usuarioRepository.findByPerfil(Perfil.DENTISTA).stream()
             .filter(Dentista.class::isInstance)
             .map(Dentista.class::cast)
-            .map(dentista -> new DentistaResumoDTO(
-                dentista.getId(),
-                dentista.getNome(),
-                dentista.getEmail(),
-                dentista.getCro(),
-                dentista.getEspecialidade(),
-                agendaService.buscarPorDentista(dentista.getId()).slotDurationMin() + " min | " + agendaService.buscarPorDentista(dentista.getId()).horaInicioPadrao() + " - " + agendaService.buscarPorDentista(dentista.getId()).horaFimPadrao(),
-                null,
-                null,
-                null
-            ))
+            .map(dentista -> {
+                String agendaInfo = agendaService.buscarPorDentista(dentista.getId())
+                    .map(a -> a.slotDurationMin() + " min | " + a.horaInicioPadrao() + " - " + a.horaFimPadrao())
+                    .orElse("Não configurado");
+                return new DentistaResumoDTO(
+                    dentista.getId(),
+                    dentista.getNome(),
+                    dentista.getEmail(),
+                    dentista.getCro(),
+                    dentista.getEspecialidade(),
+                    agendaInfo,
+                    null,
+                    null,
+                    null
+                );
+            })
             .toList();
 
         return ResponseEntity.ok(dados);

@@ -113,7 +113,11 @@ public class AgendamentoService {
 
     @Transactional(readOnly = true)
     public List<SlotResponseDTO> buscarSlotsLivres(UUID dentistaId, LocalDate inicio, LocalDate fim) {
-        AgendaResponseDTO agenda = agendaService.buscarPorDentista(dentistaId);
+        java.util.Optional<AgendaResponseDTO> agendaOpt = agendaService.buscarPorDentista(dentistaId);
+        if (agendaOpt.isEmpty()) {
+            return List.of();
+        }
+        AgendaResponseDTO agenda = agendaOpt.get();
         List<RegraHorarioDTO> regras = agenda.regras();
         if (regras == null || regras.isEmpty()) {
             return List.of();
