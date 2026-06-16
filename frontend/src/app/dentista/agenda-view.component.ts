@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { AgendaAdminService, AgendaFormPayload } from '../services/agenda-admin.service';
-import { RuntimeConfigService } from '../services/runtime-config.service';
+import { AuthService } from '../auth/auth.service';
 import { DentistaAgendaComponent } from './components/dentista-agenda.component';
 
 @Component({
@@ -50,15 +50,17 @@ export class AgendaViewComponent implements OnInit {
   };
 
   private service = inject(AgendaAdminService);
-  private runtime = inject(RuntimeConfigService);
+  private auth = inject(AuthService);
   private destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
-    this.dentistaId = (this.runtime as any)['DENTISTA_ID'] || '';
-    if (!this.dentistaId) {
-      this.dentistaId = crypto.randomUUID();
+    this.dentistaId = this.auth.getSubject() ?? '';
+    
+    if(this.dentistaId) {
+      this.load();
+    } else {
+      this.loading = false; // Parar o loading se não houver ID
     }
-    this.load();
   }
 
   load() {
