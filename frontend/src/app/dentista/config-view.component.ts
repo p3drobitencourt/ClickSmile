@@ -88,24 +88,28 @@ export class ConfigViewComponent implements OnInit {
 
   private perfilService = inject(DentistaPerfilService);
   private authService = inject(AuthService);
+  private cdr = inject(import('@angular/core').ChangeDetectorRef);
 
   async ngOnInit() {
     this.dentistaId = this.authService.getSubject() || '';
     if (this.dentistaId) {
-      this.perfilService.getPerfil(this.dentistaId).pipe(
-        finalize(() => { this.loading = false; })
-      ).subscribe({
+      this.perfilService.getPerfil(this.dentistaId).subscribe({
         next: (data) => {
           if (data) {
             this.perfil = { ...this.perfil, ...data };
           }
+          this.loading = false;
+          this.cdr.detectChanges();
         },
         error: (err) => {
           console.error('Error fetching perfil:', err);
+          this.loading = false;
+          this.cdr.detectChanges();
         }
       });
     } else {
       this.loading = false;
+      this.cdr.detectChanges();
     }
   }
 

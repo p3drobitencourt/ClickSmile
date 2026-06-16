@@ -49,9 +49,12 @@ export class AgendaViewComponent implements OnInit {
     regras: [],
   };
 
+  weekdays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
+
   private service = inject(AgendaAdminService);
   private auth = inject(AuthService);
   private destroyRef = inject(DestroyRef);
+  private cdr = inject(import('@angular/core').ChangeDetectorRef);
 
   ngOnInit(): void {
     this.dentistaId = this.auth.getSubject() ?? '';
@@ -59,15 +62,15 @@ export class AgendaViewComponent implements OnInit {
     if(this.dentistaId) {
       this.load();
     } else {
-      this.loading = false; // Parar o loading se não houver ID
+      this.loading = false;
+      this.cdr.detectChanges();
     }
   }
 
   load() {
     this.loading = true;
     this.service.getByDentist(this.dentistaId).pipe(
-      takeUntilDestroyed(this.destroyRef),
-      finalize(() => { this.loading = false; })
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: (a) => {
         if (a) {
@@ -79,10 +82,26 @@ export class AgendaViewComponent implements OnInit {
             horaFimPadrao: a.horaFimPadrao || '18:00',
             regras: a.regras || [],
           };
+        } else {
+          this.payload.dentistaId = this.dentistaId;
         }
+
+        if (!this.payload.regras || this.payload.regras.length === 0) {
+          this.payload.regras = this.weekdays.map(d => ({
+            diaSemana: d,
+            ativo: false,
+            inicio: this.payload.horaInicioPadrao || '08:00',
+            fim: this.payload.horaFimPadrao || '18:00',
+          }));
+        }
+
+        this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error fetching agenda:', err);
+        this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
