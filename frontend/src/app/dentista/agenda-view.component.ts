@@ -23,8 +23,16 @@ import { DentistaAgendaComponent } from './components/dentista-agenda.component'
           <span class="spinner" style="width: 32px; height: 32px; border-width: 3px; border-top-color: #38bdf8;"></span>
           <p>Carregando informações...</p>
         </div>
+        
+        <div *ngIf="errorMessage" class="error-panel" style="background: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+          <h3 style="margin-top: 0;">Erro na comunicação com o servidor</h3>
+          <p>Copie o texto abaixo e envie para análise:</p>
+          <pre style="background: #f87171; color: #fff; padding: 12px; border-radius: 4px; overflow-x: auto; font-size: 12px;">{{ errorMessage }}</pre>
+          <button (click)="load()" class="btn-primary" style="margin-top: 12px;">Tentar Novamente</button>
+        </div>
+
         <app-dentista-agenda 
-          *ngIf="!loading"
+          *ngIf="!loading && !errorMessage"
           [loading]="loading" 
           [saving]="saving" 
           [dentistaId]="dentistaId" 
@@ -40,6 +48,7 @@ export class AgendaViewComponent implements OnInit {
   loading = true;
   saving = false;
   dentistaId = '';
+  errorMessage = '';
   payload: AgendaFormPayload = {
     dentistaId: '',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo',
@@ -62,6 +71,7 @@ export class AgendaViewComponent implements OnInit {
     if(this.dentistaId) {
       this.load();
     } else {
+      this.errorMessage = 'Erro: Não foi possível obter o ID do dentista (Token inválido ou não autenticado).';
       this.loading = false;
       this.cdr.detectChanges();
     }
@@ -69,6 +79,7 @@ export class AgendaViewComponent implements OnInit {
 
   load() {
     this.loading = true;
+    this.errorMessage = '';
     this.service.getByDentist(this.dentistaId).pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
@@ -100,6 +111,15 @@ export class AgendaViewComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error fetching agenda:', err);
+        // Captura detalhada do erro para debug do usuário
+        this.errorMessage = JSON.stringify({
+          status: err.status,
+          message: err.message,
+          url: err.url,
+          name: err.name,
+          error: err.error
+        }, null, 2);
+        
         this.loading = false;
         this.cdr.detectChanges();
       }
@@ -112,7 +132,10 @@ export class AgendaViewComponent implements OnInit {
     this.payload.dentistaId = this.dentistaId;
     this.service.save(this.payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => { this.saving = false; },
-      error: () => { this.saving = false; }
+      error: (err) => {
+        this.errorMessage = 'Erro ao salvar: ' + JSON.stringify(err);
+        this.saving = false; 
+      }
     });
   }
 }
