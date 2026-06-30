@@ -32,11 +32,11 @@ public class DentistaPublicController {
         if (lat != null && lng != null) {
             List<DentistaResumoDTO> dadosProximos = usuarioRepository.findDentistasProximos(lat, lng).stream()
                 .map(proj -> {
-                    String agendaInfo = agendaService.buscarPorDentista(proj.getId())
+                    String agendaInfo = agendaService.buscarPorDentista(java.util.UUID.fromString(proj.getId()))
                         .map(a -> a.slotDurationMin() + " min | " + a.horaInicioPadrao() + " - " + a.horaFimPadrao())
                         .orElse("Não configurado");
                     return new DentistaResumoDTO(
-                        proj.getId(),
+                        java.util.UUID.fromString(proj.getId()),
                         proj.getNome(),
                         proj.getEmail(),
                         proj.getCro(),

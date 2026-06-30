@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public interface DentistaProximoProjection {
-    UUID getId();
+    String getId();
     String getNome();
     String getEmail();
     String getCro();

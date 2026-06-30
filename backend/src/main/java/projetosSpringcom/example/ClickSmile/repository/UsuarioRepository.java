@@ -16,7 +16,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
     long countByPerfil(Perfil perfil);
     List<Usuario> findByPerfil(Perfil perfil);
 
-    @Query(value = "SELECT CAST(d.id AS uuid) as id, u.nome as nome, u.email as email, d.cro as cro, d.especialidade as especialidade, tc.latitude as latitude, tc.longitude as longitude, " +
+    @Query(value = "SELECT CAST(d.id AS varchar) as id, u.nome as nome, u.email as email, d.cro as cro, d.especialidade as especialidade, tc.latitude as latitude, tc.longitude as longitude, " +
                    "(6371 * acos(cos(radians(:lat)) * cos(radians(tc.latitude)) * cos(radians(tc.longitude) - radians(:lng)) + sin(radians(:lat)) * sin(radians(tc.latitude)))) AS distanciaKm " +
                    "FROM dentista d " +
                    "JOIN usuario u ON d.id = u.id " +
