@@ -36,11 +36,14 @@ public class RefreshTokenService {
         RefreshToken entity = new RefreshToken(hashed, usuario, Instant.now().plus(ttl));
         repository.save(entity);
 
-        Cookie cookie = new Cookie("refreshToken", raw);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/api/auth");
-        cookie.setMaxAge((int) ttl.getSeconds());
-        response.addCookie(cookie);
+        org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("refreshToken", raw)
+                .httpOnly(true)
+                .secure(true)
+                .path("/api/auth")
+                .maxAge(ttl.getSeconds())
+                .sameSite("None")
+                .build();
+        response.addHeader("Set-Cookie", cookie.toString());
         return raw;
     }
 

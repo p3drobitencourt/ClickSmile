@@ -72,11 +72,14 @@ public class AuthController {
                 }
             }
         }
-        Cookie clear = new Cookie("refreshToken", "");
-        clear.setHttpOnly(true);
-        clear.setPath("/api/auth");
-        clear.setMaxAge(0);
-        response.addCookie(clear);
+        org.springframework.http.ResponseCookie clear = org.springframework.http.ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/api/auth")
+                .maxAge(0)
+                .sameSite("None")
+                .build();
+        response.addHeader("Set-Cookie", clear.toString());
         return ResponseEntity.noContent().build();
     }
 
