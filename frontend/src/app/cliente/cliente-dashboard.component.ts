@@ -36,6 +36,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   // Loading flags
   isLoadingDentists = false;
   isLoadingSlots = false;
+  hasError = false; // Flag for robust error handling
   
   messages: ChatMessageView[] = [];
   draftMessage = '';
@@ -74,6 +75,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     }
 
     this.isLoadingDentists = true;
+    this.hasError = false;
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -90,17 +92,25 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadDentists(lat?: number, lng?: number): void {
-    this.dentistDirectory.listDentists(lat, lng).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((dentists) => {
-      this.isLoadingDentists = false;
-      if (dentists.length > 0) {
-        this.dentists = dentists;
-        this.selectDentist(dentists[0]);
-      } else if (lat !== undefined && lng !== undefined) {
-        // Se a busca por proximidade não retornar ninguém, busca todos os dentistas
-        this.isLoadingDentists = true;
-        this.loadDentists();
-      } else {
-        this.dentists = [];
+    this.dentistDirectory.listDentists(lat, lng).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (dentists) => {
+        this.isLoadingDentists = false;
+        if (dentists && dentists.length > 0) {
+          this.dentists = dentists;
+          // Garante que a chamada loadSlots() ocorra APÓS a confirmação de que selectedDentist existe
+          this.selectDentist(dentists[0]);
+        } else if (lat !== undefined && lng !== undefined) {
+          // Se a busca por proximidade não retornar ninguém, busca todos os dentistas
+          this.isLoadingDentists = true;
+          this.loadDentists();
+        } else {
+          this.dentists = [];
+        }
+      },
+      error: (err) => {
+        console.error('Falha ao carregar especialistas:', err);
+        this.isLoadingDentists = false;
+        this.hasError = true;
       }
     });
   }
@@ -111,6 +121,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   }
 
   selectDentist(dentist: DentistSummary): void {
+    if (!dentist) return; // Proteção extra contra null/undefined
     this.selectedDentist = dentist;
     this.bookingStatus = `Agenda de ${dentist.nome} carregada.`;
     this.roomId = ''; 
@@ -118,6 +129,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     this.chatService.sessionStatus$.next(null);
     this.messages = [];
     
+    // Strictly after selectedDentist is confirmed
     this.loadSlots(dentist.id);
   }
 
@@ -196,6 +208,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   }
 
   initials(name: string): string {
+    if (!name) return '';
     return name
       .split(' ')
       .filter(Boolean)
@@ -208,10 +221,19 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     this.isLoadingSlots = true;
     this.calendarSlots = [];
     this.groupedSchedule = [];
-    this.dentistDirectory.getSlots(dentistId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((slots) => {
-      this.isLoadingSlots = false;
-      this.calendarSlots = slots;
-      this.groupSlotsByDay(slots);
+    this.dentistDirectory.getSlots(dentistId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (slots) => {
+        this.isLoadingSlots = false;
+        // Previne explicitamente passar undefined, garantindo [] como fallback
+        this.calendarSlots = slots || [];
+        this.groupSlotsByDay(this.calendarSlots);
+      },
+      error: (err) => {
+        console.error('Falha ao carregar agenda do dentista:', err);
+        this.isLoadingSlots = false;
+        this.hasError = true;
+        this.calendarSlots = [];
+      }
     });
   }
 

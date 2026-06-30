@@ -9,6 +9,11 @@
       <strong>{{ bookingStatus }}</strong>
     </div>
   </header>
+  
+  <div *ngIf="hasError" class="surface-panel" style="margin-bottom: 2rem; background: #fef2f2; border-color: #f87171;">
+    <h3 style="color: #991b1b; margin-top: 0;">Falha de Conexão</h3>
+    <p style="color: #7f1d1d;">Ocorreu um erro ao carregar os dados. Verifique sua conexão e tente novamente.</p>
+  </div>
 
   <div class="responsive-grid">
     <!-- Coluna da Esquerda: Especialistas -->
@@ -31,14 +36,14 @@
             [class.active]="selectedDentist?.id === dentist.id"
             (click)="selectDentist(dentist)"
           >
-            <span class="dentist-avatar" [style.background]="dentist.color || '#38bdf8'">{{ initials(dentist.nome) }}</span>
+            <span class="dentist-avatar" [style.background]="dentist?.color || '#38bdf8'">{{ initials(dentist?.nome || '') }}</span>
             <span class="dentist-copy">
-              <strong>{{ dentist.nome }}</strong>
-              <small>{{ dentist.especialidade }} <span *ngIf="dentist.distanciaKm">({{ dentist.distanciaKm | number:'1.1-1' }} km)</span></small>
-              <small>{{ dentist.cro }}</small>
-              <small>{{ dentist.agendaResumo }}</small>
-              <a *ngIf="dentist.latitude && dentist.longitude"
-                 href="https://www.google.com/maps/dir/?api=1&destination={{dentist.latitude}},{{dentist.longitude}}"
+              <strong>{{ dentist?.nome }}</strong>
+              <small>{{ dentist?.especialidade }} <span *ngIf="dentist?.distanciaKm">({{ dentist?.distanciaKm | number:'1.1-1' }} km)</span></small>
+              <small>{{ dentist?.cro }}</small>
+              <small>{{ dentist?.agendaResumo }}</small>
+              <a *ngIf="dentist?.latitude && dentist?.longitude"
+                 href="https://www.google.com/maps/dir/?api=1&destination={{dentist?.latitude}},{{dentist?.longitude}}"
                  target="_blank"
                  rel="noopener noreferrer"
                  style="display: inline-block; margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #e0f2fe; color: #0284c7; border-radius: 4px; font-weight: 500; font-size: 0.8rem; text-decoration: none;"
@@ -93,7 +98,7 @@
           <div class="panel-head">
             <div>
               <p class="eyebrow">Agendar</p>
-              <h2>Horários Disponíveis: {{ selectedDentist.nome }}</h2>
+              <h2>Horários Disponíveis: {{ selectedDentist?.nome }}</h2>
             </div>
             <span class="pill pill-quiet" *ngIf="!isLoadingSlots">Próximos dias</span>
             <span class="spinner-small" *ngIf="isLoadingSlots"></span>
@@ -143,7 +148,7 @@
           <div class="panel-head">
             <div>
               <p class="eyebrow">Chat Online</p>
-              <h2>Conversar com {{ selectedDentist.nome }}</h2>
+              <h2>Conversar com {{ selectedDentist?.nome }}</h2>
             </div>
             <div style="display:flex; gap:0.5rem">
               <span class="pill" *ngIf="roomId">Sala {{ roomId }}</span>
