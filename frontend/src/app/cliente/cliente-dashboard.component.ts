@@ -33,6 +33,10 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   calendarSlots: ScheduleSlot[] = [];
   groupedSchedule: DaySchedule[] = [];
   
+  // Loading flags
+  isLoadingDentists = false;
+  isLoadingSlots = false;
+  
   messages: ChatMessageView[] = [];
   draftMessage = '';
   bookingStatus = 'Escolha um especialista para começar.';
@@ -69,6 +73,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
       return; 
     }
 
+    this.isLoadingDentists = true;
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -86,11 +91,13 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
 
   private loadDentists(lat?: number, lng?: number): void {
     this.dentistDirectory.listDentists(lat, lng).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((dentists) => {
+      this.isLoadingDentists = false;
       if (dentists.length > 0) {
         this.dentists = dentists;
         this.selectDentist(dentists[0]);
       } else if (lat !== undefined && lng !== undefined) {
         // Se a busca por proximidade não retornar ninguém, busca todos os dentistas
+        this.isLoadingDentists = true;
         this.loadDentists();
       } else {
         this.dentists = [];
@@ -198,7 +205,11 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadSlots(dentistId: string): void {
+    this.isLoadingSlots = true;
+    this.calendarSlots = [];
+    this.groupedSchedule = [];
     this.dentistDirectory.getSlots(dentistId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((slots) => {
+      this.isLoadingSlots = false;
       this.calendarSlots = slots;
       this.groupSlotsByDay(slots);
     });
