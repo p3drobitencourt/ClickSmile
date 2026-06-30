@@ -86,9 +86,14 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
 
   private loadDentists(lat?: number, lng?: number): void {
     this.dentistDirectory.listDentists(lat, lng).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((dentists) => {
-      this.dentists = dentists;
       if (dentists.length > 0) {
+        this.dentists = dentists;
         this.selectDentist(dentists[0]);
+      } else if (lat !== undefined && lng !== undefined) {
+        // Se a busca por proximidade não retornar ninguém, busca todos os dentistas
+        this.loadDentists();
+      } else {
+        this.dentists = [];
       }
     });
   }

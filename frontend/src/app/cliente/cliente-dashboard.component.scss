@@ -56,13 +56,33 @@
 
 .responsive-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: 350px 1fr;
   gap: 1.5rem;
   align-items: start;
 }
 
-.span-full {
-  grid-column: 1 / -1;
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: sticky;
+  top: 2rem;
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: 1fr;
+  }
+  .left-column {
+    position: relative;
+    top: 0;
+  }
 }
 
 .surface-panel {

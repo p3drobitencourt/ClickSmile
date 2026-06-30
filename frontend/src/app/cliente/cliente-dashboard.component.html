@@ -11,163 +11,186 @@
   </header>
 
   <div class="responsive-grid">
-    <!-- Panel: Especialistas -->
-    <article class="surface-panel list-panel">
-      <div class="panel-head">
-        <div>
-          <p class="eyebrow">Especialistas</p>
-          <h2>Disponíveis agora</h2>
+    <!-- Coluna da Esquerda: Especialistas -->
+    <div class="left-column">
+      <article class="surface-panel list-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Especialistas</p>
+            <h2>Disponíveis agora</h2>
+          </div>
+          <span class="pill">{{ dentists.length }} perfis</span>
         </div>
-        <span class="pill">{{ dentists.length }} perfis</span>
+
+        <div class="dentist-list" *ngIf="dentists.length > 0">
+          <button
+            type="button"
+            class="dentist-card"
+            *ngFor="let dentist of dentists"
+            [class.active]="selectedDentist?.id === dentist.id"
+            (click)="selectDentist(dentist)"
+          >
+            <span class="dentist-avatar" [style.background]="dentist.color || '#38bdf8'">{{ initials(dentist.nome) }}</span>
+            <span class="dentist-copy">
+              <strong>{{ dentist.nome }}</strong>
+              <small>{{ dentist.especialidade }} <span *ngIf="dentist.distanciaKm">({{ dentist.distanciaKm | number:'1.1-1' }} km)</span></small>
+              <small>{{ dentist.cro }}</small>
+              <small>{{ dentist.agendaResumo }}</small>
+              <a *ngIf="dentist.latitude && dentist.longitude"
+                 href="https://www.google.com/maps/dir/?api=1&destination={{dentist.latitude}},{{dentist.longitude}}"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 style="display: inline-block; margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #e0f2fe; color: #0284c7; border-radius: 4px; font-weight: 500; font-size: 0.8rem; text-decoration: none;"
+                 (click)="$event.stopPropagation()">
+                 📍 Abrir no Google Maps
+              </a>
+            </span>
+          </button>
+        </div>
+        
+        <div *ngIf="dentists.length === 0" class="empty-state" style="margin-top: 1rem;">
+          <p>Nenhum dentista encontrado.</p>
+        </div>
+      </article>
+    </div>
+
+    <!-- Coluna da Direita: Detalhes do Especialista Selecionado -->
+    <div class="right-column">
+      
+      <!-- Detalhes exibidos apenas quando um dentista está selecionado -->
+      <ng-container *ngIf="selectedDentist">
+        <!-- Panel: Mapa -->
+        <article class="surface-panel map-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Localização</p>
+              <h2>Mapa de Proximidade</h2>
+            </div>
+          </div>
+          <div class="map-container" *ngIf="userLocation">
+            <google-map [center]="userLocation" [options]="mapOptions" height="100%" width="100%">
+              <map-marker [position]="userLocation" title="Você está aqui" [options]="{icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'}"></map-marker>
+              <map-marker 
+                *ngIf="selectedDentist.latitude && selectedDentist.longitude"
+                [position]="{lat: selectedDentist.latitude, lng: selectedDentist.longitude}" 
+                [title]="selectedDentist.nome">
+              </map-marker>
+            </google-map>
+          </div>
+          <div *ngIf="!userLocation" style="padding: 2rem; text-align: center; color: #64748b;">
+            Carregando mapa...
+          </div>
+        </article>
+
+        <!-- Panel: Agendamentos -->
+        <article class="surface-panel calendar-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Agendar</p>
+              <h2>Horários Disponíveis: {{ selectedDentist.nome }}</h2>
+            </div>
+            <span class="pill pill-quiet">Próximos dias</span>
+          </div>
+          
+          <div class="slot-picker-container" *ngIf="groupedSchedule.length > 0; else noSlots">
+            <div class="day-column" *ngFor="let day of groupedSchedule">
+              <div class="day-header">
+                <span class="day-weekday">{{ day.weekday }}</span>
+                <span class="day-date">{{ day.dayAndMonth }}</span>
+              </div>
+              
+              <div class="slot-list">
+                <button 
+                  type="button" 
+                  class="slot-btn" 
+                  *ngFor="let slot of day.slots"
+                  (click)="bookSlot(slot.start)"
+                  [disabled]="reservingSlotIso === slot.start"
+                  [class.reserving]="reservingSlotIso === slot.start">
+                  <span *ngIf="reservingSlotIso !== slot.start">{{ getSlotTime(slot.start) }}</span>
+                  <span *ngIf="reservingSlotIso === slot.start" class="spinner-small"></span>
+                </button>
+                
+                <div class="no-more-slots" *ngIf="day.slots.length === 0">Lotado</div>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #noSlots>
+            <div class="empty-state">
+              Nenhum horário configurado ou disponível para os próximos dias.
+            </div>
+          </ng-template>
+        </article>
+
+        <!-- Panel: Chat -->
+        <article class="surface-panel chat-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Chat Online</p>
+              <h2>Conversar com {{ selectedDentist.nome }}</h2>
+            </div>
+            <div style="display:flex; gap:0.5rem">
+              <span class="pill" *ngIf="roomId">Sala {{ roomId }}</span>
+              <button class="pill" style="cursor:pointer; background: #38bdf8; color:white; border:none;" *ngIf="sessionStatus === SessaoChatStatus.ACTIVE" (click)="devEnviarConvite()" title="Dev Tool">Convite Dev</button>
+            </div>
+          </div>
+
+          <div class="chat-thread" *ngIf="sessionStatus === SessaoChatStatus.ACTIVE">
+            <div class="chat-bubble" *ngFor="let message of messages" [class.mine]="message.mine" [class.system]="message.isSystem" [class.invite-card]="message.isInvite">
+              <span class="bubble-meta" *ngIf="!message.isSystem">
+                <strong>{{ message.senderName }}</strong>
+                <small>{{ message.sentAt | date : 'shortTime' }}</small>
+              </span>
+              
+              <ng-container *ngIf="message.isInvite">
+                <div style="padding: 1rem; background: #f0fdf4; border: 1px solid #16a34a; border-radius: 8px;">
+                  <h4 style="margin: 0 0 0.5rem; color: #166534;">Convite de Agendamento</h4>
+                  <p style="margin: 0 0 1rem; color: #15803d;">{{ message.inviteDataHora | date: 'dd/MM/yyyy HH:mm' }}</p>
+                  <button type="button" class="btn btn-primary" style="width: 100%;" (click)="aceitarConvite(message.inviteDataHora!)">Aceitar Horário</button>
+                </div>
+              </ng-container>
+
+              <p *ngIf="!message.isInvite" [style.textAlign]="message.isSystem ? 'center' : 'left'" [style.color]="message.isSystem ? '#6b7280' : 'inherit'" [style.fontSize]="message.isSystem ? '0.85rem' : 'inherit'">{{ message.message }}</p>
+            </div>
+          </div>
+
+          <div class="chat-placeholder" *ngIf="!sessionStatus" style="padding: 2rem; text-align: center;">
+            <p>Inicie o chat para tirar dúvidas com o especialista antes de agendar.</p>
+            <button type="button" class="btn btn-primary" (click)="iniciarChat()" style="margin-top: 1rem;">Iniciar Chat</button>
+          </div>
+
+          <div class="chat-placeholder" *ngIf="sessionStatus === SessaoChatStatus.PENDING" style="padding: 2rem; text-align: center;">
+            <p>Aguardando o dentista aceitar a solicitação...</p>
+            <button type="button" class="btn btn-warning" (click)="devAceitarChat()" style="margin-top: 1rem;" title="Ferramenta de Desenvolvedor">Simular Aceite (Dev)</button>
+          </div>
+
+          <form class="chat-composer" (ngSubmit)="sendMessage()" *ngIf="sessionStatus === SessaoChatStatus.ACTIVE">
+            <textarea
+              name="draftMessage"
+              [(ngModel)]="draftMessage"
+              rows="2"
+              placeholder="Digite sua mensagem..."
+            ></textarea>
+            <button type="submit">Enviar</button>
+          </form>
+        </article>
+      </ng-container>
+      
+      <!-- Estado vazio global da direita -->
+      <div *ngIf="!selectedDentist && dentists.length > 0" class="surface-panel empty-state" style="padding: 4rem;">
+        <h3>Selecione um especialista na lista ao lado</h3>
+        <p>Ao selecionar um dentista, você poderá ver a localização, os horários e abrir um chat.</p>
       </div>
 
-      <div class="dentist-list">
-        <button
-          type="button"
-          class="dentist-card"
-          *ngFor="let dentist of dentists"
-          [class.active]="selectedDentist?.id === dentist.id"
-          (click)="selectDentist(dentist)"
-        >
-          <span class="dentist-avatar" [style.background]="dentist.color || '#38bdf8'">{{ initials(dentist.nome) }}</span>
-          <span class="dentist-copy">
-            <strong>{{ dentist.nome }}</strong>
-            <small>{{ dentist.especialidade }} <span *ngIf="dentist.distanciaKm">({{ dentist.distanciaKm | number:'1.1-1' }} km)</span></small>
-            <small>{{ dentist.cro }}</small>
-            <small>{{ dentist.agendaResumo }}</small>
-            <a *ngIf="dentist.latitude && dentist.longitude"
-               href="https://www.google.com/maps/dir/?api=1&destination={{dentist.latitude}},{{dentist.longitude}}"
-               target="_blank"
-               rel="noopener noreferrer"
-               style="display: inline-block; margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #e0f2fe; color: #0284c7; border-radius: 4px; font-weight: 500; font-size: 0.8rem; text-decoration: none;"
-               (click)="$event.stopPropagation()">
-               📍 Abrir no Google Maps
-            </a>
-          </span>
-        </button>
-      </div>
-    </article>
-
-    <!-- Panel: Mapa -->
-    <article class="surface-panel map-panel">
-      <div class="panel-head">
-        <div>
-          <p class="eyebrow">Localização</p>
-          <h2>Mapa de Proximidade</h2>
-        </div>
-      </div>
-      <div class="map-container" *ngIf="userLocation">
-        <google-map [center]="userLocation" [options]="mapOptions" height="100%" width="100%">
-          <map-marker [position]="userLocation" title="Você está aqui" [options]="{icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'}"></map-marker>
-          <ng-container *ngFor="let dentist of dentists">
-            <map-marker 
-              *ngIf="dentist.latitude && dentist.longitude"
-              [position]="{lat: dentist.latitude, lng: dentist.longitude}" 
-              [title]="dentist.nome">
-            </map-marker>
-          </ng-container>
-        </google-map>
-      </div>
-      <div *ngIf="!userLocation" style="padding: 2rem; text-align: center; color: #64748b;">
-        Carregando mapa...
-      </div>
-    </article>
-
-    <!-- Panel: Agendamentos -->
-    <article class="surface-panel calendar-panel">
-      <div class="panel-head">
-        <div>
-          <p class="eyebrow">Agendar</p>
-          <h2>Horários Disponíveis</h2>
-        </div>
-        <span class="pill pill-quiet">Próximos dias</span>
+      <div *ngIf="dentists.length === 0" class="surface-panel empty-state" style="padding: 4rem;">
+        <h3>Nenhum especialista cadastrado ainda.</h3>
+        <p>Aguarde novos dentistas se cadastrarem na plataforma!</p>
       </div>
       
-      <div class="slot-picker-container" *ngIf="groupedSchedule.length > 0; else noSlots">
-        <div class="day-column" *ngFor="let day of groupedSchedule">
-          <div class="day-header">
-            <span class="day-weekday">{{ day.weekday }}</span>
-            <span class="day-date">{{ day.dayAndMonth }}</span>
-          </div>
-          
-          <div class="slot-list">
-            <button 
-              type="button" 
-              class="slot-btn" 
-              *ngFor="let slot of day.slots"
-              (click)="bookSlot(slot.start)"
-              [disabled]="reservingSlotIso === slot.start"
-              [class.reserving]="reservingSlotIso === slot.start">
-              <span *ngIf="reservingSlotIso !== slot.start">{{ getSlotTime(slot.start) }}</span>
-              <span *ngIf="reservingSlotIso === slot.start" class="spinner-small"></span>
-            </button>
-            
-            <div class="no-more-slots" *ngIf="day.slots.length === 0">Lotado</div>
-          </div>
-        </div>
-      </div>
-
-      <ng-template #noSlots>
-        <div class="empty-state">
-          Nenhum horário disponível para os próximos dias.
-        </div>
-      </ng-template>
-    </article>
-
-    <!-- Panel: Chat -->
-    <article class="surface-panel chat-panel">
-      <div class="panel-head">
-        <div>
-          <p class="eyebrow">Chat Online</p>
-          <h2>{{ selectedDentist?.nome || 'Selecione um dentista' }}</h2>
-        </div>
-        <div style="display:flex; gap:0.5rem">
-          <span class="pill">Sala {{ roomId || 'pendente' }}</span>
-          <button class="pill" style="cursor:pointer; background: #38bdf8; color:white; border:none;" *ngIf="sessionStatus === SessaoChatStatus.ACTIVE" (click)="devEnviarConvite()" title="Dev Tool">Convite Dev</button>
-        </div>
-      </div>
-
-      <div class="chat-thread" *ngIf="sessionStatus === SessaoChatStatus.ACTIVE">
-        <div class="chat-bubble" *ngFor="let message of messages" [class.mine]="message.mine" [class.system]="message.isSystem" [class.invite-card]="message.isInvite">
-          <span class="bubble-meta" *ngIf="!message.isSystem">
-            <strong>{{ message.senderName }}</strong>
-            <small>{{ message.sentAt | date : 'shortTime' }}</small>
-          </span>
-          
-          <ng-container *ngIf="message.isInvite">
-            <div style="padding: 1rem; background: #f0fdf4; border: 1px solid #16a34a; border-radius: 8px;">
-              <h4 style="margin: 0 0 0.5rem; color: #166534;">Convite de Agendamento</h4>
-              <p style="margin: 0 0 1rem; color: #15803d;">{{ message.inviteDataHora | date: 'dd/MM/yyyy HH:mm' }}</p>
-              <button type="button" class="btn btn-primary" style="width: 100%;" (click)="aceitarConvite(message.inviteDataHora!)">Aceitar Horário</button>
-            </div>
-          </ng-container>
-
-          <p *ngIf="!message.isInvite" [style.textAlign]="message.isSystem ? 'center' : 'left'" [style.color]="message.isSystem ? '#6b7280' : 'inherit'" [style.fontSize]="message.isSystem ? '0.85rem' : 'inherit'">{{ message.message }}</p>
-        </div>
-      </div>
-
-      <div class="chat-placeholder" *ngIf="!sessionStatus" style="padding: 2rem; text-align: center;">
-        <p>Inicie o chat para tirar dúvidas com o especialista antes de agendar.</p>
-        <button type="button" class="btn btn-primary" (click)="iniciarChat()" style="margin-top: 1rem;">Iniciar Chat</button>
-      </div>
-
-      <div class="chat-placeholder" *ngIf="sessionStatus === SessaoChatStatus.PENDING" style="padding: 2rem; text-align: center;">
-        <p>Aguardando o dentista aceitar a solicitação...</p>
-        <button type="button" class="btn btn-warning" (click)="devAceitarChat()" style="margin-top: 1rem;" title="Ferramenta de Desenvolvedor">Simular Aceite (Dev)</button>
-      </div>
-
-      <form class="chat-composer" (ngSubmit)="sendMessage()" *ngIf="sessionStatus === SessaoChatStatus.ACTIVE">
-        <textarea
-          name="draftMessage"
-          [(ngModel)]="draftMessage"
-          rows="2"
-          placeholder="Digite sua mensagem..."
-        ></textarea>
-        <button type="submit">Enviar</button>
-      </form>
-    </article>
-    
-    <!-- Componente Meus Agendamentos -->
-    <app-meus-agendamentos class="span-full"></app-meus-agendamentos>
+      <!-- Componente Meus Agendamentos (Fica sempre embaixo na direita) -->
+      <app-meus-agendamentos></app-meus-agendamentos>
+      
+    </div>
   </div>
 </div>
