@@ -80,9 +80,38 @@
           <p class="eyebrow">Agendar</p>
           <h2>Horários Disponíveis</h2>
         </div>
-        <span class="pill pill-quiet">Selecione no calendário</span>
+        <span class="pill pill-quiet">Próximos dias</span>
       </div>
-      <full-calendar [options]="calendarOptions" />
+      
+      <div class="slot-picker-container" *ngIf="groupedSchedule.length > 0; else noSlots">
+        <div class="day-column" *ngFor="let day of groupedSchedule">
+          <div class="day-header">
+            <span class="day-weekday">{{ day.weekday }}</span>
+            <span class="day-date">{{ day.dayAndMonth }}</span>
+          </div>
+          
+          <div class="slot-list">
+            <button 
+              type="button" 
+              class="slot-btn" 
+              *ngFor="let slot of day.slots"
+              (click)="bookSlot(slot.start)"
+              [disabled]="reservingSlotIso === slot.start"
+              [class.reserving]="reservingSlotIso === slot.start">
+              <span *ngIf="reservingSlotIso !== slot.start">{{ getSlotTime(slot.start) }}</span>
+              <span *ngIf="reservingSlotIso === slot.start" class="spinner-small"></span>
+            </button>
+            
+            <div class="no-more-slots" *ngIf="day.slots.length === 0">Lotado</div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noSlots>
+        <div class="empty-state">
+          Nenhum horário disponível para os próximos dias.
+        </div>
+      </ng-template>
     </article>
 
     <!-- Panel: Chat -->

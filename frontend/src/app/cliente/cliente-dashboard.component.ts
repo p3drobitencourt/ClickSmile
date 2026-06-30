@@ -2,11 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { CalendarOptions, EventClickArg } from '@fullcalendar/core';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import { FullCalendarModule } from '@fullcalendar/angular';
 import { Subscription } from 'rxjs';
 import { GoogleMapsModule } from '@angular/google-maps';
 import { AuthService } from '../auth/auth.service';
@@ -15,17 +10,29 @@ import { ChatMessageView, ChatService, SessaoChatStatus } from '../services/chat
 import { DentistDirectoryService, DentistSummary, ScheduleSlot } from '../services/dentist-directory.service';
 import { MeusAgendamentosComponent } from './meus-agendamentos.component';
 
+export interface DaySchedule {
+  dateObj: Date;
+  dateString: string;
+  weekday: string;
+  dayAndMonth: string;
+  slots: ScheduleSlot[];
+}
+
 @Component({
   selector: 'app-cliente-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, FullCalendarModule, MeusAgendamentosComponent, GoogleMapsModule],
+  imports: [CommonModule, FormsModule, MeusAgendamentosComponent, GoogleMapsModule],
   templateUrl: './cliente-dashboard.component.html',
   styleUrl: './cliente-dashboard.component.scss',
 })
 export class ClienteDashboardComponent implements OnInit, OnDestroy {
   dentists: DentistSummary[] = [];
   selectedDentist: DentistSummary | null = null;
+  
+  // Substitui calendarSlots puros
   calendarSlots: ScheduleSlot[] = [];
+  groupedSchedule: DaySchedule[] = [];
+  
   messages: ChatMessageView[] = [];
   draftMessage = '';
   bookingStatus = 'Escolha um especialista para começar.';
@@ -33,7 +40,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   currentUserId = '';
   currentUserLabel = 'Cliente';
   sessionStatus: SessaoChatStatus | null = null;
-  SessaoChatStatus = SessaoChatStatus; // Expose to template
+  SessaoChatStatus = SessaoChatStatus; 
   userLocation: google.maps.LatLngLiteral | undefined;
   mapOptions: google.maps.MapOptions = {
     zoom: 12,
@@ -42,23 +49,8 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   private chatSubscription?: Subscription;
   private sessionStatusSub?: Subscription;
 
-  calendarOptions: CalendarOptions = {
-    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
-    initialView: 'timeGridWeek',
-    height: 'auto',
-    headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'timeGridWeek,dayGridMonth',
-    },
-    slotMinTime: '07:00:00',
-    slotMaxTime: '20:00:00',
-    nowIndicator: true,
-    editable: false,
-    selectable: false,
-    events: [],
-    eventClick: (arg) => this.handleSlotClick(arg),
-  };
+  // Optimistic ID para o Slot
+  reservingSlotIso: string | null = null;
 
   constructor(
     private auth: AuthService,
@@ -74,7 +66,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     this.currentUserLabel = this.auth.getEmail() ?? 'Cliente';
 
     if (!this.currentUserId) {
-      return; // Stop execution if no valid identity is found
+      return; 
     }
 
     if (navigator.geolocation) {
@@ -84,7 +76,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
           this.loadDentists(pos.coords.latitude, pos.coords.longitude);
         },
         () => {
-          this.loadDentists(); // Fallback without location
+          this.loadDentists(); 
         }
       );
     } else {
@@ -109,7 +101,6 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   selectDentist(dentist: DentistSummary): void {
     this.selectedDentist = dentist;
     this.bookingStatus = `Agenda de ${dentist.nome} carregada.`;
-    // We will establish the roomId after starting the chat
     this.roomId = ''; 
     this.sessionStatus = null;
     this.chatService.sessionStatus$.next(null);
@@ -128,7 +119,6 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Developer Tool: Simulate dentist accept
   devAceitarChat(): void {
     if (!this.roomId) return;
     this.chatService.aceitarChat(this.roomId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(response => {
@@ -161,7 +151,6 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     if (!this.selectedDentist || !this.draftMessage.trim()) {
       return;
     }
-
     this.chatService.send(
       this.roomId,
       this.currentUserId,
@@ -173,19 +162,9 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   }
 
   bookSlot(startIso: string): void {
-    if (!this.selectedDentist) {
-      return;
-    }
+    if (!this.selectedDentist) return;
 
-    // Optimistic UI Update
-    const originalEvents = this.calendarOptions.events;
-    const optimisticEvents = (Array.isArray(originalEvents) ? originalEvents : []).map((evt: any) => {
-      if (evt.start === startIso) {
-        return { ...evt, title: 'Reservando...', backgroundColor: '#f59e0b', borderColor: '#f59e0b' };
-      }
-      return evt;
-    });
-    this.calendarOptions = { ...this.calendarOptions, events: optimisticEvents };
+    this.reservingSlotIso = startIso;
 
     this.agendamentoService.criar({
       clienteId: this.currentUserId,
@@ -193,12 +172,12 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
       dataHora: startIso,
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
-        this.bookingStatus = `Consulta agendada para ${new Date(startIso).toLocaleString('pt-BR')}.`;
+        this.bookingStatus = `Consulta agendada para ${new Date(startIso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}.`;
+        this.reservingSlotIso = null;
         this.loadSlots(this.selectedDentist?.id ?? '');
       },
       error: () => {
-        // Revert Optimistic UI
-        this.calendarOptions = { ...this.calendarOptions, events: originalEvents };
+        this.reservingSlotIso = null;
         this.bookingStatus = 'Não foi possível reservar esse horário. Tente outro slot.';
       },
     });
@@ -213,31 +192,50 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
       .join('');
   }
 
-  private handleSlotClick(arg: EventClickArg): void {
-    const start = arg.event.start?.toISOString();
-    if (!start || arg.event.title !== 'Disponível') {
-      return;
-    }
-
-    this.bookSlot(start);
-  }
-
   private loadSlots(dentistId: string): void {
     this.dentistDirectory.getSlots(dentistId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((slots) => {
       this.calendarSlots = slots;
-      this.calendarOptions = {
-        ...this.calendarOptions,
-        events: slots.map((slot) => ({
-          title: slot.title,
-          start: slot.start,
-          end: slot.end,
-          display: 'block',
-          backgroundColor: slot.tone === 'success' ? '#10b981' : slot.tone === 'warning' ? '#f59e0b' : '#38bdf8',
-          borderColor: slot.tone === 'success' ? '#10b981' : slot.tone === 'warning' ? '#f59e0b' : '#38bdf8',
-          textColor: '#ffffff',
-        })),
-      };
+      this.groupSlotsByDay(slots);
     });
+  }
+
+  private groupSlotsByDay(slots: ScheduleSlot[]): void {
+    const map = new Map<string, DaySchedule>();
+    
+    slots.forEach(slot => {
+      if (slot.title !== 'Disponível') return;
+
+      const dateObj = new Date(slot.start);
+      // Ensure we format localized strings safely (assuming pt-BR locale mostly for this app)
+      const dateString = dateObj.toISOString().split('T')[0];
+
+      if (!map.has(dateString)) {
+        const weekdayStr = dateObj.toLocaleDateString('pt-BR', { weekday: 'short' });
+        const dayAndMonth = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+        map.set(dateString, {
+          dateObj,
+          dateString,
+          weekday: weekdayStr.charAt(0).toUpperCase() + weekdayStr.slice(1).replace('.', ''),
+          dayAndMonth,
+          slots: []
+        });
+      }
+
+      map.get(dateString)?.slots.push(slot);
+    });
+
+    // Converter para array e ordenar por data
+    this.groupedSchedule = Array.from(map.values()).sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
+    
+    // Sort slots within each day
+    this.groupedSchedule.forEach(day => {
+      day.slots.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+    });
+  }
+
+  getSlotTime(isoString: string): string {
+    return new Date(isoString).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   }
 
   private bindChat(dentist: DentistSummary): void {
