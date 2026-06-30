@@ -22,6 +22,7 @@ export const routes: Routes = [
     path: '', 
     loadComponent: CorporateLayoutComponent,
     children: [
+      { path: '', component: HomeRedirectComponent, pathMatch: 'full' },
       { path: 'cliente', loadComponent: ClienteDashboardComponent, canActivate: [clienteGuard] },
       { 
         path: 'dentista', 
@@ -36,6 +37,5 @@ export const routes: Routes = [
       { path: 'admin', loadComponent: AdminDashboardComponent, canActivate: [adminGuard] }
     ]
   },
-  { path: '', component: HomeRedirectComponent },
   { path: '**', redirectTo: '' }
 ];
