@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
@@ -63,7 +63,7 @@ export class AgendaViewComponent implements OnInit {
   private service = inject(AgendaAdminService);
   private auth = inject(AuthService);
   private destroyRef = inject(DestroyRef);
-  private cdr = inject(import('@angular/core').ChangeDetectorRef);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
     this.dentistaId = this.auth.getSubject() ?? '';

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs/operators';
 import { FormsModule } from '@angular/forms';
@@ -88,7 +88,7 @@ export class ConfigViewComponent implements OnInit {
 
   private perfilService = inject(DentistaPerfilService);
   private authService = inject(AuthService);
-  private cdr = inject(import('@angular/core').ChangeDetectorRef);
+  private cdr = inject(ChangeDetectorRef);
 
   async ngOnInit() {
     this.dentistaId = this.authService.getSubject() || '';
