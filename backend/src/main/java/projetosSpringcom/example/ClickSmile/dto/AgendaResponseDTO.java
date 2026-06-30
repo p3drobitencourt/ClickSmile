@@ -13,4 +13,17 @@ public record AgendaResponseDTO(
         LocalTime horaFimPadrao,
         List<RegraHorarioDTO> regras,
         boolean ativo
-) {}
+) {
+    public static AgendaResponseDTO empty(UUID dentistaId) {
+        return new AgendaResponseDTO(
+                null,
+                dentistaId,
+                "America/Sao_Paulo",
+                30,
+                LocalTime.of(8, 0),
+                LocalTime.of(18, 0),
+                java.util.Collections.emptyList(),
+                true
+        );
+    }
+}
