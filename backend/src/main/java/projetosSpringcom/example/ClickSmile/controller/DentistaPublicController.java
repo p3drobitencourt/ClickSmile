@@ -31,20 +31,30 @@ public class DentistaPublicController {
     ) {
         if (lat != null && lng != null) {
             List<DentistaResumoDTO> dadosProximos = usuarioRepository.findDentistasProximos(lat, lng).stream()
-                .map(proj -> {
-                    String agendaInfo = agendaService.buscarPorDentista(java.util.UUID.fromString(proj.getId()))
+                .map(row -> {
+                    String idStr = row[0].toString();
+                    String nome = (String) row[1];
+                    String email = (String) row[2];
+                    String cro = (String) row[3];
+                    String especialidade = (String) row[4];
+                    java.math.BigDecimal latitude = row[5] != null ? new java.math.BigDecimal(row[5].toString()) : null;
+                    java.math.BigDecimal longitude = row[6] != null ? new java.math.BigDecimal(row[6].toString()) : null;
+                    Double distanciaKm = row[7] != null ? ((Number) row[7]).doubleValue() : null;
+
+                    String agendaInfo = agendaService.buscarPorDentista(java.util.UUID.fromString(idStr))
                         .map(a -> a.slotDurationMin() + " min | " + a.horaInicioPadrao() + " - " + a.horaFimPadrao())
                         .orElse("Não configurado");
+
                     return new DentistaResumoDTO(
-                        java.util.UUID.fromString(proj.getId()),
-                        proj.getNome(),
-                        proj.getEmail(),
-                        proj.getCro(),
-                        proj.getEspecialidade(),
+                        java.util.UUID.fromString(idStr),
+                        nome,
+                        email,
+                        cro,
+                        especialidade,
                         agendaInfo,
-                        proj.getLatitude(),
-                        proj.getLongitude(),
-                        proj.getDistanciaKm()
+                        latitude,
+                        longitude,
+                        distanciaKm
                     );
                 })
                 .toList();

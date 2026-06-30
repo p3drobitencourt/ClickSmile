@@ -23,5 +23,5 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
                    "JOIN tenant_clinica tc ON u.tenant_id = tc.id " +
                    "WHERE u.perfil = 'DENTISTA' AND tc.latitude IS NOT NULL AND tc.longitude IS NOT NULL " +
                    "ORDER BY distanciaKm ASC", nativeQuery = true)
-    List<DentistaProximoProjection> findDentistasProximos(@Param("lat") double lat, @Param("lng") double lng);
+    List<Object[]> findDentistasProximos(@Param("lat") double lat, @Param("lng") double lng);
 }
