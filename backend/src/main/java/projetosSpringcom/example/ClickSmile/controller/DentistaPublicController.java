@@ -32,14 +32,14 @@ public class DentistaPublicController {
         if (lat != null && lng != null) {
             List<DentistaResumoDTO> dadosProximos = usuarioRepository.findDentistasProximos(lat, lng).stream()
                 .map(row -> {
-                    String idStr = row[0].toString();
-                    String nome = (String) row[1];
-                    String email = (String) row[2];
-                    String cro = (String) row[3];
-                    String especialidade = (String) row[4];
-                    java.math.BigDecimal latitude = row[5] != null ? new java.math.BigDecimal(row[5].toString()) : null;
-                    java.math.BigDecimal longitude = row[6] != null ? new java.math.BigDecimal(row[6].toString()) : null;
-                    Double distanciaKm = row[7] != null ? ((Number) row[7]).doubleValue() : null;
+                String idStr = row[0] != null ? row[0].toString() : null;
+                String nome = row[1] != null ? row[1].toString() : null;
+                String email = row[2] != null ? row[2].toString() : null;
+                String cro = row[3] != null ? row[3].toString() : null;
+                String especialidade = row[4] != null ? row[4].toString() : null;
+                java.math.BigDecimal latitude = row[5] != null ? new java.math.BigDecimal(row[5].toString()) : null;
+                java.math.BigDecimal longitude = row[6] != null ? new java.math.BigDecimal(row[6].toString()) : null;
+                Double distanciaKm = row[7] != null ? ((Number) row[7]).doubleValue() : null;
 
                     String agendaInfo = agendaService.buscarPorDentista(java.util.UUID.fromString(idStr))
                         .map(a -> a.slotDurationMin() + " min | " + a.horaInicioPadrao() + " - " + a.horaFimPadrao())
