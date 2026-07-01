@@ -10,7 +10,7 @@ import { ChatMessageView, ChatService, SessaoChatStatus } from '../services/chat
 import { DentistDirectoryService, DentistSummary, ScheduleSlot } from '../services/dentist-directory.service';
 import { HttpClient } from '@angular/common/http';
 import { RuntimeConfigService } from '../services/runtime-config.service';
-import { ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectorRef, NgZone } from '@angular/core';
 import { MeusAgendamentosComponent } from './meus-agendamentos.component';
 
 export interface DaySchedule {
@@ -77,7 +77,8 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     private chatService: ChatService,
     private http: HttpClient,
     private runtime: RuntimeConfigService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
   ) {}
 
   runDiagnostics(): void {
@@ -128,11 +129,15 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          this.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          this.loadDentists(pos.coords.latitude, pos.coords.longitude);
+          this.ngZone.run(() => {
+            this.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            this.loadDentists(pos.coords.latitude, pos.coords.longitude);
+          });
         },
         () => {
-          this.loadDentists(); 
+          this.ngZone.run(() => {
+            this.loadDentists(); 
+          });
         }
       );
     } else {
@@ -155,11 +160,13 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
         } else {
           this.dentists = [];
         }
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Falha ao carregar especialistas:', err);
         this.isLoadingDentists = false;
         this.hasError = true;
+        this.cdr.detectChanges();
       }
     });
   }
