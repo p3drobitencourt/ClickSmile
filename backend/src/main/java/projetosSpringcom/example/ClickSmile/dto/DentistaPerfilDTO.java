@@ -9,5 +9,13 @@ public record DentistaPerfilDTO(
     String bio,
     String clinica,
     String telefone,
-    String endereco
+    String cep,
+    String logradouro,
+    String numero,
+    String complemento,
+    String bairro,
+    String cidade,
+    String estado,
+    java.math.BigDecimal latitude,
+    java.math.BigDecimal longitude
 ) {}

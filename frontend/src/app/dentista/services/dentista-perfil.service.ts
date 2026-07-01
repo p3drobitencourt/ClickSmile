@@ -8,8 +8,16 @@ export interface DentistaPerfilDTO {
   especialidade: string;
   bio: string;
   clinica: string;
-  telefone: string;
-  endereco: string;
+  telefone?: string;
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 @Injectable({ providedIn: 'root' })
