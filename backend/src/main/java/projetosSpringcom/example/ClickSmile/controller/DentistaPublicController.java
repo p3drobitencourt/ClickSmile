@@ -80,29 +80,39 @@ public class DentistaPublicController {
             return ResponseEntity.ok(dadosProximos);
         }
 
-        List<DentistaResumoDTO> dados = usuarioRepository.findByPerfil(Perfil.DENTISTA).stream()
-            .filter(Dentista.class::isInstance)
-            .map(Dentista.class::cast)
-            .map(dentista -> {
-                String agendaInfo = agendaService.buscarPorDentista(dentista.getId())
+        List<DentistaResumoDTO> dados = usuarioRepository.findAllDentistasComLocalizacao().stream()
+            .map(row -> {
+                String idStr = row[0] != null ? row[0].toString() : null;
+                java.util.UUID dentistaId = java.util.UUID.fromString(idStr);
+                String nome = row[1] != null ? row[1].toString() : null;
+                String email = row[2] != null ? row[2].toString() : null;
+                String cro = row[3] != null ? row[3].toString() : null;
+                String especialidade = row[4] != null ? row[4].toString() : null;
+                java.math.BigDecimal latitude = row[5] != null ? new java.math.BigDecimal(row[5].toString()) : null;
+                java.math.BigDecimal longitude = row[6] != null ? new java.math.BigDecimal(row[6].toString()) : null;
+                Double distanciaKm = row[7] != null ? ((Number) row[7]).doubleValue() : null;
+
+                String agendaInfo = agendaService.buscarPorDentista(dentistaId)
                     .map(a -> a.slotDurationMin() + " min")
                     .orElse("Não configurado");
-                List<projetosSpringcom.example.ClickSmile.dto.SlotResponseDTO> slots = agendamentoService.buscarSlotsLivres(dentista.getId(), java.time.LocalDate.now(), java.time.LocalDate.now().plusDays(7));
+                    
+                List<projetosSpringcom.example.ClickSmile.dto.SlotResponseDTO> slots = agendamentoService.buscarSlotsLivres(dentistaId, java.time.LocalDate.now(), java.time.LocalDate.now().plusDays(7));
+
                 return new DentistaResumoDTO(
-                    dentista.getId(),
-                    dentista.getNome(),
-                    dentista.getEmail(),
-                    dentista.getCro(),
-                    dentista.getEspecialidade(),
+                    dentistaId,
+                    nome,
+                    email,
+                    cro,
+                    especialidade,
                     agendaInfo,
-                    null,
-                    null,
-                    null,
+                    latitude,
+                    longitude,
+                    distanciaKm,
                     slots
                 );
             })
-                // .filter(dto -> dto.slots() != null && !dto.slots().isEmpty()) // Removido para testes e diagnóstico
-                .toList();
+            // .filter(dto -> dto.slots() != null && !dto.slots().isEmpty()) // Removido para testes e diagnóstico
+            .toList();
 
         return ResponseEntity.ok(dados);
     }
