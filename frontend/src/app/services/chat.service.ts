@@ -222,6 +222,50 @@ export class ChatService implements OnDestroy {
     }
   }
 
+  // Novo método para Dentista
+  public dentistaChats$ = new BehaviorSubject<{roomId: string, clienteNome: string, messages: ChatMessageView[]} | null>(null);
+  private roomSubscriptions: Record<string, any> = {};
+
+  connectDentista(dentistaId: string): Observable<any> {
+    this.escutarSolicitacoes(dentistaId);
+    
+    this.solicitacoes$.subscribe(solicitacoes => {
+      solicitacoes.forEach(req => {
+        if (!this.roomSubscriptions[req.id]) {
+          // Fetch history
+          this.http.get<ChatMessageView[]>(this.runtime.api(`/api/mensagens/historico/${req.id}`))
+            .subscribe((history) => {
+              const formattedHistory = history.map(msg => {
+                const parsed = { ...msg, mine: msg.senderId === dentistaId, isInvite: false, isSystem: false, inviteDataHora: undefined };
+                return parsed;
+              });
+              this.dentistaChats$.next({ roomId: req.id, clienteNome: 'Cliente', messages: formattedHistory });
+              
+              if (this.client?.connected) {
+                this.roomSubscriptions[req.id] = this.client.subscribe(`/topic/chat.${req.id}`, (message: IMessage) => {
+                  let payload = JSON.parse(message.body) as ChatMessageView;
+                  payload.mine = payload.senderId === dentistaId;
+                  
+                  // Pega o history mais recente para append
+                  let currentMessages: ChatMessageView[] = [];
+                  // Na verdade, apenas emite o update
+                  this.http.get<ChatMessageView[]>(this.runtime.api(`/api/mensagens/historico/${req.id}`)).subscribe(h => {
+                    const hF = h.map(msg => {
+                      const parsed = { ...msg, mine: msg.senderId === dentistaId, isInvite: false, isSystem: false, inviteDataHora: undefined };
+                      return parsed;
+                    });
+                    this.dentistaChats$.next({ roomId: req.id, clienteNome: 'Cliente', messages: hF });
+                  });
+                });
+              }
+            });
+        }
+      });
+    });
+
+    return this.dentistaChats$.asObservable();
+  }
+
   send(roomId: string, senderId: string, senderName: string, recipientId: string, message: string) {
     const payload: ChatMessageView = {
       id: crypto.randomUUID(),

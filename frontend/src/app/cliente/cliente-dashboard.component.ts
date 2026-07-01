@@ -3,7 +3,7 @@ import { Component, OnDestroy, OnInit, inject, DestroyRef } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { GoogleMapsModule } from '@angular/google-maps';
+import * as L from 'leaflet';
 import { AuthService } from '../auth/auth.service';
 import { AgendamentoService } from '../services/agendamento';
 import { ChatMessageView, ChatService, SessaoChatStatus } from '../services/chat.service';
@@ -21,7 +21,7 @@ export interface DaySchedule {
 @Component({
   selector: 'app-cliente-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, MeusAgendamentosComponent, GoogleMapsModule],
+  imports: [CommonModule, FormsModule, MeusAgendamentosComponent],
   templateUrl: './cliente-dashboard.component.html',
   styleUrl: './cliente-dashboard.component.scss',
 })
@@ -46,11 +46,19 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   currentUserLabel = 'Cliente';
   sessionStatus: SessaoChatStatus | null = null;
   SessaoChatStatus = SessaoChatStatus; 
-  userLocation: google.maps.LatLngLiteral | undefined;
-  mapOptions: google.maps.MapOptions = {
-    zoom: 12,
-    mapId: 'DEMO_MAP_ID',
-  };
+  userLocation: {lat: number, lng: number} | undefined;
+  private map: L.Map | undefined;
+  private marker: L.Marker | undefined;
+  
+  // Custom marker icon to fix Angular asset path issues for Leaflet
+  private defaultIcon = L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
   private chatSubscription?: Subscription;
   private sessionStatusSub?: Subscription;
 
@@ -131,6 +139,27 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     
     // Strictly after selectedDentist is confirmed
     this.loadSlots(dentist.id);
+
+    // Init map
+    if (dentist.latitude && dentist.longitude) {
+      setTimeout(() => this.initMap(dentist.latitude!, dentist.longitude!), 100);
+    }
+  }
+
+  private initMap(lat: number, lng: number): void {
+    const container = document.getElementById('dentist-map');
+    if (!container) return;
+
+    if (this.map) {
+      this.map.remove();
+    }
+
+    this.map = L.map('dentist-map').setView([lat, lng], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(this.map);
+
+    this.marker = L.marker([lat, lng], { icon: this.defaultIcon }).addTo(this.map);
   }
 
   iniciarChat(): void {

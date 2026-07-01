@@ -79,14 +79,7 @@
             </div>
           </div>
           <div class="map-container" *ngIf="userLocation">
-            <google-map [center]="userLocation" [options]="mapOptions" height="100%" width="100%">
-              <map-marker [position]="userLocation" title="Você está aqui" [options]="{icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'}"></map-marker>
-              <map-marker 
-                *ngIf="selectedDentist.latitude && selectedDentist.longitude"
-                [position]="{lat: selectedDentist.latitude, lng: selectedDentist.longitude}" 
-                [title]="selectedDentist.nome">
-              </map-marker>
-            </google-map>
+            <div id="dentist-map" style="height: 100%; width: 100%; z-index: 1;"></div>
           </div>
           <div *ngIf="!userLocation" style="padding: 2rem; text-align: center; color: #64748b;">
             Carregando mapa...
