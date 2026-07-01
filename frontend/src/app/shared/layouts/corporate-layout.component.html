@@ -16,9 +16,6 @@
         <a routerLink="/dentista/configuracoes" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Configurações</a>
       </ng-container>
 
-      <ng-container *ngIf="!isDentista && !isAdmin">
-        <a routerLink="/cliente" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Buscar Dentistas</a>
-      </ng-container>
     </nav>
     
     <div class="user-profile">

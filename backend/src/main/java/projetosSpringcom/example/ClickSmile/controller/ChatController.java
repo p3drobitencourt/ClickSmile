@@ -156,27 +156,6 @@ public class ChatController {
         }
     }
 
-    @MessageMapping("/chat.iniciar")
-    public void iniciarSessaoStomp(@Valid SessaoChatRequestDTO request) {
-        try {
-            SessaoChat sessao = sessaoChatRepository.findByClienteIdAndDentistaId(request.clienteId(), request.dentistaId())
-                .orElseGet(() -> {
-                    SessaoChat novaSessao = new SessaoChat();
-                    novaSessao.setClienteId(request.clienteId());
-                    novaSessao.setDentistaId(request.dentistaId());
-                    novaSessao.setStatus(SessaoChatStatus.PENDING);
-                    return sessaoChatRepository.save(novaSessao);
-                });
-
-            SessaoChatResponseDTO response = new SessaoChatResponseDTO(sessao.getId(), sessao.getClienteId(), sessao.getDentistaId(), sessao.getStatus());
-
-            if (sessao.getStatus() == SessaoChatStatus.PENDING) {
-                messagingTemplate.convertAndSendToUser(request.dentistaId().toString(), "/queue/solicitacoes", response);
-            }
-        } catch (DataIntegrityViolationException e) {
-            // Drop silently
-        }
-    }
 
     @PostMapping("/api/chat/sessao/{roomId}/aceitar")
     public ResponseEntity<SessaoChatResponseDTO> aceitarSessao(@PathVariable String roomId) {

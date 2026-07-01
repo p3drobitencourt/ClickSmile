@@ -25,4 +25,4 @@ COPY --from=builder /app/app.jar .
 # Configuração Railway / Render
 EXPOSE 8080 10000
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-XX:+UseZGC", "-jar", "app.jar"]

@@ -13,6 +13,8 @@ import { RuntimeConfigService } from '../services/runtime-config.service';
 import { ChangeDetectorRef, NgZone } from '@angular/core';
 import { MeusAgendamentosComponent } from './meus-agendamentos.component';
 
+export type Tab = 'CHAT_AGENDA' | 'BUSCAR' | 'PERFIL';
+
 export interface DaySchedule {
   dateObj: Date;
   dateString: string;
@@ -29,6 +31,8 @@ export interface DaySchedule {
   styleUrl: './cliente-dashboard.component.scss',
 })
 export class ClienteDashboardComponent implements OnInit, OnDestroy {
+  activeTab: Tab = 'CHAT_AGENDA';
+  
   dentists: DentistSummary[] = [];
   selectedDentist: DentistSummary | null = null;
   
@@ -126,6 +130,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
 
     this.isLoadingDentists = true;
     this.hasError = false;
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -142,6 +147,18 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
       );
     } else {
       this.loadDentists();
+    }
+  }
+
+  setActiveTab(tab: Tab): void {
+    this.activeTab = tab;
+    // Resize map when entering the BUSCAR tab if map already exists
+    if (tab === 'BUSCAR' && this.selectedDentist) {
+      setTimeout(() => {
+        if (this.map) {
+          this.map.invalidateSize();
+        }
+      }, 100);
     }
   }
 
@@ -364,5 +381,14 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
         }
       });
+  }
+
+  buscarCep(cep: string): void {
+    const rawCep = cep.replace(/\D/g, '');
+    if (rawCep.length === 8) {
+      console.log('Buscando CEP...', rawCep);
+      // O ViaCepService deverá ser implementado ou injetado aqui
+      // fetch(`https://viacep.com.br/ws/${rawCep}/json/`)...
+    }
   }
 }
