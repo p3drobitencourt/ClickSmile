@@ -115,7 +115,7 @@
           <div class="panel-head">
             <div>
               <p class="eyebrow">Agendar</p>
-              <h2>Horários Disponíveis: {{ selectedDentist?.nome }}</h2>
+              <h2>Horários Disponíveis: {{ selectedDentist.nome }}</h2>
             </div>
             <span class="pill pill-quiet" *ngIf="!isLoadingSlots">Próximos dias</span>
             <span class="spinner-small" *ngIf="isLoadingSlots"></span>
@@ -165,7 +165,7 @@
           <div class="panel-head">
             <div>
               <p class="eyebrow">Chat Online</p>
-              <h2>Conversar com {{ selectedDentist?.nome }}</h2>
+              <h2>Conversar com {{ selectedDentist.nome }}</h2>
             </div>
             <div style="display:flex; gap:0.5rem">
               <span class="pill" *ngIf="roomId">Sala {{ roomId }}</span>
