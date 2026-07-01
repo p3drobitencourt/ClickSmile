@@ -1,9 +1,10 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { Client, IMessage } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { RuntimeConfigService } from './runtime-config.service';
+import { WebSocketService } from './web-socket.service';
+import { IMessage } from '@stomp/rx-stomp';
+import { AuthService } from '../auth/auth.service';
 
 export interface ChatMessageView {
   id: string;
@@ -35,108 +36,101 @@ export interface SessaoChatResponseDTO {
 
 @Injectable({ providedIn: 'root' })
 export class ChatService implements OnDestroy {
-  private client: Client | null = null;
   private connectedRoom: string | null = null;
   private messages$ = new BehaviorSubject<ChatMessageView[]>([]);
   public sessionStatus$ = new BehaviorSubject<SessaoChatStatus | null>(null);
   public solicitacoes$ = new BehaviorSubject<SessaoChatResponseDTO[]>([]);
-  private reconnectAttempt = 0;
-  private maxReconnectDelay = 30000;
-  private chatSubscription: any = null;
-  private statusSubscription: any = null;
-  private solicitacoesSubscription: any = null;
   public agendamentos$ = new BehaviorSubject<any[]>([]);
-  private agendamentosSubscription: any = null;
 
-  constructor(private runtime: RuntimeConfigService, private http: HttpClient) {}
+  private rxSubscriptions: Subscription[] = [];
+  private tokenInitialized = false;
+
+  constructor(
+    private runtime: RuntimeConfigService,
+    private http: HttpClient,
+    private rxStomp: WebSocketService,
+    private auth: AuthService
+  ) {
+    this.ensureConnection();
+  }
+
+  private ensureConnection() {
+    if (!this.tokenInitialized) {
+      const token = this.auth.getAccessToken();
+      if (token) {
+        this.rxStomp.initConnection(token);
+        this.tokenInitialized = true;
+      }
+    }
+  }
 
   connect(roomId: string, currentUserId: string, senderName: string): Observable<ChatMessageView[]> {
+    this.ensureConnection();
+
     if (this.connectedRoom !== roomId) {
       this.connectedRoom = roomId;
       this.messages$.next([]);
-      this.client?.deactivate();
-      this.reconnectAttempt = 0;
+      this.clearRoomSubscriptions();
 
-      // Load history first
+      // Load history
       this.http.get<ChatMessageView[]>(this.runtime.api(`/api/mensagens/historico/${roomId}`))
         .subscribe((history) => {
-          const formattedHistory = history.map(msg => {
-            const parsed = { ...msg, mine: msg.senderId === currentUserId, isInvite: false, isSystem: false, inviteDataHora: undefined };
-            if (parsed.message.startsWith('[INVITE]')) {
-              parsed.isInvite = true;
-              try {
-                const data = JSON.parse(parsed.message.replace('[INVITE]', ''));
-                parsed.inviteDataHora = data.dataHora;
-              } catch(e) {}
-            } else if (parsed.message.startsWith('[SYSTEM]')) {
-              parsed.isSystem = true;
-              parsed.message = parsed.message.replace('[SYSTEM]', '').trim();
-            }
-            return parsed;
-          });
+          const formattedHistory = history.map(msg => this.parseMessage(msg, currentUserId));
           this.messages$.next(formattedHistory);
-          this.initStompClient(roomId, currentUserId, senderName);
+          this.listenToUserMessages(currentUserId);
+          this.listenToSessionStatus(roomId);
         });
     }
 
     return this.messages$.asObservable();
   }
 
-  private initStompClient(roomId: string, currentUserId: string, senderName: string) {
-    this.client = new Client({
-      webSocketFactory: () => new SockJS(this.runtime.api('/ws')),
-      reconnectDelay: 1000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-    });
+  private listenToUserMessages(currentUserId: string) {
+    // Only subscribe once to /user/queue/mensagens
+    // This serves both client and dentist as long as they are the intended recipient
+    const sub = this.rxStomp.watch('/user/queue/mensagens').subscribe((message: IMessage) => {
+      let payload = JSON.parse(message.body) as ChatMessageView;
+      payload = this.parseMessage(payload, currentUserId);
 
-    this.client.beforeConnect = () => {
-      // Exponential backoff logic
-      const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempt), this.maxReconnectDelay);
-      this.client!.reconnectDelay = delay;
-    };
-
-    this.client.onWebSocketClose = () => {
-      this.reconnectAttempt++;
-    };
-
-    this.client.onConnect = () => {
-      this.reconnectAttempt = 0;
-      
-      // Clean up previous subscriptions if any
-      if (this.chatSubscription) this.chatSubscription.unsubscribe();
-      if (this.statusSubscription) this.statusSubscription.unsubscribe();
-
-      // Listen for chat messages
-      this.chatSubscription = this.client?.subscribe(`/topic/chat.${roomId}`, (message: IMessage) => {
-        let payload = JSON.parse(message.body) as ChatMessageView;
-        payload.mine = payload.senderId === currentUserId;
-        
-        if (payload.message.startsWith('[INVITE]')) {
-          payload.isInvite = true;
-          try {
-            const data = JSON.parse(payload.message.replace('[INVITE]', ''));
-            payload.inviteDataHora = data.dataHora;
-          } catch(e) {}
-        } else if (payload.message.startsWith('[SYSTEM]')) {
-          payload.isSystem = true;
-          payload.message = payload.message.replace('[SYSTEM]', '').trim();
-        }
-
+      // Only add if it belongs to the current room in context for client
+      if (this.connectedRoom && payload.roomId === this.connectedRoom) {
         const currentMessages = this.messages$.value;
         if (!currentMessages.some(m => m.id === payload.id)) {
           this.messages$.next([...currentMessages, payload]);
         }
-      });
+      }
+    });
+    this.rxSubscriptions.push(sub);
+  }
 
-      // Listen for session status updates
-      this.statusSubscription = this.client?.subscribe(`/topic/chat.${roomId}.status`, (message: IMessage) => {
-        const payload = JSON.parse(message.body) as SessaoChatResponseDTO;
+  private listenToSessionStatus(roomId: string) {
+    const sub = this.rxStomp.watch('/user/queue/status').subscribe((message: IMessage) => {
+      const payload = JSON.parse(message.body) as SessaoChatResponseDTO;
+      if (payload.id === roomId) {
         this.sessionStatus$.next(payload.status);
-      });
-    };
+      }
+    });
+    this.rxSubscriptions.push(sub);
+  }
 
-    this.client.activate();
+  private parseMessage(msg: ChatMessageView, currentUserId: string): ChatMessageView {
+    const parsed = { ...msg, mine: msg.senderId === currentUserId, isInvite: false, isSystem: false, inviteDataHora: undefined };
+    if (parsed.message.startsWith('[INVITE]')) {
+      parsed.isInvite = true;
+      try {
+        const data = JSON.parse(parsed.message.replace('[INVITE]', ''));
+        parsed.inviteDataHora = data.dataHora;
+      } catch(e) {}
+    } else if (parsed.message.startsWith('[SYSTEM]')) {
+      parsed.isSystem = true;
+      parsed.message = parsed.message.replace('[SYSTEM]', '').trim();
+    }
+    return parsed;
+  }
+
+  private clearRoomSubscriptions() {
+    this.rxSubscriptions.forEach(sub => sub.unsubscribe());
+    this.rxSubscriptions = [];
   }
 
   solicitarChat(clienteId: string, dentistaId: string): Observable<SessaoChatResponseDTO> {
@@ -155,109 +149,71 @@ export class ChatService implements OnDestroy {
   }
 
   enviarConviteDev(roomId: string, dentistaId: string, dentistaNome: string, clienteId: string, dataHora: string): void {
-    if (this.client?.connected) {
-      this.client.publish({
-        destination: '/app/chat.invite',
-        body: JSON.stringify({
-          roomId,
-          dentistaId,
-          dentistaNome,
-          clienteId,
-          dataHora
-        }),
-      });
-    }
+    this.ensureConnection();
+    this.rxStomp.publish({
+      destination: '/app/chat.invite',
+      body: JSON.stringify({
+        roomId,
+        dentistaId,
+        dentistaNome,
+        clienteId,
+        dataHora
+      }),
+    });
   }
 
   escutarSolicitacoes(dentistaId: string): void {
-    if (!this.client?.connected) {
-      // Connect specifically for listening if not connected
-      this.client = new Client({
-        webSocketFactory: () => new SockJS(this.runtime.api('/ws')),
-        reconnectDelay: 1000,
-      });
-      this.client.onConnect = () => {
-        if (this.solicitacoesSubscription) this.solicitacoesSubscription.unsubscribe();
-        this.solicitacoesSubscription = this.client?.subscribe(`/topic/dentista.${dentistaId}.solicitacoes`, (message: IMessage) => {
-          const payload = JSON.parse(message.body) as SessaoChatResponseDTO;
-          this.solicitacoes$.next([...this.solicitacoes$.value, payload]);
-        });
-      };
-      this.client.activate();
-    } else {
-      if (this.solicitacoesSubscription) this.solicitacoesSubscription.unsubscribe();
-      this.solicitacoesSubscription = this.client?.subscribe(`/topic/dentista.${dentistaId}.solicitacoes`, (message: IMessage) => {
-        const payload = JSON.parse(message.body) as SessaoChatResponseDTO;
-        this.solicitacoes$.next([...this.solicitacoes$.value, payload]);
-      });
-    }
+    this.ensureConnection();
+    const sub = this.rxStomp.watch('/user/queue/solicitacoes').subscribe((message: IMessage) => {
+      const payload = JSON.parse(message.body) as SessaoChatResponseDTO;
+      this.solicitacoes$.next([...this.solicitacoes$.value, payload]);
+    });
+    this.rxSubscriptions.push(sub);
   }
 
   escutarAgendamentos(dentistaId: string): void {
-    const subscribeToTopic = () => {
-      if (this.agendamentosSubscription) this.agendamentosSubscription.unsubscribe();
-      this.agendamentosSubscription = this.client?.subscribe(`/topic/dentista.${dentistaId}.agendamentos`, (message: IMessage) => {
-        try {
-          const payload = JSON.parse(message.body);
-          if (payload.dentistaId === dentistaId) {
-            this.agendamentos$.next([...this.agendamentos$.value, payload]);
-          }
-        } catch (e) {
-          console.error('Failed to parse agendamento payload', e);
+    this.ensureConnection();
+    const sub = this.rxStomp.watch('/user/queue/agendamentos').subscribe((message: IMessage) => {
+      try {
+        const payload = JSON.parse(message.body);
+        if (payload.dentistaId === dentistaId) {
+          this.agendamentos$.next([...this.agendamentos$.value, payload]);
         }
-      });
-    };
-
-    if (!this.client?.connected) {
-      this.client = new Client({
-        webSocketFactory: () => new SockJS(this.runtime.api('/ws')),
-        reconnectDelay: 1000,
-      });
-      this.client.onConnect = () => {
-        subscribeToTopic();
-      };
-      this.client.activate();
-    } else {
-      subscribeToTopic();
-    }
+      } catch (e) {
+        console.error('Failed to parse agendamento payload', e);
+      }
+    });
+    this.rxSubscriptions.push(sub);
   }
 
-  // Novo método para Dentista
   public dentistaChats$ = new BehaviorSubject<{roomId: string, clienteNome: string, messages: ChatMessageView[]} | null>(null);
   private roomSubscriptions: Record<string, any> = {};
 
   connectDentista(dentistaId: string): Observable<any> {
+    this.ensureConnection();
     this.escutarSolicitacoes(dentistaId);
     
+    // Also listen to messages globally for the dentist
+    const sub = this.rxStomp.watch('/user/queue/mensagens').subscribe((message: IMessage) => {
+      let payload = JSON.parse(message.body) as ChatMessageView;
+      payload = this.parseMessage(payload, dentistaId);
+      
+      this.http.get<ChatMessageView[]>(this.runtime.api(`/api/mensagens/historico/${payload.roomId}`)).subscribe(h => {
+        const hF = h.map(msg => this.parseMessage(msg, dentistaId));
+        this.dentistaChats$.next({ roomId: payload.roomId, clienteNome: 'Cliente', messages: hF });
+      });
+    });
+    this.rxSubscriptions.push(sub);
+
     this.solicitacoes$.subscribe(solicitacoes => {
       solicitacoes.forEach(req => {
         if (!this.roomSubscriptions[req.id]) {
           // Fetch history
           this.http.get<ChatMessageView[]>(this.runtime.api(`/api/mensagens/historico/${req.id}`))
             .subscribe((history) => {
-              const formattedHistory = history.map(msg => {
-                const parsed = { ...msg, mine: msg.senderId === dentistaId, isInvite: false, isSystem: false, inviteDataHora: undefined };
-                return parsed;
-              });
+              const formattedHistory = history.map(msg => this.parseMessage(msg, dentistaId));
               this.dentistaChats$.next({ roomId: req.id, clienteNome: 'Cliente', messages: formattedHistory });
-              
-              if (this.client?.connected) {
-                this.roomSubscriptions[req.id] = this.client.subscribe(`/topic/chat.${req.id}`, (message: IMessage) => {
-                  let payload = JSON.parse(message.body) as ChatMessageView;
-                  payload.mine = payload.senderId === dentistaId;
-                  
-                  // Pega o history mais recente para append
-                  let currentMessages: ChatMessageView[] = [];
-                  // Na verdade, apenas emite o update
-                  this.http.get<ChatMessageView[]>(this.runtime.api(`/api/mensagens/historico/${req.id}`)).subscribe(h => {
-                    const hF = h.map(msg => {
-                      const parsed = { ...msg, mine: msg.senderId === dentistaId, isInvite: false, isSystem: false, inviteDataHora: undefined };
-                      return parsed;
-                    });
-                    this.dentistaChats$.next({ roomId: req.id, clienteNome: 'Cliente', messages: hF });
-                  });
-                });
-              }
+              this.roomSubscriptions[req.id] = true;
             });
         }
       });
@@ -278,26 +234,22 @@ export class ChatService implements OnDestroy {
       mine: true,
     };
 
-    if (this.sessionStatus$.value !== SessaoChatStatus.ACTIVE) {
+    if (this.sessionStatus$.value !== SessaoChatStatus.ACTIVE && senderName !== 'Dentista') {
       console.warn('Cannot send message: Chat session is not active.');
-      return;
+      // O dentista pode enviar mensagens em resposta sem o check de status local
     }
 
     this.messages$.next([...this.messages$.value, payload]);
-
-    if (this.client?.connected) {
-      this.client.publish({
-        destination: '/app/chat.send',
-        body: JSON.stringify(payload),
-      });
-    }
+    
+    this.ensureConnection();
+    this.rxStomp.publish({
+      destination: '/app/chat.send',
+      body: JSON.stringify(payload),
+    });
   }
 
   ngOnDestroy(): void {
-    if (this.chatSubscription) this.chatSubscription.unsubscribe();
-    if (this.statusSubscription) this.statusSubscription.unsubscribe();
-    if (this.solicitacoesSubscription) this.solicitacoesSubscription.unsubscribe();
-    if (this.agendamentosSubscription) this.agendamentosSubscription.unsubscribe();
-    this.client?.deactivate();
+    this.clearRoomSubscriptions();
+    this.rxStomp.deactivate();
   }
 }

@@ -77,7 +77,9 @@ public class ChatController {
             msg.getSentAt()
         );
 
-        messagingTemplate.convertAndSend("/topic/chat." + request.roomId(), response);
+        // Enviar para o destinatário e remetente (fila privada)
+        messagingTemplate.convertAndSendToUser(request.recipientId().toString(), "/queue/mensagens", response);
+        messagingTemplate.convertAndSendToUser(request.senderId().toString(), "/queue/mensagens", response);
     }
 
     @MessageMapping("/chat.invite")
@@ -110,7 +112,8 @@ public class ChatController {
             msg.getSentAt()
         );
 
-        messagingTemplate.convertAndSend("/topic/chat." + request.roomId(), response);
+        messagingTemplate.convertAndSendToUser(request.clienteId().toString(), "/queue/mensagens", response);
+        messagingTemplate.convertAndSendToUser(request.dentistaId().toString(), "/queue/mensagens", response);
     }
 
     @GetMapping("/api/mensagens/historico/{roomId}")
@@ -144,12 +147,11 @@ public class ChatController {
             SessaoChatResponseDTO response = new SessaoChatResponseDTO(sessao.getId(), sessao.getClienteId(), sessao.getDentistaId(), sessao.getStatus());
 
             if (sessao.getStatus() == SessaoChatStatus.PENDING) {
-                messagingTemplate.convertAndSend("/topic/dentista." + request.dentistaId() + ".solicitacoes", response);
+                messagingTemplate.convertAndSendToUser(request.dentistaId().toString(), "/queue/solicitacoes", response);
             }
 
             return ResponseEntity.ok(response);
         } catch (DataIntegrityViolationException e) {
-            // Se houve inserção concorrente exata que acionou a constraint UNIQUE
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Sessão já criada simultaneamente. Tente novamente.");
         }
     }
@@ -169,10 +171,10 @@ public class ChatController {
             SessaoChatResponseDTO response = new SessaoChatResponseDTO(sessao.getId(), sessao.getClienteId(), sessao.getDentistaId(), sessao.getStatus());
 
             if (sessao.getStatus() == SessaoChatStatus.PENDING) {
-                messagingTemplate.convertAndSend("/topic/dentista." + request.dentistaId() + ".solicitacoes", response);
+                messagingTemplate.convertAndSendToUser(request.dentistaId().toString(), "/queue/solicitacoes", response);
             }
         } catch (DataIntegrityViolationException e) {
-            // Drop silently or broadcast error for STOMP
+            // Drop silently
         }
     }
 
@@ -185,7 +187,8 @@ public class ChatController {
         sessao = sessaoChatRepository.save(sessao);
 
         SessaoChatResponseDTO response = new SessaoChatResponseDTO(sessao.getId(), sessao.getClienteId(), sessao.getDentistaId(), sessao.getStatus());
-        messagingTemplate.convertAndSend("/topic/chat." + roomId + ".status", response);
+        messagingTemplate.convertAndSendToUser(sessao.getClienteId().toString(), "/queue/status", response);
+        messagingTemplate.convertAndSendToUser(sessao.getDentistaId().toString(), "/queue/status", response);
 
         return ResponseEntity.ok(response);
     }
@@ -205,7 +208,6 @@ public class ChatController {
             AgendamentoRequestDTO req = new AgendamentoRequestDTO(sessao.getClienteId(), sessao.getDentistaId(), dataHora);
             projetosSpringcom.example.ClickSmile.domain.Agendamento agendamento = agendamentoService.criar(req);
 
-            // Enviar mensagem automática de sucesso para o chat
             Mensagem msg = new Mensagem();
             msg.setRoomId(roomId);
             msg.setSenderId(sessao.getClienteId());
@@ -218,7 +220,9 @@ public class ChatController {
             ChatMessageDTO responseMsg = new ChatMessageDTO(
                 msg.getId(), msg.getRoomId(), msg.getSenderId(), msg.getSenderName(), msg.getRecipientId(), msg.getContent(), msg.getSentAt()
             );
-            messagingTemplate.convertAndSend("/topic/chat." + roomId, responseMsg);
+            
+            messagingTemplate.convertAndSendToUser(sessao.getClienteId().toString(), "/queue/mensagens", responseMsg);
+            messagingTemplate.convertAndSendToUser(sessao.getDentistaId().toString(), "/queue/mensagens", responseMsg);
 
             java.util.Map<String, Object> dtoAgendamento = new java.util.HashMap<>();
             dtoAgendamento.put("id", agendamento.getId());
@@ -229,7 +233,7 @@ public class ChatController {
             dtoAgendamento.put("inicioAt", agendamento.getInicioAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
             dtoAgendamento.put("fimAt", agendamento.getFimAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
 
-            messagingTemplate.convertAndSend("/topic/dentista." + agendamento.getDentista().getId() + ".agendamentos", dtoAgendamento);
+            messagingTemplate.convertAndSendToUser(agendamento.getDentista().getId().toString(), "/queue/agendamentos", dtoAgendamento);
 
             return ResponseEntity.status(HttpStatus.CREATED).build();
         } catch (Exception e) {
