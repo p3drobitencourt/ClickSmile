@@ -10,6 +10,7 @@ import { ChatMessageView, ChatService, SessaoChatStatus } from '../services/chat
 import { DentistDirectoryService, DentistSummary, ScheduleSlot } from '../services/dentist-directory.service';
 import { HttpClient } from '@angular/common/http';
 import { RuntimeConfigService } from '../services/runtime-config.service';
+import { ChangeDetectorRef } from '@angular/core';
 import { MeusAgendamentosComponent } from './meus-agendamentos.component';
 
 export interface DaySchedule {
@@ -75,7 +76,8 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     private dentistDirectory: DentistDirectoryService,
     private chatService: ChatService,
     private http: HttpClient,
-    private runtime: RuntimeConfigService
+    private runtime: RuntimeConfigService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   runDiagnostics(): void {
@@ -341,7 +343,10 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     this.chatSubscription = this.chatService
       .connect(this.roomId, this.currentUserId, dentist.nome)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((messages) => (this.messages = messages));
+      .subscribe((messages) => {
+        this.messages = messages;
+        this.cdr.detectChanges();
+      });
 
     this.sessionStatusSub?.unsubscribe();
     this.sessionStatusSub = this.chatService.sessionStatus$
@@ -349,6 +354,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
       .subscribe(status => {
         if (status) {
           this.sessionStatus = status;
+          this.cdr.detectChanges();
         }
       });
   }

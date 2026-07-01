@@ -21,7 +21,7 @@ export class WebSocketService extends RxStomp {
       heartbeatOutgoing: 4000,
       reconnectDelay: 1000,
       debug: (msg: string): void => {
-        // console.log(new Date(), msg);
+        console.log(new Date(), '[RxStomp]', msg);
       }
     };
 

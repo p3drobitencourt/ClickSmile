@@ -53,9 +53,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                         String token = authHeader.substring(7);
                         try {
                             Jwt jwt = jwtDecoder.decode(token);
-                            UsernamePasswordAuthenticationToken auth = 
-                                new UsernamePasswordAuthenticationToken(jwt, null, null);
-                            accessor.setUser(auth);
+                            String userId = jwt.getSubject();
+                            accessor.setUser(new StompPrincipal(userId));
                         } catch (Exception e) {
                             throw new IllegalArgumentException("Invalid token");
                         }
@@ -64,5 +63,18 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 return message;
             }
         });
+    }
+
+    class StompPrincipal implements java.security.Principal {
+        private final String name;
+
+        public StompPrincipal(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return this.name;
+        }
     }
 }
