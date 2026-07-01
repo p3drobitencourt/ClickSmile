@@ -75,7 +75,7 @@ public class DentistaPublicController {
                         slots
                     );
                 })
-                .filter(dto -> dto.slots() != null && !dto.slots().isEmpty())
+                // .filter(dto -> dto.slots() != null && !dto.slots().isEmpty()) // Removido para testes e diagnóstico
                 .toList();
             return ResponseEntity.ok(dadosProximos);
         }
@@ -101,8 +101,8 @@ public class DentistaPublicController {
                     slots
                 );
             })
-            .filter(dto -> dto.slots() != null && !dto.slots().isEmpty())
-            .toList();
+                // .filter(dto -> dto.slots() != null && !dto.slots().isEmpty()) // Removido para testes e diagnóstico
+                .toList();
 
         return ResponseEntity.ok(dados);
     }

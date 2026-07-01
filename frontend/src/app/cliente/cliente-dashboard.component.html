@@ -4,12 +4,21 @@
       <p class="eyebrow">Portal do cliente</p>
       <h1>Escolha o especialista, reserve o horário e converse sem sair da tela.</h1>
     </div>
-    <div class="status-card">
+    <div class="status-card" style="display:flex; flex-direction:column; gap:0.5rem;">
       <span class="status-label">Status do Agendamento</span>
       <strong>{{ bookingStatus }}</strong>
+      <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.25rem; margin-top: 0.5rem;" (click)="runDiagnostics()">Executar Diagnóstico (Dev)</button>
     </div>
   </header>
   
+  <div *ngIf="diagnosticsResult" class="surface-panel" style="margin-bottom: 2rem; background: #f0fdf4; border-color: #16a34a; white-space: pre-wrap; font-family: monospace; font-size: 0.85rem;">
+    <h3 style="color: #166534; margin-top: 0; display: flex; justify-content: space-between;">
+      <span>Resultados do Diagnóstico da API</span>
+      <button (click)="diagnosticsResult = ''" style="background: none; border: none; cursor: pointer; color: #166534;">X</button>
+    </h3>
+    {{ diagnosticsResult }}
+  </div>
+
   <div *ngIf="hasError" class="surface-panel" style="margin-bottom: 2rem; background: #fef2f2; border-color: #f87171;">
     <h3 style="color: #991b1b; margin-top: 0;">Falha de Conexão</h3>
     <p style="color: #7f1d1d;">Ocorreu um erro ao carregar os dados. Verifique sua conexão e tente novamente.</p>
@@ -220,7 +229,7 @@
         <p>Ao selecionar um dentista, você poderá ver a localização, os horários e abrir um chat.</p>
       </div>
 
-      <div *ngIf="dentists.length === 0" class="surface-panel empty-state" style="padding: 4rem;">
+      <div *ngIf="!isLoadingDentists && dentists.length === 0" class="surface-panel empty-state" style="padding: 4rem;">
         <h3>Nenhum especialista cadastrado ainda.</h3>
         <p>Aguarde novos dentistas se cadastrarem na plataforma!</p>
       </div>

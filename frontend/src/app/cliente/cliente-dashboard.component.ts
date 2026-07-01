@@ -8,6 +8,8 @@ import { AuthService } from '../auth/auth.service';
 import { AgendamentoService } from '../services/agendamento';
 import { ChatMessageView, ChatService, SessaoChatStatus } from '../services/chat.service';
 import { DentistDirectoryService, DentistSummary, ScheduleSlot } from '../services/dentist-directory.service';
+import { HttpClient } from '@angular/common/http';
+import { RuntimeConfigService } from '../services/runtime-config.service';
 import { MeusAgendamentosComponent } from './meus-agendamentos.component';
 
 export interface DaySchedule {
@@ -65,12 +67,49 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   // Optimistic ID para o Slot
   reservingSlotIso: string | null = null;
 
+  diagnosticsResult = '';
+
   constructor(
     private auth: AuthService,
     private agendamentoService: AgendamentoService,
     private dentistDirectory: DentistDirectoryService,
-    private chatService: ChatService
+    private chatService: ChatService,
+    private http: HttpClient,
+    private runtime: RuntimeConfigService
   ) {}
+
+  runDiagnostics(): void {
+    this.diagnosticsResult = 'Iniciando teste de conectividade (aguarde até 60s se o Render estiver dormindo)...\n\n';
+    const dentistaUrl = this.runtime.api('/api/public/dentistas');
+    
+    const startDentista = Date.now();
+    this.http.get<any[]>(dentistaUrl, { observe: 'response' }).subscribe({
+      next: (res) => {
+        const time = Date.now() - startDentista;
+        this.diagnosticsResult += `[✅ Dentistas] Status: ${res.status} | Tempo: ${time}ms | Array Size: ${res.body?.length || 0}\n`;
+        if (res.body?.length === 0) {
+           this.diagnosticsResult += `   -> ⚠️ O array está VAZIO. Ninguém com perfil DENTISTA foi retornado pelo banco!\n`;
+        } else {
+           this.diagnosticsResult += `   -> Dados da primeira posição: ${JSON.stringify(res.body?.[0])}\n`;
+        }
+      },
+      error: (err) => {
+        this.diagnosticsResult += `[❌ Dentistas] Erro HTTP: ${err.status} | StatusText: ${err.statusText} | Mensagem: ${err.message}\n`;
+      }
+    });
+
+    const agendamentosUrl = this.runtime.api(`/api/agendamentos/paciente/${this.currentUserId}`);
+    const startAg = Date.now();
+    this.http.get<any[]>(agendamentosUrl, { observe: 'response' }).subscribe({
+      next: (res) => {
+        const time = Date.now() - startAg;
+        this.diagnosticsResult += `[✅ Agendamentos] Status: ${res.status} | Tempo: ${time}ms | Array Size: ${res.body?.length || 0}\n`;
+      },
+      error: (err) => {
+        this.diagnosticsResult += `[❌ Agendamentos] Erro HTTP: ${err.status} | StatusText: ${err.statusText} | Mensagem: ${err.message}\n`;
+      }
+    });
+  }
 
   private destroyRef = inject(DestroyRef);
 
