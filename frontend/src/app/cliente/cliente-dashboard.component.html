@@ -29,29 +29,53 @@
         </div>
 
         <div class="dentist-list" *ngIf="dentists.length > 0">
-          <button
-            type="button"
-            class="dentist-card"
-            *ngFor="let dentist of dentists"
-            [class.active]="selectedDentist?.id === dentist.id"
-            (click)="selectDentist(dentist)"
-          >
-            <span class="dentist-avatar" [style.background]="dentist?.color || '#38bdf8'">{{ initials(dentist?.nome || '') }}</span>
-            <span class="dentist-copy">
-              <strong>{{ dentist?.nome }}</strong>
-              <small>{{ dentist?.especialidade }} <span *ngIf="dentist?.distanciaKm">({{ dentist?.distanciaKm | number:'1.1-1' }} km)</span></small>
-              <small>{{ dentist?.cro }}</small>
-              <small>{{ dentist?.agendaResumo }}</small>
-              <a *ngIf="dentist?.latitude && dentist?.longitude"
-                 href="https://www.google.com/maps/dir/?api=1&destination={{dentist?.latitude}},{{dentist?.longitude}}"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 style="display: inline-block; margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #e0f2fe; color: #0284c7; border-radius: 4px; font-weight: 500; font-size: 0.8rem; text-decoration: none;"
-                 (click)="$event.stopPropagation()">
-                 📍 Abrir no Google Maps
-              </a>
-            </span>
-          </button>
+          <div class="dentist-card-wrapper" *ngFor="let dentist of dentists" style="margin-bottom: 1rem;">
+            <button
+              type="button"
+              class="dentist-card"
+              [class.active]="selectedDentist?.id === dentist.id"
+              (click)="selectDentist(dentist)"
+              style="width: 100%; text-align: left; margin-bottom: 0;"
+            >
+              <span class="dentist-avatar" [style.background]="dentist?.color || '#38bdf8'">{{ initials(dentist?.nome || '') }}</span>
+              <span class="dentist-copy">
+                <strong>{{ dentist?.nome }}</strong>
+                <small>{{ dentist?.especialidade }} <span *ngIf="dentist?.distanciaKm">({{ dentist?.distanciaKm | number:'1.1-1' }} km)</span></small>
+                <small>{{ dentist?.cro }}</small>
+                <small>{{ dentist?.agendaResumo }}</small>
+                <a *ngIf="dentist?.latitude && dentist?.longitude"
+                   href="https://www.google.com/maps/dir/?api=1&destination={{dentist?.latitude}},{{dentist?.longitude}}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   style="display: inline-block; margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #e0f2fe; color: #0284c7; border-radius: 4px; font-weight: 500; font-size: 0.8rem; text-decoration: none;"
+                   (click)="$event.stopPropagation()">
+                   📍 Abrir no Google Maps
+                </a>
+              </span>
+            </button>
+            
+            <!-- Slots Carrossel Embutido -->
+            <div class="dentist-quick-slots" *ngIf="dentist.slots && dentist.slots.length > 0" style="padding: 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; border-top: none; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; display: flex; gap: 0.5rem; overflow-x: auto;">
+              <button 
+                type="button" 
+                *ngFor="let slot of dentist.slots.slice(0, 4)"
+                (click)="bookSlot(slot.start); selectDentist(dentist)"
+                style="white-space: nowrap; padding: 0.5rem 0.75rem; background: white; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; color: #334155; font-weight: 500; cursor: pointer; transition: all 0.2s;"
+                onmouseover="this.style.borderColor='#38bdf8'; this.style.color='#0284c7'"
+                onmouseout="this.style.borderColor='#cbd5e1'; this.style.color='#334155'"
+              >
+                {{ slot.start | date:'dd/MM HH:mm' }}
+              </button>
+              <button 
+                type="button" 
+                *ngIf="dentist.slots.length > 4"
+                (click)="selectDentist(dentist)"
+                style="white-space: nowrap; padding: 0.5rem 0.75rem; background: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.85rem; color: #64748b; font-weight: 500; cursor: pointer;"
+              >
+                +{{ dentist.slots.length - 4 }} horários
+              </button>
+            </div>
+          </div>
         </div>
         
         <div *ngIf="!isLoadingDentists && dentists.length === 0" class="empty-state" style="margin-top: 1rem;">

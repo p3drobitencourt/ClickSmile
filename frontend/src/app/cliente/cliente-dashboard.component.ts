@@ -250,20 +250,12 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     this.isLoadingSlots = true;
     this.calendarSlots = [];
     this.groupedSchedule = [];
-    this.dentistDirectory.getSlots(dentistId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (slots) => {
-        this.isLoadingSlots = false;
-        // Previne explicitamente passar undefined, garantindo [] como fallback
-        this.calendarSlots = slots || [];
-        this.groupSlotsByDay(this.calendarSlots);
-      },
-      error: (err) => {
-        console.error('Falha ao carregar agenda do dentista:', err);
-        this.isLoadingSlots = false;
-        this.hasError = true;
-        this.calendarSlots = [];
-      }
-    });
+    
+    if (this.selectedDentist && this.selectedDentist.slots) {
+      this.calendarSlots = this.selectedDentist.slots;
+      this.groupSlotsByDay(this.calendarSlots);
+    }
+    this.isLoadingSlots = false;
   }
 
   private groupSlotsByDay(slots: ScheduleSlot[]): void {

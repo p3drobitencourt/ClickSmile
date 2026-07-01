@@ -1,6 +1,7 @@
 package projetosSpringcom.example.ClickSmile.dto;
 
 import java.util.UUID;
+import java.util.List;
 
 public record DentistaResumoDTO(
         UUID id,
@@ -11,5 +12,6 @@ public record DentistaResumoDTO(
         String agendaResumo,
         java.math.BigDecimal latitude,
         java.math.BigDecimal longitude,
-        Double distanciaKm
+        Double distanciaKm,
+        List<SlotResponseDTO> slots
 ) {}

@@ -14,6 +14,7 @@ export interface DentistSummary {
   latitude?: number;
   longitude?: number;
   distanciaKm?: number;
+  slots?: ScheduleSlot[];
 }
 
 export interface ScheduleSlot {
