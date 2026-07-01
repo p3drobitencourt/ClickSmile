@@ -6,7 +6,7 @@ import { OnboardingComponent } from './onboarding/onboarding.component';
 import { DashboardComponent } from './dashboard/dashboard';
 import { HomeRedirectComponent } from './auth/home-redirect.component';
 
-const AgendaViewComponent = () => import('./dentista/agenda-view.component').then((m) => m.AgendaViewComponent);
+const DentistaPainelGeralComponent = () => import('./dentista/dentista-painel-geral.component').then((m) => m.DentistaPainelGeralComponent);
 const PacientesViewComponent = () => import('./dentista/pacientes-view.component').then((m) => m.PacientesViewComponent);
 const ConfigViewComponent = () => import('./dentista/config-view.component').then((m) => m.ConfigViewComponent);
 
@@ -29,7 +29,7 @@ export const routes: Routes = [
         canActivate: [dentistaGuard],
         children: [
           { path: '', redirectTo: 'agenda', pathMatch: 'full' },
-          { path: 'agenda', loadComponent: AgendaViewComponent },
+          { path: 'agenda', loadComponent: DentistaPainelGeralComponent },
           { path: 'pacientes', loadComponent: PacientesViewComponent },
           { path: 'configuracoes', loadComponent: ConfigViewComponent }
         ]

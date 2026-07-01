@@ -1,0 +1,102 @@
+<div class="h-screen w-full bg-slate-50 flex flex-col lg:grid lg:grid-cols-12 overflow-hidden">
+  
+  <!-- Coluna Esquerda: FullCalendar (70% em telas grandes) -->
+  <div class="lg:col-span-8 xl:col-span-9 p-4 lg:p-6 overflow-y-auto flex flex-col gap-4">
+    <header class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+      <h1 class="text-2xl font-bold text-slate-800">Painel do Dentista</h1>
+      <p class="text-slate-500 text-sm mt-1">Gerencie sua agenda e pacientes em um só lugar.</p>
+    </header>
+
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex-1 min-h-[600px]">
+      <!-- Instância do FullCalendar -->
+      <full-calendar [options]="calendarOptions"></full-calendar>
+    </div>
+  </div>
+
+  <!-- Coluna Direita: Chat (30% em telas grandes) -->
+  <div class="lg:col-span-4 xl:col-span-3 bg-white border-l border-slate-200 flex flex-col h-full absolute lg:relative w-full lg:w-auto z-50 lg:z-auto transition-transform duration-300"
+       [class.translate-x-0]="!isMobile || showMobileChat"
+       [class.translate-x-full]="isMobile && !showMobileChat">
+    
+    <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-white">
+      <h2 class="font-semibold text-slate-800 text-lg">Chat com Pacientes</h2>
+      <button *ngIf="isMobile" (click)="closeMobileChat()" class="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Lista de Chats Ativos (Abas) -->
+    <div class="flex overflow-x-auto p-2 gap-2 border-b border-slate-100 bg-slate-50/50">
+      <div *ngIf="activeChats.length === 0" class="text-sm text-slate-400 p-2 text-center w-full">
+        Nenhum chat ativo. Clique em um agendamento.
+      </div>
+      <button *ngFor="let chatId of activeChats" 
+              (click)="selectChat(chatId)"
+              class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors"
+              [ngClass]="selectedChatId === chatId ? 'bg-blue-100 text-blue-700' : 'text-slate-600 hover:bg-slate-100'">
+        {{ chatRooms[chatId]?.clienteNome || 'Paciente' }}
+      </button>
+    </div>
+
+    <!-- Área de Mensagens -->
+    <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-slate-50/30">
+      <ng-container *ngIf="selectedChatId; else noChatSelected">
+        <div *ngFor="let msg of chatRooms[selectedChatId]?.messages"
+             class="flex flex-col max-w-[85%]"
+             [ngClass]="msg.mine ? 'self-end' : 'self-start'">
+             
+          <div *ngIf="msg.isSystem" class="self-center text-xs text-slate-400 bg-transparent my-2">
+            {{ msg.message }}
+          </div>
+          
+          <div *ngIf="!msg.isSystem" 
+               class="px-4 py-2 rounded-2xl text-sm shadow-sm"
+               [ngClass]="msg.mine ? 'bg-blue-600 text-white rounded-br-sm' : 'bg-white text-slate-800 border border-slate-100 rounded-bl-sm'">
+            <span *ngIf="!msg.mine" class="text-[10px] font-semibold text-slate-400 block mb-0.5 uppercase tracking-wide">
+              {{ msg.senderName }}
+            </span>
+            {{ msg.message }}
+          </div>
+          <span *ngIf="!msg.isSystem" class="text-[10px] text-slate-400 mt-1" [ngClass]="msg.mine ? 'text-right' : 'text-left'">
+            {{ msg.sentAt | date:'HH:mm' }}
+          </span>
+        </div>
+      </ng-container>
+      <ng-template #noChatSelected>
+        <div class="flex-1 flex flex-col items-center justify-center text-slate-400 gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          <p class="text-sm">Selecione um paciente para conversar</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Input Box -->
+    <div *ngIf="selectedChatId" class="p-4 bg-white border-t border-slate-100">
+      <form (ngSubmit)="sendMessage()" class="flex gap-2 relative">
+        <input type="text" 
+               name="draftMsg" 
+               [(ngModel)]="draftMessage" 
+               placeholder="Escreva sua mensagem..." 
+               class="flex-1 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-full pl-4 pr-12 py-3 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+               autocomplete="off" />
+        <button type="submit" 
+                [disabled]="!draftMessage.trim()"
+                class="absolute right-1 top-1 bottom-1 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center aspect-square">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform rotate-90" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Overlay Mobile -->
+  <div *ngIf="isMobile && showMobileChat" 
+       (click)="closeMobileChat()"
+       class="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 lg:hidden transition-opacity">
+  </div>
+</div>
