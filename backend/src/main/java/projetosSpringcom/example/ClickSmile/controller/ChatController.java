@@ -162,12 +162,39 @@ public class ChatController {
         SessaoChat sessao = sessaoChatRepository.findById(UUID.fromString(roomId))
             .orElseThrow(() -> new IllegalArgumentException("Sessão não encontrada"));
 
-        sessao.setStatus(SessaoChatStatus.ACTIVE);
-        sessao = sessaoChatRepository.save(sessao);
+        // a) Call Transactional Service to accept and schedule
+        projetosSpringcom.example.ClickSmile.domain.Agendamento agendamento = agendamentoService.aceitarPaciente(sessao.getClienteId(), sessao.getDentistaId());
 
-        SessaoChatResponseDTO response = new SessaoChatResponseDTO(sessao.getId(), sessao.getClienteId(), sessao.getDentistaId(), sessao.getStatus());
+        SessaoChatResponseDTO response = new SessaoChatResponseDTO(sessao.getId(), sessao.getClienteId(), sessao.getDentistaId(), SessaoChatStatus.ACTIVE);
+        
+        // Broadcast A: Para o Paciente
+        Mensagem msg = new Mensagem();
+        msg.setRoomId(sessao.getId().toString());
+        msg.setSenderId(sessao.getDentistaId());
+        msg.setSenderName("Sistema");
+        msg.setRecipientId(sessao.getClienteId());
+        msg.setContent("[SYSTEM] Avaliação Inicial agendada automaticamente para amanhã às 08:00.");
+        msg.setSentAt(java.time.OffsetDateTime.now());
+        mensagemRepository.save(msg);
+        
+        ChatMessageDTO responseMsg = new ChatMessageDTO(
+            msg.getId(), msg.getRoomId(), msg.getSenderId(), msg.getSenderName(), msg.getRecipientId(), msg.getContent(), msg.getSentAt()
+        );
+        messagingTemplate.convertAndSendToUser(sessao.getClienteId().toString(), "/queue/mensagens", responseMsg);
         messagingTemplate.convertAndSendToUser(sessao.getClienteId().toString(), "/queue/status", response);
         messagingTemplate.convertAndSendToUser(sessao.getDentistaId().toString(), "/queue/status", response);
+
+        // Broadcast B: Para a Agenda do Dentista (Atualiza FullCalendar)
+        java.util.Map<String, Object> dtoAgendamento = new java.util.HashMap<>();
+        dtoAgendamento.put("id", agendamento.getId());
+        dtoAgendamento.put("dentistaId", agendamento.getDentista().getId());
+        dtoAgendamento.put("clienteId", agendamento.getPaciente().getId());
+        projetosSpringcom.example.ClickSmile.domain.Usuario cliente = usuarioRepository.findById(agendamento.getPaciente().getId()).orElse(null);
+        dtoAgendamento.put("clienteNome", cliente != null ? cliente.getNome() : "Desconhecido");
+        dtoAgendamento.put("inicioAt", agendamento.getInicioAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        dtoAgendamento.put("fimAt", agendamento.getFimAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+
+        messagingTemplate.convertAndSendToUser(sessao.getDentistaId().toString(), "/queue/agendamentos", dtoAgendamento);
 
         return ResponseEntity.ok(response);
     }

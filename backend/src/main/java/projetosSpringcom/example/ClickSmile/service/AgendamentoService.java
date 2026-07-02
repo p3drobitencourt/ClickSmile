@@ -12,6 +12,9 @@ import java.util.UUID;
 import projetosSpringcom.example.ClickSmile.repository.AgendamentoRepository;
 import projetosSpringcom.example.ClickSmile.repository.PacienteRepository;
 import projetosSpringcom.example.ClickSmile.repository.UsuarioRepository;
+import projetosSpringcom.example.ClickSmile.repository.SessaoChatRepository;
+import projetosSpringcom.example.ClickSmile.domain.SessaoChat;
+import projetosSpringcom.example.ClickSmile.domain.SessaoChatStatus;
 import projetosSpringcom.example.ClickSmile.dto.AgendaResponseDTO;
 import projetosSpringcom.example.ClickSmile.dto.RegraHorarioDTO;
 import projetosSpringcom.example.ClickSmile.dto.SlotResponseDTO;
@@ -30,12 +33,14 @@ public class AgendamentoService {
     private final UsuarioRepository usuarioRepository;
     private final PacienteRepository pacienteRepository;
     private final AgendaService agendaService;
+    private final SessaoChatRepository sessaoChatRepository;
 
-    public AgendamentoService(AgendamentoRepository agendamentoRepository, UsuarioRepository usuarioRepository, PacienteRepository pacienteRepository, AgendaService agendaService) {
+    public AgendamentoService(AgendamentoRepository agendamentoRepository, UsuarioRepository usuarioRepository, PacienteRepository pacienteRepository, AgendaService agendaService, SessaoChatRepository sessaoChatRepository) {
         this.agendamentoRepository = agendamentoRepository;
         this.usuarioRepository = usuarioRepository;
         this.pacienteRepository = pacienteRepository;
         this.agendaService = agendaService;
+        this.sessaoChatRepository = sessaoChatRepository;
     }
 
     @Transactional
@@ -63,6 +68,26 @@ public class AgendamentoService {
         agendamento.setStatus(StatusAgendamento.CONFIRMADO);
 
         return agendamentoRepository.save(agendamento);
+    }
+
+    @Transactional
+    public Agendamento aceitarPaciente(UUID pacienteId, UUID dentistaId) {
+        // a) Atualizar status da SessaoChat para ACTIVE
+        SessaoChat sessao = sessaoChatRepository.findByClienteIdAndDentistaId(pacienteId, dentistaId)
+            .orElseThrow(() -> new IllegalArgumentException("Sessão de chat não encontrada."));
+        
+        sessao.setStatus(SessaoChatStatus.ACTIVE);
+        sessaoChatRepository.save(sessao);
+
+        // b) Criar Agendamento para 08:00 do dia seguinte
+        ZoneId zone = ZoneId.of("America/Sao_Paulo"); // Fallback
+        OffsetDateTime amanhaOitoHoras = LocalDate.now(zone).plusDays(1).atTime(8, 0).atZone(zone).toOffsetDateTime();
+
+        AgendamentoRequestDTO req = new AgendamentoRequestDTO(pacienteId, dentistaId, amanhaOitoHoras);
+        
+        // c) O método criar() já faz a validação com @Lock(LockModeType.PESSIMISTIC_WRITE) 
+        // chamando findByDentistaAndInicioAtForUpdate()
+        return this.criar(req);
     }
 
     @Transactional
