@@ -13,7 +13,7 @@ import { RuntimeConfigService } from '../services/runtime-config.service';
 import { ChangeDetectorRef, NgZone } from '@angular/core';
 import { MeusAgendamentosComponent } from './meus-agendamentos.component';
 
-export type Tab = 'CHAT_AGENDA' | 'BUSCAR' | 'PERFIL';
+import { DashboardStateService, DashboardTab } from '../services/dashboard-state.service';
 
 export interface DaySchedule {
   dateObj: Date;
@@ -31,7 +31,7 @@ export interface DaySchedule {
   styleUrl: './cliente-dashboard.component.scss',
 })
 export class ClienteDashboardComponent implements OnInit, OnDestroy {
-  activeTab: Tab = 'CHAT_AGENDA';
+  activeTab: DashboardTab = 'BUSCAR';
   
   dentists: DentistSummary[] = [];
   selectedDentist: DentistSummary | null = null;
@@ -82,7 +82,8 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private runtime: RuntimeConfigService,
     private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private dashboardState: DashboardStateService
   ) {}
 
   runDiagnostics(): void {
@@ -131,6 +132,11 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     this.isLoadingDentists = true;
     this.hasError = false;
 
+    this.dashboardState.activeTab$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(tab => {
+      this.setActiveTab(tab);
+      this.cdr.detectChanges();
+    });
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -150,7 +156,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  setActiveTab(tab: Tab): void {
+  setActiveTab(tab: DashboardTab): void {
     this.activeTab = tab;
     // Resize map when entering the BUSCAR tab if map already exists
     if (tab === 'BUSCAR' && this.selectedDentist) {

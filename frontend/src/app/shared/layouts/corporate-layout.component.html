@@ -16,6 +16,17 @@
         <a routerLink="/dentista/configuracoes" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Configurações</a>
       </ng-container>
 
+      <ng-container *ngIf="!isDentista && !isAdmin">
+        <a href="#" [class.active]="activeTab === 'BUSCAR'" (click)="setTab('BUSCAR', $event)">
+          Buscar Dentistas
+        </a>
+        <a href="#" [class.active]="activeTab === 'CHAT_AGENDA'" (click)="setTab('CHAT_AGENDA', $event)">
+          Minhas Consultas
+        </a>
+        <a href="#" [class.active]="activeTab === 'PERFIL'" (click)="setTab('PERFIL', $event)">
+          Meu Perfil
+        </a>
+      </ng-container>
     </nav>
     
     <div class="user-profile">
