@@ -42,7 +42,16 @@ export class LoginComponent {
       await this.router.navigateByUrl(role === 'DENTISTA' ? '/dentista' : '/cliente');
     } catch (err: unknown) {
       const e = err as { error?: { detail?: string; message?: string }, message?: string };
-      this.erro = e?.error?.detail || e?.error?.message || e?.message || 'Falha no login. Verifique os dados.';
+      const msg = e?.error?.detail || e?.error?.message || e?.message || 'Falha no login. Verifique os dados.';
+      
+      // Se for um erro de Chunk (nova versão na Vercel), force o reload da página
+      if (msg.includes('Failed to fetch dynamically imported module') || msg.includes('ChunkLoadError')) {
+         const role = this.auth.getRole();
+         window.location.href = role === 'DENTISTA' ? '/dentista' : '/cliente';
+         return;
+      }
+
+      this.erro = msg;
     } finally {
       this.loading = false;
       this.cdr.detectChanges();

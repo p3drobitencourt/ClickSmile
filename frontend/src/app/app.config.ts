@@ -5,8 +5,9 @@ import { provideHttpClient, withInterceptorsFromDi, HTTP_INTERCEPTORS, withInter
 import { authInterceptor } from './auth/auth.interceptor';
 import { RuntimePrefixInterceptor } from './services/runtime-prefix.interceptor';
 import { HttpErrorInterceptor } from './shared/http-error.interceptor';
-import { APP_INITIALIZER } from '@angular/core';
+import { APP_INITIALIZER, ErrorHandler } from '@angular/core';
 import { AuthService } from './auth/auth.service';
+import { GlobalErrorHandler } from './shared/global-error-handler';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -17,6 +18,7 @@ export const appConfig: ApplicationConfig = {
     ),
     { provide: HTTP_INTERCEPTORS, useClass: RuntimePrefixInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: HttpErrorInterceptor, multi: true },
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
     { provide: APP_INITIALIZER, useFactory: (auth: AuthService) => () => auth.bootstrapSession(), deps: [AuthService], multi: true }
   ]
 };
