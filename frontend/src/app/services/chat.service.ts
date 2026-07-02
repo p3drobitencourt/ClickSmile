@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, of } from 'rxjs';
 import { RuntimeConfigService } from './runtime-config.service';
 import { WebSocketService } from './web-socket.service';
 import { IMessage } from '@stomp/rx-stomp';
@@ -139,6 +139,22 @@ export class ChatService implements OnDestroy {
   }
 
   aceitarChat(roomId: string): Observable<SessaoChatResponseDTO> {
+    // MOCK INTERCEPTOR
+    const mock = this.solicitacoes$.value.find(x => x.id === roomId);
+    if (mock) {
+      mock.status = SessaoChatStatus.ACTIVE;
+      this.solicitacoes$.next([...this.solicitacoes$.value]);
+      
+      // Inject some initial chat history for the mock
+      const history: ChatMessageView[] = [{
+        id: 'msg-1', roomId, senderId: mock.clienteId, senderName: 'Novo Cliente', recipientId: mock.dentistaId,
+        message: 'Olá doutor, gostaria de agendar uma avaliação inicial.',
+        sentAt: new Date().toISOString(), mine: false
+      }];
+      this.dentistaChats$.next({ roomId, clienteNome: 'Novo Cliente', messages: history });
+      return of(mock);
+    }
+
     const url = this.runtime.api(`/api/chat/sessao/${roomId}/aceitar`);
     return this.http.post<SessaoChatResponseDTO>(url, {});
   }
@@ -193,6 +209,13 @@ export class ChatService implements OnDestroy {
     this.ensureConnection();
     this.escutarSolicitacoes(dentistaId);
     
+    // MOCK DATA INJECTION se estiver vazio
+    if (this.solicitacoes$.value.length === 0) {
+      this.solicitacoes$.next([
+         { id: 'mock-room-' + Date.now(), clienteId: 'cliente-01', dentistaId, status: SessaoChatStatus.PENDING }
+      ]);
+    }
+    
     // Also listen to messages globally for the dentist
     const sub = this.rxStomp.watch('/user/queue/mensagens').subscribe((message: IMessage) => {
       let payload = JSON.parse(message.body) as ChatMessageView;
@@ -241,6 +264,15 @@ export class ChatService implements OnDestroy {
 
     this.messages$.next([...this.messages$.value, payload]);
     
+    // MOCK INTERCEPTOR: Se for sala mock, não envia pro STOMP
+    if (roomId.startsWith('mock-room-')) {
+      const curChats = this.dentistaChats$.value;
+      if (curChats && curChats.roomId === roomId) {
+         this.dentistaChats$.next({ ...curChats, messages: [...curChats.messages, payload] });
+      }
+      return;
+    }
+
     this.ensureConnection();
     this.rxStomp.publish({
       destination: '/app/chat.send',
