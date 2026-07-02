@@ -24,7 +24,7 @@
       <div class="lg:col-span-1 bg-slate-800 text-slate-200 border border-slate-700 rounded-lg shadow-md p-6 flex flex-col h-[calc(100vh-16rem)] overflow-y-auto">
         <h2 class="text-xl font-bold mb-4 text-slate-100">Próximos Agendamentos</h2>
         <!-- O componente de agendamentos gerencia a listagem, botões de cancelamento e status -->
-        <app-meus-agendamentos></app-meus-agendamentos>
+        <app-meus-agendamentos (abrirChat)="carregarChatDoAgendamento($event)"></app-meus-agendamentos>
       </div>
 
       <!-- Coluna Direita: Chat Integrado -->

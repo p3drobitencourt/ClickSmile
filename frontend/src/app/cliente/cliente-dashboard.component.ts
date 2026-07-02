@@ -223,6 +223,32 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     this.loadSlots(dentist.id);
   }
 
+  carregarChatDoAgendamento(dentistaId: string): void {
+    let d = this.dentists.find(x => x.id === dentistaId);
+    if (!d) {
+      // Mock minimalista se não achou na lista principal
+      d = {
+        id: dentistaId,
+        nome: 'Especialista da Consulta',
+        especialidade: 'Odontologia'
+      };
+    }
+    
+    // Seta a tab ativa primeiro
+    if (this.activeTab !== 'CHAT_AGENDA') {
+       this.dashboardState.setActiveTab('CHAT_AGENDA');
+    }
+
+    this.selectDentist(d);
+    
+    // Inicia o chat automaticamente se for necessário
+    setTimeout(() => {
+       if (!this.roomId) {
+           this.iniciarChat();
+       }
+    }, 300);
+  }
+
   voltarAoMapa(): void {
     this.selectedDentist = null;
     

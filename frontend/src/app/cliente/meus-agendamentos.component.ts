@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, DestroyRef, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../auth/auth.service';
 import { AgendamentoService } from '../services/agendamento';
@@ -14,6 +14,8 @@ import { ToastService } from '../shared/toast.service';
   styleUrl: './meus-agendamentos.component.scss',
 })
 export class MeusAgendamentosComponent implements OnInit {
+  @Output() abrirChat = new EventEmitter<string>();
+  
   agendamentos: AgendamentoResumo[] = [];
   loading = true;
 
@@ -25,7 +27,8 @@ export class MeusAgendamentosComponent implements OnInit {
 
   constructor(
     private auth: AuthService,
-    private agendamentoService: AgendamentoService
+    private agendamentoService: AgendamentoService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   private destroyRef = inject(DestroyRef);
@@ -46,11 +49,19 @@ export class MeusAgendamentosComponent implements OnInit {
         next: (data) => {
           this.agendamentos = data.sort((a, b) => new Date(a.dataHora).getTime() - new Date(b.dataHora).getTime());
           this.loading = false;
+          this.cdr.detectChanges();
         },
         error: () => {
           this.loading = false;
+          this.cdr.detectChanges();
         }
       });
+  }
+
+  iniciarChat(dentistaId?: string) {
+    if (dentistaId) {
+      this.abrirChat.emit(dentistaId);
+    }
   }
 
   confirmCancel(id: number | string) {
