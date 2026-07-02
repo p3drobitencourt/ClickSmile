@@ -22,7 +22,7 @@
       </div>
       <div class="flex-1 min-w-0">
         <strong class="block text-slate-200 text-base truncate">{{ item.dataHora | date: 'EEEE, HH:mm' }}</strong>
-        <p class="text-sm text-slate-400 m-0 truncate">Dentista: {{ item.dentistaNome || item.dentistaId || 'N/A' }}</p>
+        <p class="text-sm text-slate-400 m-0 truncate">Dentista: {{ item.dentistaId || 'N/A' }}</p>
         <div class="mt-2 flex items-center gap-2">
           <span class="px-2 py-0.5 rounded text-xs font-medium" 
                 [class.bg-emerald-900]="item.status === 'CONFIRMADO' || item.status === 'AGENDADO'" 
@@ -36,7 +36,7 @@
         </div>
       </div>
       <div class="flex flex-col gap-2 shrink-0">
-        <button type="button" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-medium border-none cursor-pointer transition-colors" (click)="iniciarChat(item.dentistaId)">
+        <button type="button" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-medium border-none cursor-pointer transition-colors" (click)="iniciarChat(item.dentistaId?.toString())">
           Abrir Chat
         </button>
         <button type="button" *ngIf="item.status !== 'CANCELADO'" class="px-3 py-1.5 bg-slate-700 hover:bg-red-900 hover:text-red-200 text-slate-300 rounded text-xs font-medium border-none cursor-pointer transition-colors" (click)="confirmCancel(item.id!)">

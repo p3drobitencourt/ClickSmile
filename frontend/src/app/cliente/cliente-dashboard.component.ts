@@ -231,7 +231,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
         id: dentistaId,
         nome: 'Especialista da Consulta',
         especialidade: 'Odontologia'
-      };
+      } as DentistSummary;
     }
     
     // Seta a tab ativa primeiro
@@ -239,7 +239,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
        this.dashboardState.setActiveTab('CHAT_AGENDA');
     }
 
-    this.selectDentist(d);
+    this.selectDentist(d!);
     
     // Inicia o chat automaticamente se for necessário
     setTimeout(() => {
