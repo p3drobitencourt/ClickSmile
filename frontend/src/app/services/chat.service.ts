@@ -166,6 +166,18 @@ export class ChatService implements OnDestroy {
     return this.http.post<SessaoChatResponseDTO>(url, {});
   }
 
+  getHistorico(roomId: string): Observable<ChatMessageView[]> {
+    return this.http.get<ChatMessageView[]>(this.runtime.api(`/api/mensagens/historico/${roomId}`));
+  }
+
+  parseMessageForComponent(msg: any, currentUserId: string): ChatMessageView {
+    return this.parseMessage(msg, currentUserId);
+  }
+
+  getRxStomp() {
+    return this.rxStomp;
+  }
+
   aceitarConviteAgendamento(roomId: string, dataHora: string): Observable<any> {
     const url = this.runtime.api(`/api/chat/sessao/${roomId}/agendar`);
     return this.http.post(url, { dataHora });

@@ -129,7 +129,5 @@ export class DentistaDashboardComponent implements OnInit {
     });
   }
 
-  acceptChat(roomId: string) {
-    console.log('Accepted chat:', roomId);
-  }
+
 }

@@ -4,8 +4,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DentistaChatRequestsComponent } from './components/dentista-chat-requests.component';
 import { DentistaMetricsComponent } from './components/dentista-metrics.component';
 import { ChatService, SessaoChatResponseDTO } from '../services/chat.service';
-import { AgendamentoService } from '../services/agendamento';
-import { AuthService } from '../auth/auth.service';
 import { ToastService } from '../shared/toast.service';
 
 @Component({
@@ -29,8 +27,7 @@ import { ToastService } from '../shared/toast.service';
 
       <div class="mt-6">
         <app-dentista-chat-requests 
-          [requests]="solicitacoes" 
-          (onAccept)="acceptChat($event)">
+          [requests]="solicitacoes">
         </app-dentista-chat-requests>
       </div>
     </div>
@@ -40,44 +37,13 @@ export class PacientesViewComponent implements OnInit {
   solicitacoes: SessaoChatResponseDTO[] = [];
 
   private chatService = inject(ChatService);
-  private authService = inject(AuthService);
-  private agendamentoService = inject(AgendamentoService);
-  private toast = inject(ToastService);
   private destroyRef = inject(DestroyRef);
 
   ngOnInit() {
     this.chatService.solicitacoes$.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(reqs => {
-      this.solicitacoes = reqs.filter(r => r.status === 'PENDING');
-    });
-  }
-
-  acceptChat(roomId: string) {
-    this.chatService.aceitarChat(roomId).subscribe({
-      next: (res) => {
-        // Agora que aceitou, marca uma "Avaliação Inicial" para amanha as 08:00
-        const amanha = new Date();
-        amanha.setDate(amanha.getDate() + 1);
-        amanha.setHours(8, 0, 0, 0);
-        
-        // Remove the 'Z' to respect local time offset required by backend
-        const dataHoraIso = new Date(amanha.getTime() - (amanha.getTimezoneOffset() * 60000)).toISOString().slice(0, 19);
-
-        const dentistaId = this.authService.getSubject() ?? '';
-        
-        this.agendamentoService.criar({
-          clienteId: res.clienteId,
-          dentistaId: dentistaId,
-          dataHora: dataHoraIso
-        }).subscribe({
-           next: () => {
-             this.toast.show('Chat aceito! Uma Avaliação Inicial foi criada na sua Agenda Kanban (Trello).', 'success');
-           },
-           error: () => this.toast.show('Chat aceito, mas erro ao criar agendamento.', 'warning')
-        });
-      },
-      error: () => this.toast.show('Erro ao aceitar solicitação de chat.', 'error')
+      this.solicitacoes = reqs.filter(r => r.status === 'PENDING' || r.status === 'ACTIVE');
     });
   }
 }
