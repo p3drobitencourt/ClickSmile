@@ -61,4 +61,9 @@ export class AgendamentoService {
     }
     return of(agend as AgendamentoResumo).pipe(delay(300));
   }
+
+  reagendarPatch(id: string, novoInicioAt: string): Observable<any> {
+    const url = this.runtime.api(`/api/agendamentos/${id}/reagendar`);
+    return this.http.patch(url, { novoInicioAt });
+  }
 }
