@@ -128,6 +128,17 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     if (!this.currentUserId) {
       return; 
     }
+    
+    // Listen to custom events from Leaflet popups
+    document.addEventListener('selectDentist', (e: any) => {
+      this.ngZone.run(() => {
+        const id = e.detail;
+        const d = this.dentists.find(x => x.id === id);
+        if (d) {
+          this.selectDentist(d);
+        }
+      });
+    });
 
     this.isLoadingDentists = true;
     this.hasError = false;
@@ -174,14 +185,14 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
         this.isLoadingDentists = false;
         if (dentists && dentists.length > 0) {
           this.dentists = dentists;
-          // Garante que a chamada loadSlots() ocorra APÓS a confirmação de que selectedDentist existe
-          this.selectDentist(dentists[0]);
+          this.voltarAoMapa();
         } else if (lat !== undefined && lng !== undefined) {
           // Se a busca por proximidade não retornar ninguém, busca todos os dentistas
           this.isLoadingDentists = true;
           this.loadDentists();
         } else {
           this.dentists = [];
+          this.voltarAoMapa();
         }
         this.cdr.detectChanges();
       },
@@ -200,7 +211,7 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   }
 
   selectDentist(dentist: DentistSummary): void {
-    if (!dentist) return; // Proteção extra contra null/undefined
+    if (!dentist) return; 
     this.selectedDentist = dentist;
     this.bookingStatus = `Agenda de ${dentist.nome} carregada.`;
     this.roomId = ''; 
@@ -210,11 +221,23 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     
     // Strictly after selectedDentist is confirmed
     this.loadSlots(dentist.id);
+  }
 
-    // Init map
-    if (dentist.latitude && dentist.longitude) {
-      setTimeout(() => this.initMap(dentist.latitude!, dentist.longitude!), 100);
-    }
+  voltarAoMapa(): void {
+    this.selectedDentist = null;
+    
+    setTimeout(() => {
+      let lat = -23.5505; // Default SP
+      let lng = -46.6333;
+      if (this.userLocation) {
+        lat = this.userLocation.lat;
+        lng = this.userLocation.lng;
+      } else if (this.dentists.length > 0 && this.dentists[0].latitude && this.dentists[0].longitude) {
+        lat = this.dentists[0].latitude;
+        lng = this.dentists[0].longitude;
+      }
+      this.initMap(lat, lng);
+    }, 100);
   }
 
   private initMap(lat: number, lng: number): void {
@@ -225,12 +248,38 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
       this.map.remove();
     }
 
-    this.map = L.map('dentist-map').setView([lat, lng], 15);
+    this.map = L.map('dentist-map').setView([lat, lng], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(this.map);
 
-    this.marker = L.marker([lat, lng], { icon: this.defaultIcon }).addTo(this.map);
+    // Add marker for user
+    if (this.userLocation) {
+      const userIcon = L.icon({
+        ...this.defaultIcon.options,
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png'
+      });
+      L.marker([this.userLocation.lat, this.userLocation.lng], { icon: userIcon })
+        .addTo(this.map)
+        .bindPopup('Sua Localização')
+        .openPopup();
+    }
+
+    // Add markers for dentists
+    this.dentists.forEach(d => {
+      if (d.latitude && d.longitude) {
+        L.marker([d.latitude, d.longitude], { icon: this.defaultIcon })
+          .addTo(this.map!)
+          .bindPopup(`<b>${d.nome}</b><br>${d.especialidade}<br><button class="mt-2 px-2 py-1 bg-blue-600 text-white rounded text-xs border-none cursor-pointer" onclick="document.dispatchEvent(new CustomEvent('selectDentist', {detail: '${d.id}'}))">Agendar</button>`);
+      }
+    });
+    
+    // Resize just in case
+    setTimeout(() => {
+      if (this.map) {
+        this.map.invalidateSize();
+      }
+    }, 200);
   }
 
   iniciarChat(): void {
