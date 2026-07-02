@@ -18,7 +18,7 @@ import { CommonModule } from '@angular/common';
               Aguardando resposta
             </span>
           </div>
-          <button class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm font-medium border-none cursor-pointer transition-colors" (click)="onAccept.emit(req.roomId)">Aceitar</button>
+          <button class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm font-medium border-none cursor-pointer transition-colors" (click)="onAccept.emit(req.id)">Aceitar</button>
         </div>
       </div>
       

@@ -141,7 +141,7 @@ export class DentistaPainelGeralComponent implements OnInit {
       // Obs: A estrutura atual indexa por roomId. Precisamos achar a sala com esse clienteId.
       let foundRoomId = null;
       for (const roomId of this.activeChats) {
-         if (this.chatRooms[roomId].clienteId === props.clienteId || 
+         if (String(this.chatRooms[roomId].clienteId) === String(props.clienteId) || 
              this.chatRooms[roomId].clienteNome === props.clienteNome) {
              foundRoomId = roomId;
              break;

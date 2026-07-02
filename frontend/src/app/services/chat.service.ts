@@ -134,6 +134,13 @@ export class ChatService implements OnDestroy {
   }
 
   solicitarChat(clienteId: string, dentistaId: string): Observable<SessaoChatResponseDTO> {
+    // MOCK INTERCEPTOR
+    if (String(clienteId) === '1') {
+       const mockRoomId = 'mock-room-' + Date.now();
+       const mockRoom = { id: mockRoomId, clienteId: '1', dentistaId, status: SessaoChatStatus.ACTIVE };
+       this.dentistaChats$.next({ roomId: mockRoomId, clienteNome: 'João (Mock)', messages: [] });
+       return of(mockRoom);
+    }
     const url = this.runtime.api('/api/chat/iniciar');
     return this.http.post<SessaoChatResponseDTO>(url, { clienteId, dentistaId });
   }
@@ -212,7 +219,7 @@ export class ChatService implements OnDestroy {
     // MOCK DATA INJECTION se estiver vazio
     if (this.solicitacoes$.value.length === 0) {
       this.solicitacoes$.next([
-         { id: 'mock-room-' + Date.now(), clienteId: 'cliente-01', dentistaId, status: SessaoChatStatus.PENDING }
+         { id: 'mock-room-' + Date.now(), clienteId: '1', dentistaId, status: SessaoChatStatus.PENDING }
       ]);
     }
     
