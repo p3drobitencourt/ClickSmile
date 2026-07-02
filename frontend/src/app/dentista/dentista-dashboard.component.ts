@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ViewEncapsulation } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -32,6 +32,7 @@ import { ToastService } from '../shared/toast.service';
   ],
   templateUrl: './dentista-dashboard.component.html',
   styleUrl: './dentista-dashboard.component.scss',
+  encapsulation: ViewEncapsulation.None
 })
 export class DentistaDashboardComponent implements OnInit {
   loading = true;
@@ -58,6 +59,8 @@ export class DentistaDashboardComponent implements OnInit {
     headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridWeek' },
     slotMinTime: '07:00:00',
     slotMaxTime: '20:00:00',
+    slotDuration: '00:15:00',
+    slotLabelInterval: '01:00',
     nowIndicator: true,
     editable: true,
     droppable: true,
