@@ -31,7 +31,7 @@ import { ToastService } from '../shared/toast.service';
     DentistaChatRequestsComponent
   ],
   templateUrl: './dentista-dashboard.component.html',
-  styleUrl: '../cliente/cliente-dashboard.component.scss', // Reuse the grid container styles
+  styleUrl: './dentista-dashboard.component.scss',
 })
 export class DentistaDashboardComponent implements OnInit {
   loading = true;
@@ -53,7 +53,8 @@ export class DentistaDashboardComponent implements OnInit {
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
     initialView: 'timeGridWeek',
-    height: 'auto',
+    height: '800px',
+    expandRows: true,
     headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridWeek' },
     slotMinTime: '07:00:00',
     slotMaxTime: '20:00:00',

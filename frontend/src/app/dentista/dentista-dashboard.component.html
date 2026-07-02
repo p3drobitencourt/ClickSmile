@@ -13,28 +13,32 @@
     [ganhosProjetados]="'1.250,00'">
   </app-dentista-metrics>
 
-  <div class="responsive-grid">
-    <!-- Agenda -->
-    <div class="agenda-wrapper" style="grid-column: span 2;">
-      <app-dentista-agenda 
-        *ngIf="!loading"
-        [loading]="loading" 
-        [saving]="saving" 
-        [dentistaId]="dentistaId" 
-        [payload]="payload"
-        (onSave)="saveAgenda($event)">
-      </app-dentista-agenda>
+  <div class="grid grid-cols-12 gap-6 mt-6">
+    <!-- Chat Requests (Left side) -->
+    <div class="col-span-12 xl:col-span-4 flex flex-col">
+      <app-dentista-chat-requests [requests]="mockRequests"></app-dentista-chat-requests>
     </div>
 
-    <!-- Chat Requests -->
-      <div class="col-span-12 lg:col-span-8">
-        <app-dentista-chat-requests [requests]="mockRequests"></app-dentista-chat-requests>
+    <!-- Calendar View (Right side) -->
+    <div class="col-span-12 xl:col-span-8 bg-slate-900 rounded-xl border border-slate-700 p-6 shadow-md">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-semibold text-slate-100">Agenda Semanal Kanban</h3>
+        <span class="text-xs px-2 py-1 bg-blue-500/10 text-blue-400 rounded border border-blue-500/20">Arraste para reagendar</span>
       </div>
-
-    <!-- Calendar View -->
-    <div class="calendar-wrapper" style="grid-column: span 3; background: var(--surface-bg, #0f172a); border-radius: 12px; border: 1px solid var(--border-color, #1e293b); padding: 24px; margin-top: 24px;">
-      <h3 style="margin-top: 0; margin-bottom: 24px; font-size: 1.1rem; color: #f8fafc; font-weight: 500;">Agenda Semanal</h3>
       <full-calendar [options]="calendarOptions"></full-calendar>
     </div>
+  </div>
+
+  <!-- Agenda Config (Bottom) -->
+  <div class="mt-8 bg-slate-800 rounded-xl border border-slate-700 p-6 shadow-md">
+    <h3 class="text-lg font-semibold text-slate-200 mb-4">Configurações de Horários de Trabalho</h3>
+    <app-dentista-agenda 
+      *ngIf="!loading"
+      [loading]="loading" 
+      [saving]="saving" 
+      [dentistaId]="dentistaId" 
+      [payload]="payload"
+      (onSave)="saveAgenda($event)">
+    </app-dentista-agenda>
   </div>
 </div>
