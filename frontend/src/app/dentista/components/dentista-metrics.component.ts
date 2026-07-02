@@ -6,22 +6,21 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="metrics-grid">
-      <div class="metric-card">
-        <p>Consultas Hoje</p>
-        <h3>{{ consultasHoje }}</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-700">
+        <p class="text-sm text-slate-400 font-medium mb-1">Consultas Hoje</p>
+        <h3 class="text-3xl font-bold text-slate-100 m-0">{{ consultasHoje }}</h3>
       </div>
-      <div class="metric-card">
-        <p>Taxa de Aceitação</p>
-        <h3>{{ taxaAceitacao }}%</h3>
+      <div class="bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-700">
+        <p class="text-sm text-slate-400 font-medium mb-1">Taxa de Aceitação</p>
+        <h3 class="text-3xl font-bold text-slate-100 m-0">{{ taxaAceitacao }}%</h3>
       </div>
-      <div class="metric-card">
-        <p>Ganhos Projetados</p>
-        <h3>R$ {{ ganhosProjetados }}</h3>
+      <div class="bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-700">
+        <p class="text-sm text-slate-400 font-medium mb-1">Ganhos Projetados</p>
+        <h3 class="text-3xl font-bold text-emerald-400 m-0">R$ {{ ganhosProjetados }}</h3>
       </div>
     </div>
-  `,
-  styleUrl: '../dentista-theme.scss'
+  `
 })
 export class DentistaMetricsComponent {
   @Input() consultasHoje = 0;

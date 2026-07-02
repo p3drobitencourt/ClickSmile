@@ -37,9 +37,11 @@ export class DentistaPainelGeralComponent implements OnInit {
     slotMaxTime: '22:00:00',
     allDaySlot: false,
     nowIndicator: true,
-    editable: false,
+    editable: true,
+    eventDurationEditable: false,
     selectable: true,
     eventClick: this.handleEventClick.bind(this),
+    eventDrop: this.handleEventDrop.bind(this),
     events: []
   };
 
@@ -82,6 +84,7 @@ export class DentistaPainelGeralComponent implements OnInit {
     ).subscribe({
       next: (agendamentos) => {
         const events = agendamentos.map(a => ({
+          id: a.id?.toString(),
           title: a.cliente?.nome ? `Consulta: ${a.cliente.nome}` : 'Consulta Agendada',
           start: a.dataHora,
           // Vamos assumir duração padrão de 30 min se não houver fim (ou se vier da API)
@@ -162,6 +165,29 @@ export class DentistaPainelGeralComponent implements OnInit {
         });
       }
     }
+  }
+
+  handleEventDrop(dropInfo: any) {
+    const agendamentoId = dropInfo.event.id;
+    const newStart = dropInfo.event.start;
+    if (!agendamentoId || !newStart) {
+      dropInfo.revert();
+      return;
+    }
+    
+    // Converte para ISO String (ajustando fuso caso o JS retorne local)
+    const novoInicioAt = new Date(newStart.getTime() - (newStart.getTimezoneOffset() * 60000)).toISOString().slice(0, 19);
+    
+    this.agendamentoService.reagendar(agendamentoId, novoInicioAt).subscribe({
+       next: () => {
+         // O card de consulta já está atualizado no UI (FullCalendar cuida disso visualmente)
+         console.log(`Agendamento ${agendamentoId} movido para ${novoInicioAt}`);
+       },
+       error: (err) => {
+         console.error('Erro ao reagendar, revertendo movimento:', err);
+         dropInfo.revert();
+       }
+    });
   }
 
   selectChat(chatId: string) {
