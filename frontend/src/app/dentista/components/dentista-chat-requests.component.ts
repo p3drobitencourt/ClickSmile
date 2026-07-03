@@ -38,8 +38,10 @@ import { IMessage } from '@stomp/stompjs';
               </span>
               
               <button *ngIf="req.status === 'PENDING'" 
-                      class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-medium border-none cursor-pointer transition-colors"
+                      class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-medium border-none cursor-pointer transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                      [disabled]="isSubmitting() === req.id"
                       (click)="acceptChat(req, $event)">
+                <span *ngIf="isSubmitting() === req.id" class="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full inline-block"></span>
                 Aceitar
               </button>
             </div>
@@ -110,6 +112,7 @@ export class DentistaChatRequestsComponent implements OnInit {
   
   selectedRequest = signal<SessaoChatResponseDTO | null>(null);
   chatMessages = signal<ChatMessageView[]>([]);
+  isSubmitting = signal<string | null>(null);
   newMessage = '';
 
   private chatService = inject(ChatService);
@@ -127,7 +130,8 @@ export class DentistaChatRequestsComponent implements OnInit {
     this.selectedRequest.set(req);
     // Reload messages from server history
     this.chatService.getHistorico(req.id).subscribe(hist => {
-      this.chatMessages.set(hist);
+      const mapped = hist.map(msg => this.chatService.parseMessageForComponent(msg, this.dentistaId));
+      this.chatMessages.set(mapped);
     });
 
     if (req.status === 'ACTIVE') {
@@ -137,19 +141,26 @@ export class DentistaChatRequestsComponent implements OnInit {
 
   acceptChat(req: SessaoChatResponseDTO, event: Event) {
     event.stopPropagation();
-    this.chatService.aceitarChat(req.id).subscribe(updated => {
-      // O backend transacional já cria a agenda e retorna o status ACTIVE
-      const updatedReq = { ...req, status: SessaoChatStatus.ACTIVE };
-      
-      // Update requests list locally to reflect changes
-      const idx = this.requests.findIndex(r => r.id === req.id);
-      if (idx !== -1) {
-        this.requests[idx] = updatedReq;
-      }
-      
-      this.selectedRequest.set(updatedReq);
-      this.chatMessages.set([]); // Limpa para evitar flickering, RXSTOMP trará o SYSTEM
-      this.subscribeToChat();
+    if (this.isSubmitting()) return;
+    this.isSubmitting.set(req.id);
+    
+    this.chatService.aceitarChat(req.id).subscribe({
+      next: (updated) => {
+        // O backend transacional já cria a agenda e retorna o status ACTIVE
+        const updatedReq = { ...req, status: SessaoChatStatus.ACTIVE };
+        
+        // Update requests list locally to reflect changes
+        const idx = this.requests.findIndex(r => r.id === req.id);
+        if (idx !== -1) {
+          this.requests[idx] = updatedReq;
+        }
+        
+        this.selectedRequest.set(updatedReq);
+        this.chatMessages.set([]); // Limpa para evitar flickering, RXSTOMP trará o SYSTEM
+        this.subscribeToChat();
+        this.isSubmitting.set(null);
+      },
+      error: () => this.isSubmitting.set(null)
     });
   }
 
@@ -173,7 +184,8 @@ export class DentistaChatRequestsComponent implements OnInit {
       
     // Fetch historico again just in case there are missing messages
     this.chatService.getHistorico(req.id).subscribe(hist => {
-      this.chatMessages.set(hist);
+      const mapped = hist.map(msg => this.chatService.parseMessageForComponent(msg, this.dentistaId));
+      this.chatMessages.set(mapped);
     });
   }
 

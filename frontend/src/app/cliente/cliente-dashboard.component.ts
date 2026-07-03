@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, DestroyRef, signal, effect } from '@angular/core';
+import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -8,10 +9,10 @@ import { AuthService } from '../auth/auth.service';
 import { AgendamentoService } from '../services/agendamento';
 import { ChatMessageView, ChatService, SessaoChatStatus } from '../services/chat.service';
 import { DentistDirectoryService, DentistSummary, ScheduleSlot } from '../services/dentist-directory.service';
-import { HttpClient } from '@angular/common/http';
 import { RuntimeConfigService } from '../services/runtime-config.service';
 import { ChangeDetectorRef, NgZone } from '@angular/core';
 import { MeusAgendamentosComponent } from './meus-agendamentos.component';
+import { SkeletonCardComponent } from '../shared/components/skeleton-card.component';
 
 import { DashboardStateService, DashboardTab } from '../services/dashboard-state.service';
 
@@ -26,7 +27,7 @@ export interface DaySchedule {
 @Component({
   selector: 'app-cliente-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, MeusAgendamentosComponent],
+  imports: [CommonModule, HttpClientModule, FormsModule, MeusAgendamentosComponent, SkeletonCardComponent],
   templateUrl: './cliente-dashboard.component.html',
   styleUrl: './cliente-dashboard.component.scss',
 })
@@ -57,6 +58,10 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
   private map: L.Map | undefined;
   private marker: L.Marker | undefined;
   
+  // Reatividade do Mapa
+  hoveredDentistaId = signal<string | null>(null);
+  private markerMap = new Map<string, L.Marker>();
+  
   // Custom marker icon to fix Angular asset path issues for Leaflet
   private defaultIcon = L.icon({
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -84,7 +89,29 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     private dashboardState: DashboardStateService
-  ) {}
+  ) {
+    effect(() => {
+      const activeId = this.hoveredDentistaId();
+      
+      this.markerMap.forEach((marker, id) => {
+        if (id === activeId) {
+          const activeIcon = L.divIcon({
+            className: 'custom-active-marker',
+            html: `<div class="w-8 h-8 bg-blue-600 rounded-full border-2 border-white shadow-lg shadow-blue-500/50 flex items-center justify-center animate-bounce">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
+                   </div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32]
+          });
+          marker.setIcon(activeIcon);
+          marker.setZIndexOffset(1000);
+        } else {
+          marker.setIcon(this.defaultIcon);
+          marker.setZIndexOffset(0);
+        }
+      });
+    });
+  }
 
   runDiagnostics(): void {
     this.diagnosticsResult = 'Iniciando teste de conectividade (aguarde até 60s se o Render estiver dormindo)...\n\n';
@@ -177,6 +204,14 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
         }
       }, 100);
     }
+  }
+
+  onCardMouseEnter(id: string): void {
+    this.hoveredDentistaId.set(id);
+  }
+
+  onCardMouseLeave(): void {
+    this.hoveredDentistaId.set(null);
   }
 
   private loadDentists(lat?: number, lng?: number): void {
@@ -292,11 +327,14 @@ export class ClienteDashboardComponent implements OnInit, OnDestroy {
     }
 
     // Add markers for dentists
+    this.markerMap.clear();
     this.dentists.forEach(d => {
       if (d.latitude && d.longitude) {
-        L.marker([d.latitude, d.longitude], { icon: this.defaultIcon })
+        const marker = L.marker([d.latitude, d.longitude], { icon: this.defaultIcon })
           .addTo(this.map!)
           .bindPopup(`<b>${d.nome}</b><br>${d.especialidade}<br><button class="mt-2 px-2 py-1 bg-blue-600 text-white rounded text-xs border-none cursor-pointer" onclick="document.dispatchEvent(new CustomEvent('selectDentist', {detail: '${d.id}'}))">Agendar</button>`);
+        
+        this.markerMap.set(d.id, marker);
       }
     });
     

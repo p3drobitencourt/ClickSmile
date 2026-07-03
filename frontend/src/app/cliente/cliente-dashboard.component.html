@@ -32,7 +32,16 @@
         <div class="flex justify-between items-center border-b border-slate-700 pb-4 mb-4">
           <div>
             <p class="text-xs text-slate-400 uppercase tracking-wider m-0">Chat Online</p>
-            <h2 class="text-xl font-bold m-0 text-slate-100" *ngIf="selectedDentist">Conversar com {{ selectedDentist.nome }}</h2>
+            <h2 class="text-xl font-bold m-0 text-slate-100 flex items-center gap-2" *ngIf="selectedDentist">
+              Conversar com {{ selectedDentist.nome }}
+              <a *ngIf="selectedDentist.latitude && selectedDentist.longitude"
+                 [href]="'https://maps.google.com/?q=' + selectedDentist.latitude + ',' + selectedDentist.longitude"
+                 target="_blank"
+                 class="ml-auto text-xs px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded flex items-center gap-1 transition-colors no-underline">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
+                Como Chegar
+              </a>
+            </h2>
             <h2 class="text-xl font-bold m-0 text-slate-500" *ngIf="!selectedDentist">Nenhum chat aberto</h2>
           </div>
           <div class="flex gap-2" *ngIf="selectedDentist">
@@ -125,32 +134,44 @@
           <span class="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full" *ngIf="isLoadingDentists"></span>
         </div>
 
-        <div class="flex-1 overflow-y-auto pr-2 space-y-4" *ngIf="dentists.length > 0">
-          <div *ngFor="let dentist of dentists" 
-               class="bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors cursor-pointer border border-slate-700 rounded-lg shadow-sm p-4"
-               [class.border-blue-500]="selectedDentist?.id === dentist.id"
-               [class.bg-slate-700]="selectedDentist?.id === dentist.id">
-            <div class="flex items-center gap-4 mb-3">
-              <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0" [style.background]="dentist?.color || '#38bdf8'">
-                {{ initials(dentist?.nome || '') }}
+        @defer (when !isLoadingDentists) {
+          <div class="flex-1 overflow-y-auto pr-2 space-y-4" *ngIf="dentists.length > 0">
+            <div *ngFor="let dentist of dentists" 
+                 class="bg-slate-800 text-slate-200 hover:bg-slate-700 transition-all cursor-pointer border border-slate-700 rounded-lg shadow-sm p-4"
+                 [class.border-blue-500]="selectedDentist?.id === dentist.id"
+                 [class.bg-slate-700]="selectedDentist?.id === dentist.id"
+                 [class.ring-2]="hoveredDentistaId() === dentist.id"
+                 [class.ring-blue-500]="hoveredDentistaId() === dentist.id"
+                 (mouseenter)="onCardMouseEnter(dentist.id)"
+                 (mouseleave)="onCardMouseLeave()">
+              <div class="flex items-center gap-4 mb-3">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0" [style.background]="dentist?.color || '#38bdf8'">
+                  {{ initials(dentist?.nome || '') }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <strong class="block text-slate-100 text-lg truncate">{{ dentist?.nome }}</strong>
+                  <small class="block text-slate-400 truncate">{{ dentist?.especialidade }} <span *ngIf="dentist?.distanciaKm">({{ dentist?.distanciaKm | number:'1.1-1' }} km)</span></small>
+                </div>
               </div>
-              <div class="flex-1 min-w-0">
-                <strong class="block text-slate-100 text-lg truncate">{{ dentist?.nome }}</strong>
-                <small class="block text-slate-400 truncate">{{ dentist?.especialidade }} <span *ngIf="dentist?.distanciaKm">({{ dentist?.distanciaKm | number:'1.1-1' }} km)</span></small>
-              </div>
+              <button 
+                type="button" 
+                class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium transition-colors border-none cursor-pointer"
+                (click)="selectDentist(dentist)">
+                {{ selectedDentist?.id === dentist.id ? 'Visualizando Horários' : 'Ver Horários' }}
+              </button>
             </div>
-            <button 
-              type="button" 
-              class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium transition-colors border-none cursor-pointer"
-              (click)="selectDentist(dentist)">
-              {{ selectedDentist?.id === dentist.id ? 'Visualizando Horários' : 'Ver Horários' }}
-            </button>
           </div>
-        </div>
 
-        <div *ngIf="!isLoadingDentists && dentists.length === 0" class="flex-1 flex flex-col items-center justify-center text-slate-500 bg-slate-800 rounded-lg border border-slate-700 p-6">
-          <p>Nenhum especialista disponível no momento.</p>
-        </div>
+          <div *ngIf="dentists.length === 0" class="flex-1 flex flex-col items-center justify-center text-slate-500 bg-slate-800 rounded-lg border border-slate-700 p-6">
+            <p>Nenhum especialista disponível no momento.</p>
+          </div>
+        } @loading (minimum 500ms) {
+          <div class="flex-1 overflow-y-auto pr-2 space-y-4">
+            <app-skeleton-card></app-skeleton-card>
+            <app-skeleton-card></app-skeleton-card>
+            <app-skeleton-card></app-skeleton-card>
+          </div>
+        }
       </div>
 
       <!-- Painel Direito (Mapa ou Slots) -->
@@ -174,8 +195,19 @@
         <ng-container *ngIf="selectedDentist">
           <div class="p-6 border-b border-slate-700 bg-slate-800 flex justify-between items-center shrink-0">
              <div>
-               <h2 class="text-2xl font-bold m-0 mb-1 text-slate-100">{{ selectedDentist.nome }}</h2>
-               <p class="text-slate-400 m-0">{{ selectedDentist.especialidade }} | CRO: {{ selectedDentist.cro }}</p>
+               <div class="flex items-center gap-2">
+                 <h2 class="text-xl font-bold m-0 text-slate-100 flex items-center gap-2">
+                   <span class="w-8 h-8 rounded-full bg-emerald-900 text-emerald-400 flex items-center justify-center text-sm font-bold">{{ selectedDentist.nome.charAt(0) }}</span>
+                   Dr(a). {{ selectedDentist.nome }}
+                 </h2>
+                 <a *ngIf="selectedDentist.latitude && selectedDentist.longitude"
+                    [href]="'https://maps.google.com/?q=' + selectedDentist.latitude + ',' + selectedDentist.longitude"
+                    target="_blank"
+                    class="ml-auto text-xs px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded flex items-center gap-1 transition-colors no-underline">
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
+                   Como Chegar
+                 </a>
+               </div>
              </div>
              <div class="flex gap-3">
                <button type="button" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded border-none cursor-pointer text-sm" (click)="voltarAoMapa()">

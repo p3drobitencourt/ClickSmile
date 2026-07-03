@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -128,20 +128,28 @@ import { NominatimService } from '../services/nominatim.service';
 
             <!-- Coordenadas Hidden (apenas para verificação de desenvolvimento, idealmente oculto ou readonly) -->
             <div class="mt-2 bg-slate-900/50 p-3 rounded-lg border border-slate-700 text-xs text-slate-400">
-              <div class="flex justify-between items-center mb-1">
-                <strong class="text-slate-300">Coordenadas Atuais</strong>
-                <button type="button" class="text-blue-500 hover:text-blue-400 hover:underline border-none bg-transparent cursor-pointer" (click)="triggerGeocodeNow()" [disabled]="geoLoading">Atualizar Local</button>
+              <div class="flex flex-col gap-2 mb-2 border-b border-slate-700/50 pb-2">
+                <div class="flex justify-between items-center">
+                  <strong class="text-slate-300">Coordenadas Atuais</strong>
+                  <div class="flex gap-2">
+                    <button type="button" class="text-blue-500 hover:text-blue-400 hover:underline border-none bg-transparent cursor-pointer text-xs" (click)="triggerGeocodeNow()" [disabled]="geoLoading">Recalcular pelo Endereço</button>
+                    <button type="button" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded px-2 py-1 cursor-pointer text-xs flex items-center gap-1 border-none transition-colors" (click)="captureGpsNow()">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
+                      Usar meu GPS
+                    </button>
+                  </div>
+                </div>
               </div>
               <div>Lat: {{ perfil.latitude || 'N/D' }}</div>
               <div>Lon: {{ perfil.longitude || 'N/D' }}</div>
             </div>
 
-            <button class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm" (click)="salvar()" [disabled]="saving">
-              <svg *ngIf="saving" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <button class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm" (click)="salvar()" [disabled]="isSubmitting()">
+              <svg *ngIf="isSubmitting()" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              <span>{{ saving ? 'Salvando...' : 'Salvar Alterações' }}</span>
+              <span>{{ isSubmitting() ? 'Salvando...' : 'Salvar Alterações' }}</span>
             </button>
           </div>
         </article>
@@ -151,7 +159,7 @@ import { NominatimService } from '../services/nominatim.service';
 })
 export class ConfigViewComponent implements OnInit {
   loading = true;
-  saving = false;
+  isSubmitting = signal(false);
   cepLoading = false;
   geoLoading = false;
   dentistaId = '';
@@ -269,21 +277,40 @@ export class ConfigViewComponent implements OnInit {
     }
   }
 
+  captureGpsNow() {
+    if (navigator.geolocation) {
+      this.geoLoading = true;
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          this.perfil.latitude = pos.coords.latitude;
+          this.perfil.longitude = pos.coords.longitude;
+          this.geoLoading = false;
+          this.cdr.detectChanges();
+        },
+        (err) => {
+          console.warn('Erro ao capturar GPS:', err);
+          this.geoLoading = false;
+          this.cdr.detectChanges();
+        }
+      );
+    }
+  }
+
   isAddressComplete(): boolean {
     return !!(this.perfil.logradouro && this.perfil.numero && this.perfil.bairro && this.perfil.cidade && this.perfil.estado);
   }
 
   salvar() {
-    if (!this.dentistaId) return;
-    this.saving = true;
+    if (!this.dentistaId || this.isSubmitting()) return;
+    this.isSubmitting.set(true);
     this.perfilService.updatePerfil(this.dentistaId, this.perfil).subscribe({
       next: (data) => {
         this.perfil = { ...this.perfil, ...data };
-        this.saving = false;
+        this.isSubmitting.set(false);
         this.cdr.detectChanges();
       },
       error: () => {
-        this.saving = false;
+        this.isSubmitting.set(false);
         this.cdr.detectChanges();
       }
     });
