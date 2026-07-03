@@ -25,6 +25,10 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.time.format.DateTimeFormatter;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 @Service
 public class AgendamentoService {
@@ -34,13 +38,15 @@ public class AgendamentoService {
     private final PacienteRepository pacienteRepository;
     private final AgendaService agendaService;
     private final SessaoChatRepository sessaoChatRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public AgendamentoService(AgendamentoRepository agendamentoRepository, UsuarioRepository usuarioRepository, PacienteRepository pacienteRepository, AgendaService agendaService, SessaoChatRepository sessaoChatRepository) {
+    public AgendamentoService(AgendamentoRepository agendamentoRepository, UsuarioRepository usuarioRepository, PacienteRepository pacienteRepository, AgendaService agendaService, SessaoChatRepository sessaoChatRepository, SimpMessagingTemplate messagingTemplate) {
         this.agendamentoRepository = agendamentoRepository;
         this.usuarioRepository = usuarioRepository;
         this.pacienteRepository = pacienteRepository;
         this.agendaService = agendaService;
         this.sessaoChatRepository = sessaoChatRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Transactional
@@ -87,7 +93,31 @@ public class AgendamentoService {
         
         // c) O método criar() já faz a validação com @Lock(LockModeType.PESSIMISTIC_WRITE) 
         // chamando findByDentistaAndInicioAtForUpdate()
-        return this.criar(req);
+        Agendamento agendamento = this.criar(req);
+        agendamentoRepository.flush();
+
+        // d) Enviar WebSockets
+        Map<String, Object> chatPayload = new HashMap<>();
+        chatPayload.put("action", "CHAT_ACCEPTED");
+        chatPayload.put("sessaoId", sessao.getId());
+        chatPayload.put("dentistaId", dentistaId);
+        messagingTemplate.convertAndSendToUser(
+            pacienteId.toString(),
+            "/queue/chat",
+            chatPayload
+        );
+
+        Map<String, Object> agendaPayload = new HashMap<>();
+        agendaPayload.put("action", "NEW_APPOINTMENT");
+        agendaPayload.put("agendamentoId", agendamento.getId());
+        agendaPayload.put("inicioAt", agendamento.getInicioAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        messagingTemplate.convertAndSendToUser(
+            dentistaId.toString(),
+            "/queue/agenda",
+            agendaPayload
+        );
+
+        return agendamento;
     }
 
     @Transactional
