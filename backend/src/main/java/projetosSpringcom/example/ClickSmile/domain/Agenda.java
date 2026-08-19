@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.time.LocalTime;
@@ -14,6 +15,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "agenda")
 @Data
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 public class Agenda {
 
     @Id

@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
+@org.hibernate.annotations.Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 @Table(name = "agendamento")
 @Data
 public class Agendamento {

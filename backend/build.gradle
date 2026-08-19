@@ -23,6 +23,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-aop'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	implementation 'org.springframework.security:spring-security-oauth2-jose'
@@ -45,4 +46,8 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 	jvmArgs '-XX:+EnableDynamicAgentLoading'
+	environment "SPRING_PROFILES_ACTIVE", System.getenv("SPRING_PROFILES_ACTIVE")
+	environment "SPRING_DATASOURCE_URL", System.getenv("SPRING_DATASOURCE_URL")
+	environment "SPRING_DATASOURCE_USERNAME", System.getenv("SPRING_DATASOURCE_USERNAME")
+	environment "SPRING_DATASOURCE_PASSWORD", System.getenv("SPRING_DATASOURCE_PASSWORD")
 }

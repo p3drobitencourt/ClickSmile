@@ -6,15 +6,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import projetosSpringcom.example.ClickSmile.domain.Dentista;
-import projetosSpringcom.example.ClickSmile.domain.Paciente;
-import projetosSpringcom.example.ClickSmile.domain.Perfil;
+// Removed Testcontainers imports
+// Removed unused domain/repository imports
 import projetosSpringcom.example.ClickSmile.dto.AgendamentoRequestDTO;
-import projetosSpringcom.example.ClickSmile.repository.PacienteRepository;
-import projetosSpringcom.example.ClickSmile.repository.UsuarioRepository;
 import projetosSpringcom.example.ClickSmile.service.AgendamentoConflictException;
 import projetosSpringcom.example.ClickSmile.service.AgendamentoService;
 
@@ -28,62 +22,26 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
-@Testcontainers
-@ActiveProfiles("test")
+@ActiveProfiles("prod")
 public class AgendamentoConcurrencyIT {
-
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
-    }
+// Testcontainers removed. Using external DB provided by environment.
 
     @Autowired
     private AgendamentoService agendamentoService;
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private PacienteRepository pacienteRepository;
+// Removed unused repositories
 
     @Test
     public void testConcurrencyOnAgendamento() throws InterruptedException {
-        // Prepare data
-        UUID tenantId = UUID.randomUUID();
+        // Prepare data using V7 static mock UUIDs
+        UUID dentistaId = UUID.fromString("d1000000-0000-0000-0000-000000000001");
+        UUID paciente1Id = UUID.fromString("c1000000-0000-0000-0000-000000000001");
+        UUID paciente2Id = UUID.fromString("c2000000-0000-0000-0000-000000000002");
+
+        OffsetDateTime dataHora = java.time.OffsetDateTime.of(2026, 11, 23, 10, 0, 0, 0, java.time.ZoneOffset.of("-03:00")); // 23 de Novembro de 2026 é Segunda-feira
         
-        Dentista dentista = new Dentista();
-        dentista.setEmail("dentista" + UUID.randomUUID() + "@teste.com");
-        dentista.setSenha("123456");
-        dentista.setTenantId(tenantId);
-        dentista.setPerfil(Perfil.DENTISTA);
-        dentista.setNome("Dr. Teste");
-        dentista.setCro("12345");
-        dentista = usuarioRepository.save(dentista);
-
-        Paciente paciente1 = new Paciente();
-        paciente1.setNome("Paciente 1");
-        paciente1.setEmail("paciente1" + UUID.randomUUID() + "@teste.com");
-        paciente1.setTelefone("111111111");
-        paciente1.setTenantId(tenantId);
-        paciente1 = pacienteRepository.save(paciente1);
-
-        Paciente paciente2 = new Paciente();
-        paciente2.setNome("Paciente 2");
-        paciente2.setEmail("paciente2" + UUID.randomUUID() + "@teste.com");
-        paciente2.setTelefone("222222222");
-        paciente2.setTenantId(tenantId);
-        paciente2 = pacienteRepository.save(paciente2);
-
-        OffsetDateTime dataHora = OffsetDateTime.now().plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0);
-        
-        AgendamentoRequestDTO req1 = new AgendamentoRequestDTO(paciente1.getId(), dentista.getId(), dataHora);
-        AgendamentoRequestDTO req2 = new AgendamentoRequestDTO(paciente2.getId(), dentista.getId(), dataHora);
+        AgendamentoRequestDTO req1 = new AgendamentoRequestDTO(paciente1Id, dentistaId, dataHora);
+        AgendamentoRequestDTO req2 = new AgendamentoRequestDTO(paciente2Id, dentistaId, dataHora);
 
         int threads = 2;
         ExecutorService executorService = Executors.newFixedThreadPool(threads);

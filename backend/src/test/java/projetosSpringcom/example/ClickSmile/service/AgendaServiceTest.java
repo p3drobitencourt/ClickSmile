@@ -13,7 +13,8 @@ import projetosSpringcom.example.ClickSmile.dto.AgendaResponseDTO;
 import projetosSpringcom.example.ClickSmile.dto.RegraHorarioDTO;
 import projetosSpringcom.example.ClickSmile.repository.AgendaRepository;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -70,8 +71,8 @@ class AgendaServiceTest {
 
         boolean permitido = agendaService.slotPermitido(
             dentistaId,
-            LocalDateTime.of(2026, 5, 25, 12, 15),
-            LocalDateTime.of(2026, 5, 25, 12, 45)
+            OffsetDateTime.of(2026, 5, 25, 12, 15, 0, 0, ZoneOffset.of("-03:00")),
+            OffsetDateTime.of(2026, 5, 25, 12, 45, 0, 0, ZoneOffset.of("-03:00"))
         );
 
         assertFalse(permitido);
@@ -88,8 +89,8 @@ class AgendaServiceTest {
 
         boolean permitido = agendaService.slotPermitido(
             dentistaId,
-            LocalDateTime.of(2026, 5, 25, 10, 0),
-            LocalDateTime.of(2026, 5, 25, 10, 30)
+            OffsetDateTime.of(2026, 5, 25, 10, 0, 0, 0, ZoneOffset.of("-03:00")),
+            OffsetDateTime.of(2026, 5, 25, 10, 30, 0, 0, ZoneOffset.of("-03:00"))
         );
 
         assertTrue(permitido);

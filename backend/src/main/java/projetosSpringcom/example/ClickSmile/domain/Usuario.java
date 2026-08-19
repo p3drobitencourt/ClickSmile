@@ -5,14 +5,19 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.UUID;
 
 @Entity
 @Table(name = "usuario")
-@Inheritance(strategy = InheritanceType.JOINED) // Estratégia crucial: Cria uma tabela 'usuario' separada, e as filhas terão chaves estrangeiras apontando para cá.
-@Data // Anotação do Lombok (no seu build.gradle) que gera Getters e Setters implicitamente em tempo de compilação.
+@Inheritance(strategy = InheritanceType.JOINED)
+@Data
+@FilterDef(name = "tenantFilter", parameters = {@ParamDef(name = "tenantId", type = UUID.class)})
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 public abstract class Usuario {
 
     @Id

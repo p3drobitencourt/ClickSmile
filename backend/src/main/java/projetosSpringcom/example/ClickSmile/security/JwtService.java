@@ -35,6 +35,7 @@ public class JwtService {
                 .expiresAt(now.plus(ttl))
                 .subject(String.valueOf(usuario.getId()))
                 .claim("email", usuario.getEmail())
+                .claim("tenantId", usuario.getTenantId().toString())
                 .claim("roles", List.of("ROLE_" + usuario.getPerfil().name()))
                 .build();
 

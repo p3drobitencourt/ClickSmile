@@ -54,27 +54,50 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                         try {
                             Jwt jwt = jwtDecoder.decode(token);
                             String userId = jwt.getSubject();
-                            accessor.setUser(new StompPrincipal(userId));
+                            String tenantId = jwt.getClaimAsString("tenantId");
+                            accessor.setUser(new StompPrincipal(userId, tenantId));
+                            if (accessor.getSessionAttributes() != null) {
+                                accessor.getSessionAttributes().put("tenantId", tenantId);
+                            }
                         } catch (Exception e) {
                             throw new IllegalArgumentException("Invalid token");
                         }
                     }
                 }
+                
+                // Propaga para a thread atual que vai rotear/processar a mensagem
+                if (accessor.getSessionAttributes() != null) {
+                    String tenantId = (String) accessor.getSessionAttributes().get("tenantId");
+                    if (tenantId != null) {
+                        projetosSpringcom.example.ClickSmile.security.TenantContext.setTenantId(java.util.UUID.fromString(tenantId));
+                    }
+                }
                 return message;
+            }
+
+            @Override
+            public void afterSendCompletion(Message<?> message, MessageChannel channel, boolean sent, Exception ex) {
+                projetosSpringcom.example.ClickSmile.security.TenantContext.clear();
             }
         });
     }
 
     class StompPrincipal implements java.security.Principal {
         private final String name;
+        private final String tenantId;
 
-        public StompPrincipal(String name) {
+        public StompPrincipal(String name, String tenantId) {
             this.name = name;
+            this.tenantId = tenantId;
         }
 
         @Override
         public String getName() {
             return this.name;
+        }
+        
+        public String getTenantId() {
+            return this.tenantId;
         }
     }
 }
