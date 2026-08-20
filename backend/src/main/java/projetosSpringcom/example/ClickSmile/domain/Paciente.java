@@ -7,11 +7,15 @@ import org.hibernate.annotations.GenericGenerator;
 
 import java.util.UUID;
 
+import projetosSpringcom.example.ClickSmile.security.TenantEntityListener;
+import projetosSpringcom.example.ClickSmile.security.TenantAware;
+
 @Entity
 @Table(name = "paciente")
 @Data
+@EntityListeners(TenantEntityListener.class)
 @Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
-public class Paciente {
+public class Paciente implements TenantAware {
 
     @Id
     @GeneratedValue(generator = "UUID")

@@ -26,7 +26,15 @@ public class TenantFilter extends OncePerRequestFilter {
             Jwt jwt = jwtAuth.getToken();
             String tenantIdStr = jwt.getClaimAsString("tenantId");
             if (tenantIdStr != null && !tenantIdStr.isBlank()) {
-                TenantContext.setTenantId(UUID.fromString(tenantIdStr));
+                try {
+                    TenantContext.setTenantId(UUID.fromString(tenantIdStr));
+                } catch (IllegalArgumentException e) {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "Tenant ID inválido no token.");
+                    return;
+                }
+            } else {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Tenant ID ausente no token.");
+                return;
             }
         }
 

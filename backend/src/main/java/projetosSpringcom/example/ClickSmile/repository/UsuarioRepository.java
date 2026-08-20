@@ -10,7 +10,17 @@ import java.util.Optional;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.jpa.repository.Modifying;
+
 public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
+    
+    @Query("SELECT u FROM Usuario u WHERE u.id = :id")
+    Optional<Usuario> findById(@Param("id") UUID id);
+
+    @Modifying
+    @Query("DELETE FROM Usuario u WHERE u.id = :id")
+    void deleteById(@Param("id") UUID id);
+
     Optional<Usuario> findByEmail(String email);
     Optional<Usuario> findByTenantIdAndEmail(UUID tenantId, String email);
     long countByPerfil(Perfil perfil);

@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
 @Table(name = "cliente")
 @Data
 @EqualsAndHashCode(callSuper = true) // Instrui o Lombok a considerar os campos da classe pai (Usuario) no equals/hashCode.
-public class Cliente extends Usuario {
+public class PacienteUsuario extends Usuario {
 
 
 

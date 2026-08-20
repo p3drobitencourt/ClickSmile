@@ -155,10 +155,8 @@ public class MultiTenantDeepValidationIT {
         
         Paciente salvo = pacienteRepository.saveAndFlush(paciente);
         
-        // O Hibernate salva, MAS a leitura subjacente na mesma transação não trará o dado por conta do filtro!
-        // Contudo, idealmente, a constraint ou o Aspect deveriam forçar o tenantId.
-        // Vamos checar no banco com bypass se a JPA forçou o Tenant A ou deixou vazar B.
-        System.out.println("Salvou paciente com tenant id: " + salvo.getTenantId());
+        assertEquals(tenantA, salvo.getTenantId(), "O listener deve forçar o ID do tenant A e sobrescrever o B malicioso!");
+        System.out.println("Salvou paciente com tenant id corrigido para: " + salvo.getTenantId());
         
         System.out.println("===============================================");
     }
@@ -192,10 +190,13 @@ public class MultiTenantDeepValidationIT {
         // Tenant A tenta deletar
         TenantContext.setTenantId(tenantA);
         
-        // Repositório recusa exclusão pois não consegue achar o ID
-        assertThrows(org.springframework.dao.EmptyResultDataAccessException.class, () -> {
-            pacienteRepository.deleteById(pacienteB);
-        });
+        // Repositório tenta exclusão, mas a query JPQL não afeta a linha pois o filtro está ativo
+        pacienteRepository.deleteById(pacienteB);
+        
+        // Verifica que o paciente B continua existindo no banco
+        TenantContext.clear(); // Desativa o filtro JPA para ler tudo com o bypass RLS e ver se B ainda existe
+        Integer countB = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM paciente WHERE id = ?", Integer.class, pacienteB);
+        assertEquals(1, countB, "Paciente B NÃO deve ser deletado pelo Tenant A");
         
         // Exclusão cega via JDBC com RLS
         int deleted = jdbcTemplate.update("DELETE FROM paciente WHERE id = ? AND tenant_id = current_setting('app.tenant_id')::uuid", pacienteB);

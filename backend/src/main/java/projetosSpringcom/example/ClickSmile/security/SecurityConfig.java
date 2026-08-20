@@ -76,7 +76,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/**", "/static/**", "/", "/index.html", "/assets/**", "/api/public/**", "/api/agendas/dentista/**").permitAll()
                 .requestMatchers("/api/dentista/**").hasRole("DENTISTA")
-                .requestMatchers("/api/cliente/**").hasRole("CLIENTE")
+                .requestMatchers("/api/paciente/**").hasRole("PACIENTE")
+                .requestMatchers("/api/admin/**").hasRole("TENANT_ADMIN")
+                .requestMatchers("/api/recepcao/**").hasAnyRole("RECEPCAO", "TENANT_ADMIN")
                 .anyRequest().authenticated()
             )
             .userDetailsService(uds)

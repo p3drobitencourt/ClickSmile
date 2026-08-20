@@ -3,7 +3,7 @@ package projetosSpringcom.example.ClickSmile.security;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import projetosSpringcom.example.ClickSmile.domain.Cliente;
+import projetosSpringcom.example.ClickSmile.domain.PacienteUsuario;
 import projetosSpringcom.example.ClickSmile.domain.Dentista;
 import projetosSpringcom.example.ClickSmile.domain.Perfil;
 import projetosSpringcom.example.ClickSmile.domain.TenantClinica;
@@ -11,6 +11,7 @@ import projetosSpringcom.example.ClickSmile.domain.Usuario;
 import projetosSpringcom.example.ClickSmile.repository.TenantClinicaRepository;
 import projetosSpringcom.example.ClickSmile.repository.UsuarioRepository;
 import projetosSpringcom.example.ClickSmile.security.dto.RegisterRequest;
+import projetosSpringcom.example.ClickSmile.security.TenantContext;
 
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
@@ -39,8 +40,8 @@ public class RegistrationService {
         }
 
         Perfil perfil = request.perfil();
-        if (perfil == Perfil.ADMIN) {
-            throw new IllegalArgumentException("Cadastro público não pode criar ADMIN.");
+        if (perfil == Perfil.TENANT_ADMIN) {
+            throw new IllegalArgumentException("Cadastro público não pode criar TENANT_ADMIN.");
         }
 
         TenantClinica tenant = new TenantClinica();
@@ -60,7 +61,12 @@ public class RegistrationService {
         usuario.setSenha(passwordEncoder.encode(request.senha()));
         usuario.setPerfil(perfil);
 
-        return usuarioRepository.save(usuario);
+        TenantContext.setTenantId(tenant.getId());
+        try {
+            return usuarioRepository.save(usuario);
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     private Usuario createUsuario(Perfil perfil, RegisterRequest request) {
@@ -76,12 +82,12 @@ public class RegistrationService {
         }
 
         if (isBlank(request.telefone())) {
-            throw new IllegalArgumentException("Para cliente, informe o telefone.");
+            throw new IllegalArgumentException("Para paciente, informe o telefone.");
         }
-        Cliente cliente = new Cliente();
-        cliente.setNome(request.nome());
-        cliente.setTelefone(request.telefone().trim());
-        return cliente;
+        PacienteUsuario pacienteUsuario = new PacienteUsuario();
+        pacienteUsuario.setNome(request.nome());
+        pacienteUsuario.setTelefone(request.telefone().trim());
+        return pacienteUsuario;
     }
 
     private String resolveRazaoSocial(RegisterRequest request) {

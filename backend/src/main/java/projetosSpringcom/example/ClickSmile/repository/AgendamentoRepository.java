@@ -12,7 +12,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.jpa.repository.Modifying;
+
 public interface AgendamentoRepository extends JpaRepository<Agendamento, UUID> {
+
+    @Query("SELECT a FROM Agendamento a WHERE a.id = :id")
+    Optional<Agendamento> findById(@Param("id") UUID id);
+
+    @Modifying
+    @Query("DELETE FROM Agendamento a WHERE a.id = :id")
+    void deleteById(@Param("id") UUID id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT a FROM Agendamento a WHERE a.dentista.id = :dentistaId AND a.inicioAt = :inicioAt")
