@@ -10,6 +10,8 @@ import projetosSpringcom.example.ClickSmile.domain.TenantClinica;
 import projetosSpringcom.example.ClickSmile.domain.Usuario;
 import projetosSpringcom.example.ClickSmile.repository.TenantClinicaRepository;
 import projetosSpringcom.example.ClickSmile.repository.UsuarioRepository;
+import projetosSpringcom.example.ClickSmile.repository.PacienteRepository;
+import projetosSpringcom.example.ClickSmile.domain.Paciente;
 import projetosSpringcom.example.ClickSmile.security.dto.RegisterRequest;
 import projetosSpringcom.example.ClickSmile.security.TenantContext;
 
@@ -22,14 +24,17 @@ public class RegistrationService {
 
     private final UsuarioRepository usuarioRepository;
     private final TenantClinicaRepository tenantRepository;
+    private final PacienteRepository pacienteRepository;
     private final PasswordEncoder passwordEncoder;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public RegistrationService(UsuarioRepository usuarioRepository,
                                TenantClinicaRepository tenantRepository,
+                               PacienteRepository pacienteRepository,
                                PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.tenantRepository = tenantRepository;
+        this.pacienteRepository = pacienteRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -63,7 +68,15 @@ public class RegistrationService {
 
         TenantContext.setTenantId(tenant.getId());
         try {
-            return usuarioRepository.save(usuario);
+            Usuario savedUsuario = usuarioRepository.save(usuario);
+            if (savedUsuario instanceof PacienteUsuario pu) {
+                Paciente paciente = new Paciente();
+                paciente.setNome(pu.getNome());
+                paciente.setPacienteUsuario(pu);
+                paciente.setTenantId(tenant.getId());
+                pacienteRepository.save(paciente);
+            }
+            return savedUsuario;
         } finally {
             TenantContext.clear();
         }

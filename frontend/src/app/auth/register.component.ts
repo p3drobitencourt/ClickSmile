@@ -20,7 +20,7 @@ export class RegisterComponent {
 
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router, private cdr: ChangeDetectorRef) {
     this.form = this.fb.nonNullable.group({
-      perfil: ['CLIENTE' as 'CLIENTE' | 'DENTISTA', Validators.required],
+      perfil: ['PACIENTE' as 'PACIENTE' | 'DENTISTA' | 'RECEPCAO' | 'TENANT_ADMIN', Validators.required],
       nome: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
       senha: ['', [Validators.required, Validators.minLength(8)]],
@@ -52,14 +52,14 @@ export class RegisterComponent {
         nome: value.nome,
         email: value.email,
         senha: value.senha,
-        telefone: value.perfil === 'CLIENTE' ? value.telefone : undefined,
+        telefone: value.perfil === 'PACIENTE' ? value.telefone : undefined,
         cro: value.perfil === 'DENTISTA' ? value.cro : undefined,
         especialidade: value.perfil === 'DENTISTA' ? value.especialidade : undefined,
         nomeClinica: value.nomeClinica,
       });
 
-      if (value.perfil === 'CLIENTE') {
-        await this.router.navigateByUrl('/cliente');
+      if (value.perfil === 'PACIENTE') {
+        await this.router.navigateByUrl('/paciente');
       } else {
         await this.router.navigateByUrl('/onboarding');
       }

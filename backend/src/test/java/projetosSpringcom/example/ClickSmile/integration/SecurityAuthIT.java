@@ -11,10 +11,18 @@ import org.springframework.test.web.servlet.MockMvc;
 // Removed Testcontainers imports
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("prod")
+@TestPropertySource(properties = {
+    "spring.datasource.url=jdbc:postgresql://aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require",
+    "spring.datasource.username=postgres.vlgfqocctzicdpcwhhyr",
+    "spring.datasource.password=e!qN4k+f*H*x8Mt",
+    "spring.datasource.driver-class-name=org.postgresql.Driver",
+    "spring.flyway.enabled=true"
+})
 public class SecurityAuthIT {
 
     // Testcontainers removed. Using external DB provided by environment.

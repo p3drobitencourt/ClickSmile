@@ -11,11 +11,15 @@ function goHome(router: Router, role?: string | null): UrlTree {
     return router.parseUrl('/dentista');
   }
 
-  if (role === 'CLIENTE') {
-    return router.parseUrl('/cliente');
+  if (role === 'PACIENTE') {
+    return router.parseUrl('/paciente');
   }
 
-  if (role === 'ADMIN') {
+  if (role === 'RECEPCAO') {
+    return router.parseUrl('/recepcao');
+  }
+
+  if (role === 'TENANT_ADMIN') {
     return router.parseUrl('/admin');
   }
 
@@ -29,7 +33,7 @@ export const authGuard: CanActivateFn = async () => {
   return auth.isAuthenticated() ? true : goLogin(router);
 };
 
-export const clienteGuard: CanActivateFn = async () => {
+export const pacienteGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
@@ -38,7 +42,7 @@ export const clienteGuard: CanActivateFn = async () => {
   }
 
   const profile = await auth.getProfile();
-  return profile?.perfil === 'CLIENTE' ? true : goLogin(router);
+  return profile?.perfil === 'PACIENTE' ? true : goLogin(router);
 };
 
 export const dentistaGuard: CanActivateFn = async () => {
@@ -53,6 +57,18 @@ export const dentistaGuard: CanActivateFn = async () => {
   return profile?.perfil === 'DENTISTA' ? true : goLogin(router);
 };
 
+export const recepcaoGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (!auth.isAuthenticated()) {
+    return goLogin(router);
+  }
+
+  const profile = await auth.getProfile();
+  return profile?.perfil === 'RECEPCAO' ? true : goLogin(router);
+};
+
 export const adminGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
@@ -62,7 +78,7 @@ export const adminGuard: CanActivateFn = async () => {
   }
 
   const profile = await auth.getProfile();
-  return profile?.perfil === 'ADMIN' ? true : goLogin(router);
+  return profile?.perfil === 'TENANT_ADMIN' ? true : goLogin(router);
 };
 
 export const homeGuard: CanActivateFn = async () => {

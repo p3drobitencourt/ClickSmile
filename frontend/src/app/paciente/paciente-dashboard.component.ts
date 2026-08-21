@@ -25,13 +25,13 @@ export interface DaySchedule {
 }
 
 @Component({
-  selector: 'app-cliente-dashboard',
+  selector: 'app-paciente-dashboard',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, FormsModule, MeusAgendamentosComponent, SkeletonCardComponent],
-  templateUrl: './cliente-dashboard.component.html',
-  styleUrl: './cliente-dashboard.component.scss',
+  imports: [CommonModule, RouterModule, HttpClientModule, FormsModule, MeusAgendamentosComponent, SkeletonCardComponent],
+  templateUrl: './paciente-dashboard.component.html',
+  styleUrl: './paciente-dashboard.component.scss',
 })
-export class ClienteDashboardComponent implements OnInit, OnDestroy {
+export class PacienteDashboardComponent implements OnInit, OnDestroy {
   activeTab: DashboardTab = 'BUSCAR';
   
   dentists: DentistSummary[] = [];

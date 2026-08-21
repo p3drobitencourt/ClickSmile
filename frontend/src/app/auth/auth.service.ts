@@ -16,7 +16,7 @@ export interface UserProfile {
 }
 
 export interface RegisterRequest {
-  perfil: 'CLIENTE' | 'DENTISTA';
+  perfil: 'PACIENTE' | 'DENTISTA' | 'RECEPCAO' | 'TENANT_ADMIN';
   nome: string;
   email: string;
   senha: string;

@@ -15,7 +15,7 @@
       <label>
         <span>Perfil</span>
         <select formControlName="perfil">
-          <option value="CLIENTE">Cliente</option>
+          <option value="PACIENTE">Paciente</option>
           <option value="DENTISTA">Dentista</option>
         </select>
       </label>
@@ -35,7 +35,7 @@
         <input type="password" formControlName="senha" placeholder="Crie uma senha forte (mínimo 8 caracteres)" />
       </label>
 
-      @if (perfil === 'CLIENTE') {
+      @if (perfil === 'PACIENTE') {
         <label>
           <span>Telefone</span>
           <input type="text" formControlName="telefone" placeholder="(11) 99999-9999" />

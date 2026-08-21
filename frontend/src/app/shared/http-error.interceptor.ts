@@ -16,8 +16,18 @@ export class HttpErrorInterceptor implements HttpInterceptor {
     return next.handle(req).pipe(
       catchError((err: unknown) => {
         if (err instanceof HttpErrorResponse) {
-          const detail = err.error?.detail || err.error?.message || err.message || 'Falha inesperada na requisição.';
-
+          let detail = 'Falha inesperada na requisição.';
+          if (err.error) {
+            if (typeof err.error === 'string') {
+              detail = err.error;
+            } else if (err.error.message) {
+              detail = err.error.message;
+            } else if (err.error.detail) {
+              detail = err.error.detail;
+            }
+          } else if (err.message) {
+            detail = err.message;
+          }
           if (err.status === 0) {
             this.toast.show('Não foi possível alcançar a API. Verifique o backend.', 'Rede indisponível', 'warning');
           } else if (err.status === 401) {

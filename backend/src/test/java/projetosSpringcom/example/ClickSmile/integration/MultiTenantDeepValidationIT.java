@@ -44,6 +44,12 @@ public class MultiTenantDeepValidationIT {
     @BeforeEach
     public void setup() {
         TenantContext.clear();
+        try {
+            jdbcTemplate.update("INSERT INTO tenant_clinica (id, cnpj, razao_social, nome_fantasia) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING", 
+                                tenantA, "00000000000001", "Tenant A", "Tenant A");
+            jdbcTemplate.update("INSERT INTO tenant_clinica (id, cnpj, razao_social, nome_fantasia) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING", 
+                                tenantB, "00000000000002", "Tenant B", "Tenant B");
+        } catch(Exception e) {}
     }
 
     @AfterEach

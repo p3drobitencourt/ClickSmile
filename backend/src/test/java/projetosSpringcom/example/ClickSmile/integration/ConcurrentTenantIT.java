@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import org.springframework.transaction.support.TransactionTemplate;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,6 +40,9 @@ public class ConcurrentTenantIT {
 
     private UUID tenantA = UUID.fromString("aaaaaaaa-0000-0000-0000-000000000001");
     private UUID tenantB = UUID.fromString("bbbbbbbb-0000-0000-0000-000000000002");
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     @BeforeEach
     public void setup() {
@@ -67,15 +71,17 @@ public class ConcurrentTenantIT {
                     UUID myTenant = isTenantA ? tenantA : tenantB;
                     TenantContext.setTenantId(myTenant);
                     
-                    // Acessa o banco (forçando uso do HikariCP e do Aspect)
-                    List<Paciente> pacientes = pacienteRepository.findAll();
-                    
-                    // Verifica se recebemos apenas os pacientes do nosso Tenant
-                    boolean allMatch = pacientes.stream().allMatch(p -> p.getTenantId().equals(myTenant));
-                    if (!allMatch) {
-                        System.err.println("VAZAMENTO DETECTADO PARA TENANT: " + myTenant);
-                        failures.incrementAndGet();
-                    }
+                    transactionTemplate.executeWithoutResult(status -> {
+                        // Acessa o banco (forçando uso do HikariCP e do Aspect)
+                        List<Paciente> pacientes = pacienteRepository.findAll();
+                        
+                        // Verifica se recebemos apenas os pacientes do nosso Tenant
+                        boolean allMatch = pacientes.stream().allMatch(p -> p.getTenantId().equals(myTenant));
+                        if (!allMatch) {
+                            System.err.println("VAZAMENTO DETECTADO PARA TENANT: " + myTenant);
+                            failures.incrementAndGet();
+                        }
+                    });
                     
                 } catch (Exception e) {
                     e.printStackTrace();

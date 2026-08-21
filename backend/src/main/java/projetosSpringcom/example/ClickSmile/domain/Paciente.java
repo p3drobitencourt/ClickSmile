@@ -28,4 +28,8 @@ public class Paciente implements TenantAware {
 
     @Column(nullable = false, length = 160)
     private String nome;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id", nullable = true)
+    private PacienteUsuario pacienteUsuario;
 }

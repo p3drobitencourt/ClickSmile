@@ -39,7 +39,17 @@ export class LoginComponent {
       const value = this.form.getRawValue();
       await this.auth.login(value.email, value.senha);
       const role = this.auth.getRole();
-      await this.router.navigateByUrl(role === 'DENTISTA' ? '/dentista' : '/cliente');
+      if (role === 'DENTISTA') {
+        await this.router.navigateByUrl('/dentista');
+      } else if (role === 'PACIENTE') {
+        await this.router.navigateByUrl('/paciente');
+      } else if (role === 'RECEPCAO') {
+        await this.router.navigateByUrl('/recepcao');
+      } else if (role === 'TENANT_ADMIN') {
+        await this.router.navigateByUrl('/admin');
+      } else {
+        await this.router.navigateByUrl('/');
+      }
     } catch (err: unknown) {
       const e = err as { error?: { detail?: string; message?: string }, message?: string };
       const msg = e?.error?.detail || e?.error?.message || e?.message || 'Falha no login. Verifique os dados.';
@@ -47,7 +57,11 @@ export class LoginComponent {
       // Se for um erro de Chunk (nova versão na Vercel), force o reload da página
       if (msg.includes('Failed to fetch dynamically imported module') || msg.includes('ChunkLoadError')) {
          const role = this.auth.getRole();
-         window.location.href = role === 'DENTISTA' ? '/dentista' : '/cliente';
+         if (role === 'DENTISTA') window.location.href = '/dentista';
+         else if (role === 'PACIENTE') window.location.href = '/paciente';
+         else if (role === 'RECEPCAO') window.location.href = '/recepcao';
+         else if (role === 'TENANT_ADMIN') window.location.href = '/admin';
+         else window.location.href = '/';
          return;
       }
 

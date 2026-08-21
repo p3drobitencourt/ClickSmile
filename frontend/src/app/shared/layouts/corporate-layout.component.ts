@@ -44,8 +44,8 @@ export class CorporateLayoutComponent implements OnInit, OnDestroy {
     event.preventDefault();
     this.dashboardState.setActiveTab(tab);
     // If the user is somewhere else inside /cliente, force navigation back to the root of /cliente
-    if (this.router.url !== '/cliente') {
-      this.router.navigate(['/cliente']);
+    if (this.router.url !== '/paciente') {
+      this.router.navigate(['/paciente']);
     }
   }
 

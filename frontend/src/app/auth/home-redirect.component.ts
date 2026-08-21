@@ -18,8 +18,18 @@ export class HomeRedirectComponent implements OnInit {
       return;
     }
 
-    if (role === 'CLIENTE') {
-      void this.router.navigateByUrl('/cliente');
+    if (role === 'PACIENTE') {
+      void this.router.navigateByUrl('/paciente');
+      return;
+    }
+
+    if (role === 'RECEPCAO') {
+      void this.router.navigateByUrl('/recepcao');
+      return;
+    }
+
+    if (role === 'TENANT_ADMIN') {
+      void this.router.navigateByUrl('/admin');
       return;
     }
 

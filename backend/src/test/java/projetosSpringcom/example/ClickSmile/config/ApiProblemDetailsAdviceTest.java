@@ -9,6 +9,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import org.springframework.security.test.context.support.WithMockUser;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -21,6 +22,7 @@ public class ApiProblemDetailsAdviceTest {
     private MockMvc mockMvc;
 
     @Test
+    @WithMockUser
     public void testMalformedJsonReturns400WithoutStacktrace() throws Exception {
         String malformedJson = "{ \"dentistaId\": \"123\", \"dataHora\": \"2024-02-31T10:00:00Z\", "; // Incomplete JSON
 
