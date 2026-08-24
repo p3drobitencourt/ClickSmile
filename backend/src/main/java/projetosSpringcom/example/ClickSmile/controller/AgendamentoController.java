@@ -3,13 +3,13 @@ package projetosSpringcom.example.ClickSmile.controller;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import projetosSpringcom.example.ClickSmile.domain.Agendamento;
+import java.util.List;
 import projetosSpringcom.example.ClickSmile.dto.AgendamentoRequestDTO;
+import projetosSpringcom.example.ClickSmile.dto.AgendamentoResponseDTO;
 import projetosSpringcom.example.ClickSmile.service.AgendamentoService;
 import projetosSpringcom.example.ClickSmile.dto.SlotResponseDTO;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 import java.util.Map;
 import java.util.HashMap;
@@ -29,12 +29,12 @@ public class AgendamentoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Agendamento criar(@Valid @RequestBody AgendamentoRequestDTO dto) {
+    public AgendamentoResponseDTO criar(@Valid @RequestBody AgendamentoRequestDTO dto) {
         return service.criar(dto);
     }
 
     @PutMapping("/{id}")
-    public Agendamento reagendar(@PathVariable UUID id, @RequestBody java.util.Map<String, String> body) {
+    public AgendamentoResponseDTO reagendar(@PathVariable UUID id, @RequestBody java.util.Map<String, String> body) {
         String novoInicioStr = body.get("novoInicioAt");
         if (novoInicioStr == null) {
             throw new IllegalArgumentException("O campo 'novoInicioAt' é obrigatório.");
@@ -43,23 +43,23 @@ public class AgendamentoController {
     }
 
     @PatchMapping("/{id}/reagendar")
-    public Agendamento reagendarPatch(@PathVariable UUID id, @RequestBody java.util.Map<String, String> body) {
+    public AgendamentoResponseDTO reagendarPatch(@PathVariable UUID id, @RequestBody java.util.Map<String, String> body) {
         String novoInicioStr = body.get("novoInicioAt");
         if (novoInicioStr == null) {
             throw new IllegalArgumentException("O campo 'novoInicioAt' é obrigatório.");
         }
         // 1. Transactional Update with Pessimistic Lock (delegated to service)
-        Agendamento agendamento = service.reagendar(id, java.time.OffsetDateTime.parse(novoInicioStr));
+        AgendamentoResponseDTO agendamento = service.reagendar(id, java.time.OffsetDateTime.parse(novoInicioStr));
 
         // 2. WebSockets Update (Obrigatório)
         Map<String, Object> payload = new HashMap<>();
         payload.put("action", "FORCE_REFRESH");
-        payload.put("agendamentoId", agendamento.getId());
-        payload.put("novoInicioAt", agendamento.getInicioAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-        payload.put("novoFimAt", agendamento.getFimAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        payload.put("agendamentoId", agendamento.id());
+        payload.put("novoInicioAt", agendamento.inicioAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        payload.put("novoFimAt", agendamento.fimAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
 
         messagingTemplate.convertAndSendToUser(
-            agendamento.getPaciente().getId().toString(),
+            agendamento.pacienteId().toString(),
             "/queue/agendamentos",
             payload
         );
@@ -74,7 +74,7 @@ public class AgendamentoController {
     }
 
     @GetMapping("/dentista/{dentistaId}")
-    public List<Agendamento> listarPorDentista(@PathVariable UUID dentistaId) {
+    public List<AgendamentoResponseDTO> listarPorDentista(@PathVariable UUID dentistaId) {
         return service.listarPorDentista(dentistaId);
     }
 
@@ -91,7 +91,7 @@ public class AgendamentoController {
     }
 
     @GetMapping("/paciente/{pacienteId}")
-    public List<Agendamento> listarPorPaciente(@PathVariable UUID pacienteId) {
+    public List<AgendamentoResponseDTO> listarPorPaciente(@PathVariable UUID pacienteId) {
         return service.listarPorPaciente(pacienteId);
     }
 }

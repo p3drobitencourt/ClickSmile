@@ -16,6 +16,7 @@ import { DashboardStateService, DashboardTab } from '../../services/dashboard-st
 export class CorporateLayoutComponent implements OnInit, OnDestroy {
   isDentista = false;
   isAdmin = false;
+  isRecepcao = false;
   userEmail = '';
   activeTab: DashboardTab = 'BUSCAR';
   
@@ -27,9 +28,10 @@ export class CorporateLayoutComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.userEmail = this.auth.getEmail() || 'Usuário';
     this.isDentista = this.auth.getRole() === 'DENTISTA';
-    this.isAdmin = this.auth.getRole() === 'ADMIN';
+    this.isAdmin = this.auth.getRole() === 'ADMIN' || this.auth.getRole() === 'TENANT_ADMIN';
+    this.isRecepcao = this.auth.getRole() === 'RECEPCAO';
     
-    if (!this.isDentista && !this.isAdmin) {
+    if (!this.isDentista && !this.isAdmin && !this.isRecepcao) {
       this.sub.add(
         this.dashboardState.activeTab$.subscribe(tab => this.activeTab = tab)
       );

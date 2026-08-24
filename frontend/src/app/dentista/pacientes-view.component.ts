@@ -19,31 +19,77 @@ import { ToastService } from '../shared/toast.service';
         </div>
       </header>
       
-      <app-dentista-metrics 
-        [consultasHoje]="5" 
-        [taxaAceitacao]="92" 
-        [ganhosProjetados]="'1.250,00'">
-      </app-dentista-metrics>
+      <div *ngIf="loading" class="flex justify-center p-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div>
+      </div>
 
-      <div class="mt-6">
-        <app-dentista-chat-requests 
-          [requests]="solicitacoes">
-        </app-dentista-chat-requests>
+      <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-lg mt-6" *ngIf="!loading">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-900/50 text-slate-400 text-xs uppercase tracking-wider">
+              <th class="p-4 font-semibold">Paciente</th>
+              <th class="p-4 font-semibold text-right">Última Consulta</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-700/50">
+            <tr *ngFor="let paciente of pacientes" class="hover:bg-slate-800/80 transition-colors">
+              <td class="p-4 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-lg">
+                  {{ paciente.nome.charAt(0) }}
+                </div>
+                <div>
+                  <p class="font-medium text-slate-200">{{ paciente.nome }}</p>
+                </div>
+              </td>
+              <td class="p-4 text-right text-slate-400 text-sm">
+                {{ paciente.ultimaConsulta | date:'dd/MM/yyyy HH:mm' }}
+              </td>
+            </tr>
+            <tr *ngIf="pacientes.length === 0">
+              <td colspan="2" class="p-8 text-center text-slate-500">Nenhum paciente agendado até o momento.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   `
 })
 export class PacientesViewComponent implements OnInit {
-  solicitacoes: SessaoChatResponseDTO[] = [];
+  pacientes: { id: string, nome: string, ultimaConsulta: string }[] = [];
+  loading = false;
 
-  private chatService = inject(ChatService);
-  private destroyRef = inject(DestroyRef);
+  private http = inject(import('@angular/common/http').HttpClient);
+  private auth = inject(import('../../auth/auth.service').AuthService);
+  private runtime = inject(import('../../services/runtime-config.service').RuntimeConfigService);
 
   ngOnInit() {
-    this.chatService.solicitacoes$.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe(reqs => {
-      this.solicitacoes = reqs.filter(r => r.status === 'PENDING' || r.status === 'ACTIVE');
-    });
+    this.carregarPacientes();
+  }
+
+  carregarPacientes() {
+    this.loading = true;
+    this.auth.getUserProfile().then(user => {
+      this.http.get<any[]>(this.runtime.api(`/api/agendamentos/dentista/${user.id}`)).subscribe({
+        next: (agendamentos) => {
+          const mapa = new Map<string, any>();
+          
+          agendamentos.forEach(ag => {
+            const pId = ag.pacienteId;
+            if (!mapa.has(pId)) {
+              mapa.set(pId, { id: pId, nome: ag.pacienteNome, ultimaConsulta: ag.inicioAt });
+            } else {
+              const existente = mapa.get(pId);
+              if (new Date(ag.inicioAt) > new Date(existente.ultimaConsulta)) {
+                existente.ultimaConsulta = ag.inicioAt;
+              }
+            }
+          });
+          
+          this.pacientes = Array.from(mapa.values());
+          this.loading = false;
+        },
+        error: () => this.loading = false
+      });
+    }).catch(() => this.loading = false);
   }
 }

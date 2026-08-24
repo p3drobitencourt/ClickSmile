@@ -2,7 +2,7 @@
   <aside class="sidebar">
     <div class="brand">
       <h2>ClickSmile</h2>
-      <p class="role-badge">{{ isDentista ? 'Dentista' : 'Cliente' }}</p>
+      <p class="role-badge">{{ isDentista ? 'Dentista' : (isRecepcao ? 'Recepção' : (isAdmin ? 'Admin' : 'Cliente')) }}</p>
     </div>
     
     <nav class="nav-links">
@@ -16,7 +16,12 @@
         <a routerLink="/dentista/configuracoes" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Configurações</a>
       </ng-container>
 
-      <ng-container *ngIf="!isDentista && !isAdmin">
+      <ng-container *ngIf="isRecepcao">
+        <a routerLink="/recepcao/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Agenda do Dia</a>
+        <a routerLink="/recepcao/pacientes" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Pacientes</a>
+      </ng-container>
+
+      <ng-container *ngIf="!isDentista && !isAdmin && !isRecepcao">
         <a href="#" [class.active]="activeTab === 'BUSCAR'" (click)="setTab('BUSCAR', $event)">
           Buscar Dentistas
         </a>

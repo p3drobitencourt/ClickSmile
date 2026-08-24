@@ -118,8 +118,30 @@ public class ChatController {
 
     @GetMapping("/api/mensagens/historico/{roomId}")
     @ResponseBody
-    public List<ChatMessageDTO> getHistorico(@PathVariable String roomId) {
-        return mensagemRepository.findByRoomIdOrderBySentAtAsc(roomId).stream()
+    public ResponseEntity<?> getHistorico(@PathVariable String roomId) {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        String userIdStr;
+        if (auth.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt) {
+            userIdStr = ((org.springframework.security.oauth2.jwt.Jwt) auth.getPrincipal()).getSubject();
+        } else {
+            userIdStr = auth.getName();
+        }
+        UUID userId = UUID.fromString(userIdStr);
+
+        SessaoChat sessao = sessaoChatRepository.findById(UUID.fromString(roomId)).orElse(null);
+        if (sessao == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (!sessao.getClienteId().equals(userId) && !sessao.getDentistaId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado: você não pertence a este chat.");
+        }
+
+        List<ChatMessageDTO> mensagens = mensagemRepository.findByRoomIdOrderBySentAtAsc(roomId).stream()
             .map(msg -> new ChatMessageDTO(
                 msg.getId(),
                 msg.getRoomId(),
@@ -130,6 +152,8 @@ public class ChatController {
                 msg.getSentAt()
             ))
             .collect(Collectors.toList());
+            
+        return ResponseEntity.ok(mensagens);
     }
 
     @PostMapping("/api/chat/iniciar")
@@ -163,7 +187,7 @@ public class ChatController {
             .orElseThrow(() -> new IllegalArgumentException("Sessão não encontrada"));
 
         // a) Call Transactional Service to accept and schedule
-        projetosSpringcom.example.ClickSmile.domain.Agendamento agendamento = agendamentoService.aceitarPaciente(sessao.getClienteId(), sessao.getDentistaId());
+        projetosSpringcom.example.ClickSmile.dto.AgendamentoResponseDTO agendamento = agendamentoService.aceitarPaciente(sessao.getClienteId(), sessao.getDentistaId());
 
         SessaoChatResponseDTO response = new SessaoChatResponseDTO(sessao.getId(), sessao.getClienteId(), sessao.getDentistaId(), SessaoChatStatus.ACTIVE);
         
@@ -186,13 +210,13 @@ public class ChatController {
 
         // Broadcast B: Para a Agenda do Dentista (Atualiza FullCalendar)
         java.util.Map<String, Object> dtoAgendamento = new java.util.HashMap<>();
-        dtoAgendamento.put("id", agendamento.getId());
-        dtoAgendamento.put("dentistaId", agendamento.getDentista().getId());
-        dtoAgendamento.put("clienteId", agendamento.getPaciente().getId());
-        projetosSpringcom.example.ClickSmile.domain.Usuario cliente = usuarioRepository.findById(agendamento.getPaciente().getId()).orElse(null);
+        dtoAgendamento.put("id", agendamento.id());
+        dtoAgendamento.put("dentistaId", agendamento.dentistaId());
+        dtoAgendamento.put("clienteId", agendamento.pacienteId());
+        projetosSpringcom.example.ClickSmile.domain.Usuario cliente = usuarioRepository.findById(agendamento.pacienteId()).orElse(null);
         dtoAgendamento.put("clienteNome", cliente != null ? cliente.getNome() : "Desconhecido");
-        dtoAgendamento.put("inicioAt", agendamento.getInicioAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-        dtoAgendamento.put("fimAt", agendamento.getFimAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        dtoAgendamento.put("inicioAt", agendamento.inicioAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        dtoAgendamento.put("fimAt", agendamento.fimAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
 
         messagingTemplate.convertAndSendToUser(sessao.getDentistaId().toString(), "/queue/agendamentos", dtoAgendamento);
 
@@ -212,7 +236,7 @@ public class ChatController {
 
             java.time.OffsetDateTime dataHora = java.time.OffsetDateTime.parse(payload.get("dataHora"), DateTimeFormatter.ISO_OFFSET_DATE_TIME);
             AgendamentoRequestDTO req = new AgendamentoRequestDTO(sessao.getClienteId(), sessao.getDentistaId(), dataHora);
-            projetosSpringcom.example.ClickSmile.domain.Agendamento agendamento = agendamentoService.criar(req);
+            projetosSpringcom.example.ClickSmile.dto.AgendamentoResponseDTO agendamento = agendamentoService.criar(req);
 
             Mensagem msg = new Mensagem();
             msg.setRoomId(roomId);
@@ -231,15 +255,15 @@ public class ChatController {
             messagingTemplate.convertAndSendToUser(sessao.getDentistaId().toString(), "/queue/mensagens", responseMsg);
 
             java.util.Map<String, Object> dtoAgendamento = new java.util.HashMap<>();
-            dtoAgendamento.put("id", agendamento.getId());
-            dtoAgendamento.put("dentistaId", agendamento.getDentista().getId());
-            dtoAgendamento.put("clienteId", agendamento.getPaciente().getId());
-            projetosSpringcom.example.ClickSmile.domain.Usuario cliente = usuarioRepository.findById(agendamento.getPaciente().getId()).orElse(null);
+            dtoAgendamento.put("id", agendamento.id());
+            dtoAgendamento.put("dentistaId", agendamento.dentistaId());
+            dtoAgendamento.put("clienteId", agendamento.pacienteId());
+            projetosSpringcom.example.ClickSmile.domain.Usuario cliente = usuarioRepository.findById(agendamento.pacienteId()).orElse(null);
             dtoAgendamento.put("clienteNome", cliente != null ? cliente.getNome() : "Desconhecido");
-            dtoAgendamento.put("inicioAt", agendamento.getInicioAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-            dtoAgendamento.put("fimAt", agendamento.getFimAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+            dtoAgendamento.put("inicioAt", agendamento.inicioAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+            dtoAgendamento.put("fimAt", agendamento.fimAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
 
-            messagingTemplate.convertAndSendToUser(agendamento.getDentista().getId().toString(), "/queue/agendamentos", dtoAgendamento);
+            messagingTemplate.convertAndSendToUser(agendamento.dentistaId().toString(), "/queue/agendamentos", dtoAgendamento);
 
             return ResponseEntity.status(HttpStatus.CREATED).build();
         } catch (Exception e) {

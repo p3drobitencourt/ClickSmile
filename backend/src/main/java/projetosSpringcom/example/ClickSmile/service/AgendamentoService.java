@@ -8,6 +8,7 @@ import projetosSpringcom.example.ClickSmile.domain.Dentista;
 import projetosSpringcom.example.ClickSmile.domain.Paciente;
 import projetosSpringcom.example.ClickSmile.domain.StatusAgendamento;
 import projetosSpringcom.example.ClickSmile.dto.AgendamentoRequestDTO;
+import projetosSpringcom.example.ClickSmile.dto.AgendamentoResponseDTO;
 import java.util.UUID;
 import projetosSpringcom.example.ClickSmile.repository.AgendamentoRepository;
 import projetosSpringcom.example.ClickSmile.repository.PacienteRepository;
@@ -50,7 +51,7 @@ public class AgendamentoService {
     }
 
     @Transactional
-    public Agendamento criar(AgendamentoRequestDTO dto) {
+    public AgendamentoResponseDTO criar(AgendamentoRequestDTO dto) {
         var fimAt = dto.dataHora().plusMinutes(30);
 
         if (!agendaService.slotPermitido(dto.dentistaId(), dto.dataHora(), fimAt)) {
@@ -73,11 +74,11 @@ public class AgendamentoService {
         agendamento.setFimAt(fimAt);
         agendamento.setStatus(StatusAgendamento.CONFIRMADO);
 
-        return agendamentoRepository.save(agendamento);
+        return toDto(agendamentoRepository.save(agendamento));
     }
 
     @Transactional
-    public Agendamento aceitarPaciente(UUID pacienteId, UUID dentistaId) {
+    public AgendamentoResponseDTO aceitarPaciente(UUID pacienteId, UUID dentistaId) {
         // a) Atualizar status da SessaoChat para ACTIVE
         SessaoChat sessao = sessaoChatRepository.findByClienteIdAndDentistaId(pacienteId, dentistaId)
             .orElseThrow(() -> new IllegalArgumentException("Sessão de chat não encontrada."));
@@ -93,7 +94,7 @@ public class AgendamentoService {
         
         // c) O método criar() já faz a validação com @Lock(LockModeType.PESSIMISTIC_WRITE) 
         // chamando findByDentistaAndInicioAtForUpdate()
-        Agendamento agendamento = this.criar(req);
+        AgendamentoResponseDTO agendamento = this.criar(req);
         agendamentoRepository.flush();
 
         // d) Enviar WebSockets
@@ -109,8 +110,8 @@ public class AgendamentoService {
 
         Map<String, Object> agendaPayload = new HashMap<>();
         agendaPayload.put("action", "NEW_APPOINTMENT");
-        agendaPayload.put("agendamentoId", agendamento.getId());
-        agendaPayload.put("inicioAt", agendamento.getInicioAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        agendaPayload.put("agendamentoId", agendamento.id());
+        agendaPayload.put("inicioAt", agendamento.inicioAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
         messagingTemplate.convertAndSendToUser(
             dentistaId.toString(),
             "/queue/agenda",
@@ -130,7 +131,7 @@ public class AgendamentoService {
     }
 
     @Transactional
-    public Agendamento reagendar(UUID id, OffsetDateTime novoInicio) {
+    public AgendamentoResponseDTO reagendar(UUID id, OffsetDateTime novoInicio) {
         Agendamento agendamento = agendamentoRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Agendamento não encontrado."));
 
@@ -153,17 +154,17 @@ public class AgendamentoService {
 
         agendamento.setInicioAt(novoInicio);
         agendamento.setFimAt(fimAt);
-        return agendamentoRepository.save(agendamento);
+        return toDto(agendamentoRepository.save(agendamento));
     }
 
     @Transactional(readOnly = true)
-    public List<Agendamento> listarPorDentista(UUID dentistaId) {
-        return agendamentoRepository.findByDentistaId(dentistaId);
+    public List<AgendamentoResponseDTO> listarPorDentista(UUID dentistaId) {
+        return agendamentoRepository.findByDentistaId(dentistaId).stream().map(this::toDto).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<Agendamento> listarPorPaciente(UUID pacienteId) {
-        return agendamentoRepository.findByPacienteIdOrderByInicioAtDesc(pacienteId);
+    public List<AgendamentoResponseDTO> listarPorPaciente(UUID pacienteId) {
+        return agendamentoRepository.findByPacienteIdOrderByInicioAtDesc(pacienteId).stream().map(this::toDto).toList();
     }
 
     @Transactional(readOnly = true)
@@ -228,5 +229,19 @@ public class AgendamentoService {
         }
 
         return slots;
+    }
+
+    private AgendamentoResponseDTO toDto(Agendamento a) {
+        return new AgendamentoResponseDTO(
+                a.getId(),
+                a.getPaciente().getId(),
+                a.getPaciente().getNome(),
+                a.getDentista().getId(),
+                a.getDentista().getNome(),
+                a.getInicioAt(),
+                a.getFimAt(),
+                a.getStatus(),
+                a.getObservacoes()
+        );
     }
 }

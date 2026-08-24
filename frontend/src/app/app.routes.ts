@@ -14,6 +14,9 @@ const PacienteDashboardComponent = () => import('./paciente/paciente-dashboard.c
 const CorporateLayoutComponent = () => import('./shared/layouts/corporate-layout.component').then((m) => m.CorporateLayoutComponent);
 const AdminDashboardComponent = () => import('./admin/admin-dashboard.component').then((m) => m.AdminDashboardComponent);
 
+const RecepcaoDashboardComponent = () => import('./recepcao/recepcao-dashboard.component').then((m) => m.RecepcaoDashboardComponent);
+const RecepcaoPacientesComponent = () => import('./recepcao/recepcao-pacientes.component').then((m) => m.RecepcaoPacientesComponent);
+
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
@@ -32,6 +35,15 @@ export const routes: Routes = [
           { path: 'agenda', loadComponent: DentistaPainelGeralComponent },
           { path: 'pacientes', loadComponent: PacientesViewComponent },
           { path: 'configuracoes', loadComponent: ConfigViewComponent }
+        ]
+      },
+      { 
+        path: 'recepcao', 
+        canActivate: [recepcaoGuard],
+        children: [
+          { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+          { path: 'dashboard', loadComponent: RecepcaoDashboardComponent },
+          { path: 'pacientes', loadComponent: RecepcaoPacientesComponent }
         ]
       },
       { path: 'admin', loadComponent: AdminDashboardComponent, canActivate: [adminGuard] }
