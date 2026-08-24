@@ -140,7 +140,7 @@ public class PublicDiscoveryService {
                                 }
                             }
                             if (!hasConflict) {
-                                slots.add(new SlotResponseDTO(slotStart, slotEnd));
+                                slots.add(new SlotResponseDTO(slotStart, slotEnd, null, null));
                             }
                             current = current.plusMinutes(slotDuration);
                         }

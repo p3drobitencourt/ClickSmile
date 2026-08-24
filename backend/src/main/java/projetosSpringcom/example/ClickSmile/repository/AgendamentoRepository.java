@@ -37,6 +37,10 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, UUID> 
     List<Agendamento> findByDentistaIdAndDataRange(@Param("dentistaId") UUID dentistaId, @Param("inicio") OffsetDateTime inicio, @Param("fim") OffsetDateTime fim);
 
     @EntityGraph(attributePaths = {"paciente", "dentista", "paciente.pacienteUsuario"})
+    @Query("SELECT a FROM Agendamento a WHERE a.dentista.id IN :dentistaIds AND a.inicioAt >= :inicio AND a.inicioAt < :fim AND a.status != 'CANCELADO'")
+    List<Agendamento> findByDentistaIdInAndDataRange(@Param("dentistaIds") List<UUID> dentistaIds, @Param("inicio") OffsetDateTime inicio, @Param("fim") OffsetDateTime fim);
+
+    @EntityGraph(attributePaths = {"paciente", "dentista", "paciente.pacienteUsuario"})
     List<Agendamento> findByDentistaId(UUID dentistaId);
 
     @EntityGraph(attributePaths = {"paciente", "dentista", "paciente.pacienteUsuario"})

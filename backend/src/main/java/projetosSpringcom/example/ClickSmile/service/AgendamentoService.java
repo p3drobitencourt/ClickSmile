@@ -241,7 +241,7 @@ public class AgendamentoService {
                 a.getInicioAt(),
                 a.getFimAt(),
                 a.getStatus(),
-                a.getObservacoes()
+                null // observacoes foram removidas
         );
     }
 }

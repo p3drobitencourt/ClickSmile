@@ -17,4 +17,8 @@ public interface PacienteRepository extends JpaRepository<Paciente, UUID> {
     @Modifying
     @Query("DELETE FROM Paciente p WHERE p.id = :id")
     void deleteById(@Param("id") UUID id);
+
+    @Override
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"pacienteUsuario"})
+    java.util.List<Paciente> findAll();
 }

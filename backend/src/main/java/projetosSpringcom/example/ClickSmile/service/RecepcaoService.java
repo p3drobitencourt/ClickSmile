@@ -10,6 +10,9 @@ import projetosSpringcom.example.ClickSmile.repository.PacienteRepository;
 import projetosSpringcom.example.ClickSmile.repository.UsuarioRepository;
 import projetosSpringcom.example.ClickSmile.repository.AgendamentoRepository;
 import projetosSpringcom.example.ClickSmile.dto.AgendamentoResponseDTO;
+import projetosSpringcom.example.ClickSmile.dto.PacienteResponseDTO;
+import projetosSpringcom.example.ClickSmile.dto.AgendaDiaDentistaDTO;
+import projetosSpringcom.example.ClickSmile.domain.PacienteUsuario;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,12 +37,24 @@ public class RecepcaoService {
     }
 
     @Transactional(readOnly = true)
-    public List<Paciente> listarPacientesDaClinica() {
-        return pacienteRepository.findAll();
+    public List<PacienteResponseDTO> listarPacientesDaClinica() {
+        return pacienteRepository.findAll().stream()
+            .map(p -> {
+                String email = null;
+                String telefone = null;
+                if (p.getPacienteUsuario() != null) {
+                    email = p.getPacienteUsuario().getEmail();
+                    if (p.getPacienteUsuario() instanceof PacienteUsuario) {
+                        telefone = ((PacienteUsuario) p.getPacienteUsuario()).getTelefone();
+                    }
+                }
+                return new PacienteResponseDTO(p.getId(), p.getNome(), email, telefone);
+            })
+            .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> listarAgendasDoDia(LocalDate data) {
+    public List<AgendaDiaDentistaDTO> listarAgendasDoDia(LocalDate data) {
         ZoneId zone = ZoneId.of("America/Sao_Paulo");
         OffsetDateTime inicioDia = data.atStartOfDay(zone).toOffsetDateTime();
         OffsetDateTime fimDia = data.plusDays(1).atStartOfDay(zone).toOffsetDateTime();
@@ -50,32 +65,32 @@ public class RecepcaoService {
                 .map(Dentista.class::cast)
                 .toList();
 
-        List<Map<String, Object>> resultado = new java.util.ArrayList<>();
-
-        for (Dentista dentista : dentistas) {
-            List<AgendamentoResponseDTO> agendamentos = agendamentoRepository
-                    .findByDentistaIdAndDataRange(dentista.getId(), inicioDia, fimDia)
-                    .stream()
-                    .map(a -> new AgendamentoResponseDTO(
-                            a.getId(),
-                            a.getPaciente().getId(),
-                            a.getPaciente().getNome(),
-                            a.getDentista().getId(),
-                            a.getDentista().getNome(),
-                            a.getInicioAt(),
-                            a.getFimAt(),
-                            a.getStatus(),
-                            a.getObservacoes()
-                    ))
-                    .toList();
-
-            Map<String, Object> dentistaAgenda = new HashMap<>();
-            dentistaAgenda.put("dentistaId", dentista.getId());
-            dentistaAgenda.put("dentistaNome", dentista.getNome());
-            dentistaAgenda.put("agendamentos", agendamentos);
-            resultado.add(dentistaAgenda);
+        if (dentistas.isEmpty()) {
+            return java.util.Collections.emptyList();
         }
 
-        return resultado;
+        List<UUID> dentistaIds = dentistas.stream().map(Dentista::getId).toList();
+
+        List<Agendamento> agendamentosBatch = agendamentoRepository
+                .findByDentistaIdInAndDataRange(dentistaIds, inicioDia, fimDia);
+
+        Map<UUID, List<AgendamentoResponseDTO>> agrupados = agendamentosBatch.stream()
+                .map(a -> new AgendamentoResponseDTO(
+                        a.getId(),
+                        a.getPaciente().getId(),
+                        a.getPaciente().getNome(),
+                        a.getDentista().getId(),
+                        a.getDentista().getNome(),
+                        a.getInicioAt(),
+                        a.getFimAt(),
+                        a.getStatus(),
+                        null // observacoes
+                ))
+                .collect(Collectors.groupingBy(AgendamentoResponseDTO::dentistaId));
+
+        return dentistas.stream().map(dentista -> {
+            List<AgendamentoResponseDTO> agendaDentista = agrupados.getOrDefault(dentista.getId(), java.util.Collections.emptyList());
+            return new AgendaDiaDentistaDTO(dentista.getId(), dentista.getNome(), agendaDentista);
+        }).toList();
     }
 }

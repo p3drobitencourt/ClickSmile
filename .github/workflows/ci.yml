@@ -16,12 +16,16 @@ jobs:
       with:
         java-version: '21'
         distribution: 'temurin'
-        cache: maven
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
     - name: Start PostgreSQL (Testcontainers)
       run: echo "Testcontainers will start Postgres automatically during the tests"
-    - name: Build and test with Maven
+    - name: Make gradlew executable
       working-directory: ./backend
-      run: ./mvnw verify
+      run: chmod +x gradlew
+    - name: Build and test with Gradle
+      working-directory: ./backend
+      run: ./gradlew build
 
   test-frontend:
     runs-on: ubuntu-latest

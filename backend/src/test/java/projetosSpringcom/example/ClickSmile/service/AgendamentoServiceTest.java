@@ -13,6 +13,7 @@ import projetosSpringcom.example.ClickSmile.dto.AgendamentoRequestDTO;
 import projetosSpringcom.example.ClickSmile.repository.AgendamentoRepository;
 import projetosSpringcom.example.ClickSmile.repository.PacienteRepository;
 import projetosSpringcom.example.ClickSmile.repository.UsuarioRepository;
+import projetosSpringcom.example.ClickSmile.dto.AgendamentoResponseDTO;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -74,11 +75,11 @@ class AgendamentoServiceTest {
         when(usuarioRepository.findById(dentistaId)).thenReturn(Optional.of(dentista));
         when(agendamentoRepository.save(any(Agendamento.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Agendamento salvo = service.criar(dto);
+        AgendamentoResponseDTO salvo = service.criar(dto);
 
-        assertEquals(StatusAgendamento.CONFIRMADO, salvo.getStatus());
-        assertEquals(inicio.plusMinutes(30), salvo.getFimAt());
-        assertEquals(inicio, salvo.getInicioAt());
+        assertEquals(StatusAgendamento.CONFIRMADO, salvo.status());
+        assertEquals(inicio.plusMinutes(30), salvo.fimAt());
+        assertEquals(inicio, salvo.inicioAt());
         verify(agendamentoRepository).save(any(Agendamento.class));
     }
 

@@ -3,12 +3,12 @@ package projetosSpringcom.example.ClickSmile.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import projetosSpringcom.example.ClickSmile.domain.Paciente;
+import projetosSpringcom.example.ClickSmile.dto.PacienteResponseDTO;
+import projetosSpringcom.example.ClickSmile.dto.AgendaDiaDentistaDTO;
 import projetosSpringcom.example.ClickSmile.service.RecepcaoService;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/recepcao")
@@ -22,12 +22,12 @@ public class RecepcaoController {
     }
 
     @GetMapping("/pacientes")
-    public ResponseEntity<List<Paciente>> listarPacientes() {
+    public ResponseEntity<List<PacienteResponseDTO>> listarPacientes() {
         return ResponseEntity.ok(recepcaoService.listarPacientesDaClinica());
     }
 
     @GetMapping("/agendas/dia")
-    public ResponseEntity<List<Map<String, Object>>> listarAgendasDoDia(@RequestParam(required = false) LocalDate data) {
+    public ResponseEntity<List<AgendaDiaDentistaDTO>> listarAgendasDoDia(@RequestParam(required = false) LocalDate data) {
         if (data == null) {
             data = LocalDate.now();
         }
