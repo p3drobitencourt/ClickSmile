@@ -2,7 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { RuntimeConfigService } from '../../services/runtime-config.service';
-import { AgendamentoDTO } from '../../services/agendamento.models';
+
+export interface AgendamentoDTO {
+  id: string;
+  inicioAt: string;
+  status: string;
+  pacienteId: string;
+  pacienteNome: string;
+}
 
 export interface Paciente {
   id: string;

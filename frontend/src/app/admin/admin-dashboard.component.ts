@@ -67,19 +67,6 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
-    // Load users
-    this.service.getUsuarios().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (data) => { 
-        this.usuarios = data;
-        this.loading = false;
-      },
-      error: () => {
-        this.toast.show('Erro ao carregar usuários', 'error');
-        this.loading = false;
-      }
-    });
-  }
-
   toggleBlock(u: AdminUsuario) {
     const newStatus = u.status === 'ACTIVE' ? 'BLOCKED' : 'ACTIVE';
     this.service.toggleUserStatus(u.id, newStatus).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({

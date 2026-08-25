@@ -37,9 +37,9 @@ WHERE a.ativo = true;
 CREATE VIEW public.vw_agendamento_publico AS
 SELECT 
     ag.id, 
-    ag.dentista_id, 
+    ag.dentista_usuario_id, 
     ag.tenant_id, 
-    ag.data_hora, 
+    ag.inicio_at, 
     ag.status
 FROM public.agendamento ag
 WHERE ag.status != 'CANCELADO' AND ag.status != 'REJEITADO';

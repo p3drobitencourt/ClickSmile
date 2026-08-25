@@ -3,6 +3,7 @@ import { Component, OnDestroy, OnInit, inject, DestroyRef, signal, effect } from
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import * as L from 'leaflet';
 import { AuthService } from '../auth/auth.service';

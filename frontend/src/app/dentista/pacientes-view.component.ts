@@ -4,12 +4,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DentistaChatRequestsComponent } from './components/dentista-chat-requests.component';
 import { DentistaMetricsComponent } from './components/dentista-metrics.component';
 import { ChatService, SessaoChatResponseDTO } from '../services/chat.service';
-import { ToastService } from '../shared/toast.service';
+import { ToastService } from '../shared/toast.service';import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../auth/auth.service';
+import { RuntimeConfigService } from '../services/runtime-config.service';
 
 @Component({
   selector: 'app-pacientes-view',
   standalone: true,
-  imports: [CommonModule, DentistaChatRequestsComponent, DentistaMetricsComponent],
+  imports: [CommonModule],
   template: `
     <div class="h-full bg-slate-900 text-slate-200 p-4 lg:p-6 overflow-y-auto">
       <header class="bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-700 mb-6">
@@ -58,9 +60,9 @@ export class PacientesViewComponent implements OnInit {
   pacientes: { id: string, nome: string, ultimaConsulta: string }[] = [];
   loading = false;
 
-  private http = inject(import('@angular/common/http').HttpClient);
-  private auth = inject(import('../../auth/auth.service').AuthService);
-  private runtime = inject(import('../../services/runtime-config.service').RuntimeConfigService);
+  private http = inject(HttpClient);
+  private auth = inject(AuthService);
+  private runtime = inject(RuntimeConfigService);
 
   ngOnInit() {
     this.carregarPacientes();
@@ -68,12 +70,12 @@ export class PacientesViewComponent implements OnInit {
 
   carregarPacientes() {
     this.loading = true;
-    this.auth.getUserProfile().then(user => {
+    this.auth.getProfile().then((user: any) => {
       this.http.get<any[]>(this.runtime.api(`/api/agendamentos/dentista/${user.id}`)).subscribe({
-        next: (agendamentos) => {
+        next: (agendamentos: any[]) => {
           const mapa = new Map<string, any>();
           
-          agendamentos.forEach(ag => {
+          agendamentos.forEach((ag: any) => {
             const pId = ag.pacienteId;
             if (!mapa.has(pId)) {
               mapa.set(pId, { id: pId, nome: ag.pacienteNome, ultimaConsulta: ag.inicioAt });
