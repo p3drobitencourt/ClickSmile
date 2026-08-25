@@ -50,4 +50,7 @@ public class Agendamento implements TenantAware {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private StatusAgendamento status = StatusAgendamento.PENDENTE;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
 }

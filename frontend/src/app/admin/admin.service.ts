@@ -4,9 +4,13 @@ import { Observable } from 'rxjs';
 import { RuntimeConfigService } from '../services/runtime-config.service';
 
 export interface AdminMetrics {
-  consultasAtivas: number;
+  totalPacientes: number;
+  novosPacientes: number;
   totalDentistas: number;
-  volumeCancelamentos: number;
+  totalAgendamentos: number;
+  agendamentosConcluidos: number;
+  agendamentosCancelados: number;
+  taxaCancelamento: number;
 }
 
 export interface AdminUsuario {
@@ -22,8 +26,14 @@ export class AdminService {
   private http = inject(HttpClient);
   private runtime = inject(RuntimeConfigService);
 
-  getMetricas(): Observable<AdminMetrics> {
-    const url = this.runtime.api('/api/admin/metricas');
+  getMetricas(startDate?: string, endDate?: string): Observable<AdminMetrics> {
+    let url = this.runtime.api('/api/admin/metricas');
+    const params = new URLSearchParams();
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+    if (params.toString()) {
+      url += '?' + params.toString();
+    }
     return this.http.get<AdminMetrics>(url);
   }
 

@@ -46,6 +46,12 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, UUID> 
     @EntityGraph(attributePaths = {"paciente", "dentista", "paciente.pacienteUsuario"})
     List<Agendamento> findByPacienteIdOrderByInicioAtDesc(UUID pacienteId);
     
-    long countByStatusIn(List<String> statuses);
-    long countByStatus(String status);
+    long countByStatusIn(List<projetosSpringcom.example.ClickSmile.domain.StatusAgendamento> statuses);
+    long countByStatus(projetosSpringcom.example.ClickSmile.domain.StatusAgendamento status);
+    
+    @Query("SELECT COUNT(a) FROM Agendamento a WHERE a.status = :status AND a.inicioAt >= :start AND a.inicioAt <= :end")
+    long countByStatusAndPeriodo(@Param("status") projetosSpringcom.example.ClickSmile.domain.StatusAgendamento status, @Param("start") OffsetDateTime start, @Param("end") OffsetDateTime end);
+    
+    @Query("SELECT COUNT(a) FROM Agendamento a WHERE a.createdAt >= :start")
+    long countNovosAgendamentos(@Param("start") OffsetDateTime start);
 }

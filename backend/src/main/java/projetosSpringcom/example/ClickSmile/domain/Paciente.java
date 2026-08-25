@@ -32,4 +32,7 @@ public class Paciente implements TenantAware {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = true)
     private PacienteUsuario pacienteUsuario;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private java.time.OffsetDateTime createdAt;
 }

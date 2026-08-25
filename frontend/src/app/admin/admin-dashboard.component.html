@@ -6,20 +6,42 @@
     </div>
   </header>
 
+  <!-- Toolbar -->
+  <div class="toolbar" style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+    <input type="date" [(ngModel)]="startDate" class="form-input" (change)="loadMetrics()">
+    <input type="date" [(ngModel)]="endDate" class="form-input" (change)="loadMetrics()">
+    <span *ngIf="loadingMetrics" style="align-self: center;">Carregando...</span>
+  </div>
+
   <!-- Metrics Grid -->
   <div class="metrics-grid" *ngIf="metrics">
     <div class="metric-card">
-      <p>Consultas Ativas</p>
-      <h3>{{ metrics.consultasAtivas }}</h3>
+      <p>Total de Pacientes</p>
+      <h3>{{ metrics.totalPacientes }}</h3>
+      <span class="subtext">+{{ metrics.novosPacientes }} no período</span>
     </div>
     <div class="metric-card">
-      <p>Total de Dentistas</p>
+      <p>Consultas Realizadas</p>
+      <h3>{{ metrics.agendamentosConcluidos }}</h3>
+      <span class="subtext">de {{ metrics.totalAgendamentos }} no total</span>
+    </div>
+    <div class="metric-card">
+      <p>Taxa de Cancelamentos</p>
+      <h3>{{ metrics.taxaCancelamento | number:'1.0-1' }}%</h3>
+      <span class="subtext">{{ metrics.agendamentosCancelados }} canceladas</span>
+    </div>
+    <div class="metric-card">
+      <p>Dentistas</p>
       <h3>{{ metrics.totalDentistas }}</h3>
     </div>
-    <div class="metric-card">
-      <p>Volume de Cancelamentos</p>
-      <h3>{{ metrics.volumeCancelamentos }}</h3>
-    </div>
+  </div>
+
+  <div class="metrics-grid" *ngIf="!metrics && loadingMetrics">
+    <!-- Skeleton Loading -->
+    <div class="metric-card skeleton-card"></div>
+    <div class="metric-card skeleton-card"></div>
+    <div class="metric-card skeleton-card"></div>
+    <div class="metric-card skeleton-card"></div>
   </div>
 
   <!-- Users Table -->

@@ -1,13 +1,14 @@
 import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AdminService, AdminMetrics, AdminUsuario } from './admin.service';
 import { ToastService } from '../shared/toast.service';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './admin-dashboard.component.html',
   styleUrl: './admin-dashboard.component.scss',
 })
@@ -15,23 +16,56 @@ export class AdminDashboardComponent implements OnInit {
   metrics: AdminMetrics | null = null;
   usuarios: AdminUsuario[] = [];
   loading = true;
+  loadingMetrics = false;
+
+  startDate: string = '';
+  endDate: string = '';
 
   private service = inject(AdminService);
   private toast = inject(ToastService);
   private destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
+    const d = new Date();
+    this.endDate = d.toISOString().split('T')[0];
+    d.setDate(d.getDate() - 30);
+    this.startDate = d.toISOString().split('T')[0];
     this.loadData();
   }
 
   loadData() {
     this.loading = true;
-    
-    // Load metrics
-    this.service.getMetricas().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (data) => { this.metrics = data; },
-      error: () => this.toast.show('Erro ao carregar métricas', 'error')
+    this.loadMetrics();
+
+    // Load users
+    this.service.getUsuarios().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (data) => { 
+        this.usuarios = data;
+        this.loading = false;
+      },
+      error: () => {
+        this.toast.show('Erro ao carregar usuários', 'error');
+        this.loading = false;
+      }
     });
+  }
+
+  loadMetrics() {
+    this.loadingMetrics = true;
+    const startIso = this.startDate ? new Date(this.startDate).toISOString() : undefined;
+    const endIso = this.endDate ? new Date(this.endDate).toISOString() : undefined;
+
+    this.service.getMetricas(startIso, endIso).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (data) => { 
+        this.metrics = data; 
+        this.loadingMetrics = false;
+      },
+      error: () => {
+        this.toast.show('Erro ao carregar métricas', 'error');
+        this.loadingMetrics = false;
+      }
+    });
+  }
 
     // Load users
     this.service.getUsuarios().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({

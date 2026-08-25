@@ -8,7 +8,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AdminMetricsDTO {
-    private long consultasAtivas;
+    private long totalPacientes;
+    private long novosPacientes;
     private long totalDentistas;
-    private long volumeCancelamentos;
+    private long totalAgendamentos;
+    private long agendamentosConcluidos;
+    private long agendamentosCancelados;
+    private double taxaCancelamento;
 }

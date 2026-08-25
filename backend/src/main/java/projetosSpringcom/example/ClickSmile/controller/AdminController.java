@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('TENANT_ADMIN')")
 public class AdminController {
 
     @Autowired
@@ -27,13 +27,32 @@ public class AdminController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    @GetMapping("/metricas")
-    public ResponseEntity<AdminMetricsDTO> getMetricas() {
-        long consultasAtivas = agendamentoRepository.countByStatusIn(Arrays.asList("PENDENTE", "CONFIRMADO"));
-        long volumeCancelamentos = agendamentoRepository.countByStatus("CANCELADO");
-        long totalDentistas = usuarioRepository.countByPerfil(Perfil.DENTISTA);
+    @Autowired
+    private projetosSpringcom.example.ClickSmile.repository.PacienteRepository pacienteRepository;
 
-        return ResponseEntity.ok(new AdminMetricsDTO(consultasAtivas, totalDentistas, volumeCancelamentos));
+    @GetMapping("/metricas")
+    public ResponseEntity<AdminMetricsDTO> getMetricas(
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.OffsetDateTime startDate,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.OffsetDateTime endDate) {
+        
+        if (startDate == null) startDate = java.time.OffsetDateTime.now().minusDays(30);
+        if (endDate == null) endDate = java.time.OffsetDateTime.now();
+
+        long totalPacientes = pacienteRepository.count();
+        long novosPacientes = pacienteRepository.countNovosPacientes(startDate);
+        long totalDentistas = usuarioRepository.countByPerfil(Perfil.DENTISTA);
+        long totalAgendamentos = agendamentoRepository.count();
+        long agendamentosConcluidos = agendamentoRepository.countByStatusAndPeriodo(projetosSpringcom.example.ClickSmile.domain.StatusAgendamento.CONCLUIDO, startDate, endDate);
+        long agendamentosCancelados = agendamentoRepository.countByStatusAndPeriodo(projetosSpringcom.example.ClickSmile.domain.StatusAgendamento.CANCELADO, startDate, endDate);
+        
+        long totalNoPeriodo = agendamentoRepository.countNovosAgendamentos(startDate); // Simplifying total no periodo
+        double taxaCancelamento = totalNoPeriodo > 0 ? (double) agendamentosCancelados / totalNoPeriodo * 100 : 0.0;
+
+        AdminMetricsDTO dto = new AdminMetricsDTO(
+            totalPacientes, novosPacientes, totalDentistas, totalAgendamentos,
+            agendamentosConcluidos, agendamentosCancelados, taxaCancelamento
+        );
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/usuarios")

@@ -53,4 +53,7 @@ public abstract class Usuario implements TenantAware {
 
     @Column(nullable = false)
     private String status = "ACTIVE";
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private java.time.OffsetDateTime createdAt;
 }

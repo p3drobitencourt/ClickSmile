@@ -21,4 +21,7 @@ public interface PacienteRepository extends JpaRepository<Paciente, UUID> {
     @Override
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"pacienteUsuario"})
     java.util.List<Paciente> findAll();
+
+    @Query("SELECT COUNT(p) FROM Paciente p WHERE p.createdAt >= :start")
+    long countNovosPacientes(@Param("start") java.time.OffsetDateTime start);
 }
