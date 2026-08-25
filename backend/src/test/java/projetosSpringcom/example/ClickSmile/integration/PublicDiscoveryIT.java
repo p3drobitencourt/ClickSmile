@@ -14,7 +14,7 @@ import static org.hamcrest.Matchers.*;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public class PublicDiscoveryIT {
+public class PublicDiscoveryIT extends BaseIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -37,3 +37,4 @@ public class PublicDiscoveryIT {
                 .andExpect(status().isBadRequest());
     }
 }
+

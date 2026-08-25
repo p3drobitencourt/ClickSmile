@@ -32,23 +32,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("prod")
 @TestPropertySource(properties = {
-    // RUNTIME usa a nova role restrita (Fase 2)
-    "spring.datasource.url=jdbc:postgresql://aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require",
-    "spring.datasource.username=clicksmile_app.vlgfqocctzicdpcwhhyr",
-    "spring.datasource.password=ClickSmile#App!2026",
-    "spring.datasource.driver-class-name=org.postgresql.Driver",
-    
-    // FLYWAY usa a role administrativa (Fase 8)
-    "spring.flyway.url=jdbc:postgresql://aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require",
-    "spring.flyway.user=postgres.vlgfqocctzicdpcwhhyr",
-    "spring.flyway.password=e!qN4k+f*H*x8Mt",
-    "spring.flyway.driver-class-name=org.postgresql.Driver",
-    
     "spring.jpa.hibernate.ddl-auto=none",
     "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect"
 })
 @Transactional
-public class RoleRuntimeValidationIT {
+public class RoleRuntimeValidationIT extends BaseIntegrationTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;

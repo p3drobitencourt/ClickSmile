@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ActiveProfiles("prod")
-public class AgendamentoBoundaryIT {
+public class AgendamentoBoundaryIT extends BaseIntegrationTest {
 
     // Testcontainers removed. Using external DB provided by environment.
 
@@ -43,3 +43,4 @@ public class AgendamentoBoundaryIT {
         });
     }
 }
+

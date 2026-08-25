@@ -20,14 +20,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("prod")
-@TestPropertySource(properties = {
-    "spring.datasource.url=jdbc:postgresql://aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require",
-    "spring.datasource.username=postgres.vlgfqocctzicdpcwhhyr",
-    "spring.datasource.password=e!qN4k+f*H*x8Mt",
-    "spring.datasource.driver-class-name=org.postgresql.Driver",
-    "spring.flyway.enabled=true"
-})
-public class RecepcaoMultiTenantIT {
+
+public class RecepcaoMultiTenantIT extends BaseIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -61,3 +55,4 @@ public class RecepcaoMultiTenantIT {
                .andExpect(status().isUnauthorized()); // 401
     }
 }
+

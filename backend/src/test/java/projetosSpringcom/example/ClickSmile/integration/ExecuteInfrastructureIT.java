@@ -9,15 +9,8 @@ import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
 @ActiveProfiles("prod")
-@TestPropertySource(properties = {
-    "spring.datasource.url=jdbc:postgresql://aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require",
-    "spring.datasource.username=postgres.vlgfqocctzicdpcwhhyr",
-    "spring.datasource.password=e!qN4k+f*H*x8Mt",
-    "spring.datasource.driver-class-name=org.postgresql.Driver",
-    "spring.flyway.enabled=true",
-    "spring.jpa.hibernate.ddl-auto=none"
-})
-public class ExecuteInfrastructureIT {
+
+public class ExecuteInfrastructureIT extends BaseIntegrationTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -54,3 +47,4 @@ public class ExecuteInfrastructureIT {
         System.out.println("========== PERMISSÕES APLICADAS ==========");
     }
 }
+
