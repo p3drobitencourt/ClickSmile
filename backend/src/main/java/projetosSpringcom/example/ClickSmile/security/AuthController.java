@@ -40,9 +40,15 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<LoginResponse> register(@RequestBody RegisterRequest request, HttpServletResponse response) {
         Usuario usuario = registrationService.register(request);
-        String access = jwtService.createAccessToken(usuario);
-        refreshTokenService.createRefreshToken(usuario, response);
-        return ResponseEntity.ok(new LoginResponse(access, usuario.getEmail(), usuario.getPerfil()));
+        
+        TenantContext.setTenantId(usuario.getTenantId());
+        try {
+            String access = jwtService.createAccessToken(usuario);
+            refreshTokenService.createRefreshToken(usuario, response);
+            return ResponseEntity.ok(new LoginResponse(access, usuario.getEmail(), usuario.getPerfil()));
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     @PostMapping("/login")
