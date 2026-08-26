@@ -25,7 +25,6 @@ public class TenantAspect {
     @Before("execution(* projetosSpringcom.example.ClickSmile.repository..*(..)) || execution(* projetosSpringcom.example.ClickSmile.service..*(..))")
     public void setTenantId() {
         UUID tenantId = TenantContext.getTenantId();
-        System.out.println("ASPECT EXECUTING WITH TENANT: " + tenantId);
         if (tenantId != null) {
             Session session = entityManager.unwrap(Session.class);
             // Defesa Nível 2: JPA Filters

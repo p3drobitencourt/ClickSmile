@@ -23,7 +23,19 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
     Optional<Usuario> findByEmail(String email);
 
-    @Query(nativeQuery = true, value = "SELECT id, email, senha_hash as senhaHash, tenant_id as tenantId, perfil, status FROM get_auth_user_by_email(:email)")
+    @Query(
+        nativeQuery = true,
+        value = """
+            SELECT
+                id,
+                email,
+                senha_hash AS senhaHash,
+                tenant_id AS tenantId,
+                perfil,
+                status
+            FROM public.get_auth_user_by_email(CAST(:email AS CITEXT))
+            """
+    )
     Optional<AuthUserProjection> findAuthUserByEmail(@Param("email") String email);
 
     Optional<Usuario> findByTenantIdAndEmail(UUID tenantId, String email);
