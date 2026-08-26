@@ -49,16 +49,36 @@ public class RegistrationService {
             throw new IllegalArgumentException("Cadastro público não pode criar TENANT_ADMIN.");
         }
 
-        TenantClinica tenant = new TenantClinica();
-        tenant.setId(UUID.randomUUID());
-        tenant.setCnpj(null);
-        tenant.setRazaoSocial(resolveRazaoSocial(request));
-        tenant.setNomeFantasia(resolveNomeFantasia(request));
-        tenant.setStatus("ACTIVE");
-        tenant.setTimezone("America/Sao_Paulo");
-        tenant.setCreatedAt(OffsetDateTime.now());
-        tenant.setUpdatedAt(OffsetDateTime.now());
-        tenantRepository.save(tenant);
+        TenantClinica tenant;
+        
+        if (perfil == Perfil.DENTISTA) {
+            if (isBlank(request.cnpj())) {
+                throw new IllegalArgumentException("O CNPJ da clínica é obrigatório para cadastro de dentistas.");
+            }
+            if (request.cnpj().length() > 14) {
+                throw new IllegalArgumentException("CNPJ inválido.");
+            }
+            if (tenantRepository.findByCnpj(request.cnpj()).isPresent()) {
+                throw new IllegalArgumentException("Já existe uma clínica com este CNPJ.");
+            }
+            
+            tenant = new TenantClinica();
+            tenant.setId(UUID.randomUUID());
+            tenant.setCnpj(request.cnpj());
+            tenant.setRazaoSocial(resolveRazaoSocial(request));
+            tenant.setNomeFantasia(resolveNomeFantasia(request));
+            tenant.setStatus("ACTIVE");
+            tenant.setTimezone("America/Sao_Paulo");
+            tenant.setCreatedAt(OffsetDateTime.now());
+            tenant.setUpdatedAt(OffsetDateTime.now());
+            tenantRepository.save(tenant);
+        } else {
+            if (request.tenantId() == null) {
+                throw new IllegalArgumentException("É obrigatório selecionar uma clínica existente para pacientes.");
+            }
+            tenant = tenantRepository.findById(request.tenantId())
+                    .orElseThrow(() -> new IllegalArgumentException("Clínica não encontrada."));
+        }
 
         Usuario usuario = createUsuario(perfil, request);
         usuario.setTenantId(tenant.getId());

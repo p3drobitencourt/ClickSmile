@@ -24,6 +24,8 @@ export interface RegisterRequest {
   cro?: string;
   especialidade?: string;
   nomeClinica?: string;
+  cnpj?: string;
+  tenantId?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -106,6 +108,10 @@ export class AuthService {
     return firstValueFrom(this.http.get<UserProfile>('/api/usuarios/me', {
       headers: { Authorization: `Bearer ${this.accessToken}` }
     })).catch(() => null);
+  }
+
+  getClinicas() {
+    return firstValueFrom(this.http.get<{id: string, nomeFantasia: string, cnpj: string}[]>('/api/public/clinicas'));
   }
 
   private setSession(response: LoginResponse) {

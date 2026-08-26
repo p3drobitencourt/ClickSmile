@@ -14,6 +14,8 @@ public record RegisterRequest(
         String telefone,
         String cro,
         String especialidade,
-        String nomeClinica
+        String nomeClinica,
+        String cnpj,
+        java.util.UUID tenantId
 ) {
 }

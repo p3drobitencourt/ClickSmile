@@ -51,14 +51,19 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(request.email(), request.senha())
         );
 
-        Optional<Usuario> u = usuarioRepository.findByEmail(request.email());
-        if (u.isEmpty()) return ResponseEntity.status(401).build();
+        var optUser = usuarioRepository.findAuthUserByEmail(request.email());
+        if (optUser.isEmpty()) return ResponseEntity.status(401).build();
 
-        Usuario usuario = u.get();
-        String access = jwtService.createAccessToken(usuario);
-        refreshTokenService.createRefreshToken(usuario, response);
-
-        return ResponseEntity.ok(new LoginResponse(access, usuario.getEmail(), usuario.getPerfil()));
+        var authUser = optUser.get();
+        TenantContext.setTenantId(authUser.getTenantId());
+        try {
+            Usuario usuario = usuarioRepository.findById(authUser.getId()).orElseThrow();
+            String access = jwtService.createAccessToken(usuario);
+            refreshTokenService.createRefreshToken(usuario, response);
+            return ResponseEntity.ok(new LoginResponse(access, usuario.getEmail(), usuario.getPerfil()));
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     @PostMapping("/logout")

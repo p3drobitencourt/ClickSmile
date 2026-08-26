@@ -10,7 +10,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -46,14 +45,6 @@ public class SecurityConfig {
     }
 
     @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers(
-            new AntPathRequestMatcher("/api/auth/**"),
-            new AntPathRequestMatcher("/ws/**")
-        );
-    }
-
-    @Bean
     @Order(1)
     public SecurityFilterChain authSecurityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -74,7 +65,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/**", "/static/**", "/", "/index.html", "/assets/**", "/api/public/**", "/api/agendas/dentista/**").permitAll()
+                .requestMatchers("/actuator/**", "/static/**", "/", "/index.html", "/assets/**", "/api/public/**", "/api/agendas/dentista/**", "/ws/**").permitAll()
                 .requestMatchers("/api/dentista/**").hasRole("DENTISTA")
                 .requestMatchers("/api/paciente/**").hasRole("PACIENTE")
                 .requestMatchers("/api/admin/**").hasRole("TENANT_ADMIN")

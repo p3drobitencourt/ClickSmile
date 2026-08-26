@@ -40,10 +40,21 @@
           <span>Telefone</span>
           <input type="text" formControlName="telefone" placeholder="(11) 99999-9999" />
         </label>
+        <label>
+          <span>Clínica</span>
+          <select formControlName="tenantId">
+            <option value="" disabled selected>Selecione a clínica</option>
+            <option *ngFor="let c of clinicas" [value]="c.id">{{ c.nomeFantasia }}</option>
+          </select>
+        </label>
       } @else {
         <label>
           <span>Nome da clínica</span>
           <input type="text" formControlName="nomeClinica" placeholder="Clínica Sorria Bem" />
+        </label>
+        <label>
+          <span>CNPJ da clínica</span>
+          <input type="text" formControlName="cnpj" placeholder="00.000.000/0000-00" />
         </label>
         <div class="grid-two">
           <label>

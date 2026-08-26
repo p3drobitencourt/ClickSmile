@@ -22,6 +22,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
     void deleteById(@Param("id") UUID id);
 
     Optional<Usuario> findByEmail(String email);
+
+    @Query(nativeQuery = true, value = "SELECT id, email, senha_hash as senhaHash, tenant_id as tenantId, perfil, status FROM get_auth_user_by_email(:email)")
+    Optional<AuthUserProjection> findAuthUserByEmail(@Param("email") String email);
+
     Optional<Usuario> findByTenantIdAndEmail(UUID tenantId, String email);
     long countByPerfil(Perfil perfil);
     List<Usuario> findByPerfil(Perfil perfil);

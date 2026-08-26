@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
@@ -12,9 +12,10 @@ import { LogoComponent } from '../shared/logo.component';
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   loading = false;
   erro = '';
+  clinicas: {id: string, nomeFantasia: string, cnpj: string}[] = [];
 
   form: FormGroup;
 
@@ -28,11 +29,21 @@ export class RegisterComponent {
       cro: [''],
       especialidade: [''],
       nomeClinica: [''],
+      cnpj: [''],
+      tenantId: [''],
     });
   }
 
   get perfil() {
     return this.form.get('perfil')?.value;
+  }
+
+  async ngOnInit() {
+    try {
+      this.clinicas = await this.auth.getClinicas();
+    } catch (e) {
+      console.error('Erro ao carregar clínicas', e);
+    }
   }
 
   async submit() {
@@ -56,6 +67,8 @@ export class RegisterComponent {
         cro: value.perfil === 'DENTISTA' ? value.cro : undefined,
         especialidade: value.perfil === 'DENTISTA' ? value.especialidade : undefined,
         nomeClinica: value.nomeClinica,
+        cnpj: value.perfil === 'DENTISTA' ? value.cnpj : undefined,
+        tenantId: value.perfil === 'PACIENTE' ? value.tenantId : undefined,
       });
 
       if (value.perfil === 'PACIENTE') {
