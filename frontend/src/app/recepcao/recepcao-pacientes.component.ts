@@ -6,7 +6,7 @@ import { RecepcaoService, Paciente } from './services/recepcao.service';
 @Component({
   selector: 'app-recepcao-pacientes',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="h-full bg-slate-900 text-slate-200 p-4 lg:p-6 overflow-y-auto">
       <header class="bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-700 mb-6 flex justify-between items-center">
