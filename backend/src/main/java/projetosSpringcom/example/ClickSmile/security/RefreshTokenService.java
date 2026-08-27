@@ -27,6 +27,7 @@ public class RefreshTokenService {
         this.repository = repository;
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public String createRefreshToken(Usuario usuario, HttpServletResponse response) {
         String raw = UUID.randomUUID().toString();
         String hashed = encoder.encode(raw);
