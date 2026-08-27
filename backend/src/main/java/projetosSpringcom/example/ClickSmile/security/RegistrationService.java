@@ -94,6 +94,7 @@ public class RegistrationService {
                 paciente.setNome(pu.getNome());
                 paciente.setPacienteUsuario(pu);
                 paciente.setTenantId(tenant.getId());
+                paciente.setCreatedAt(OffsetDateTime.now());
                 pacienteRepository.save(paciente);
             }
             return savedUsuario;

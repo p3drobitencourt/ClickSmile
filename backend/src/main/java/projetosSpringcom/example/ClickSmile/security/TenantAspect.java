@@ -22,7 +22,7 @@ public class TenantAspect {
         this.entityManager = entityManager;
     }
 
-    @Before("execution(* projetosSpringcom.example.ClickSmile.repository..*(..)) || execution(* projetosSpringcom.example.ClickSmile.service..*(..))")
+    @Before("execution(* projetosSpringcom.example.ClickSmile.repository..*(..)) || execution(* projetosSpringcom.example.ClickSmile.service..*(..)) || execution(* projetosSpringcom.example.ClickSmile.security.RefreshTokenService.*(..)) || execution(* projetosSpringcom.example.ClickSmile.security.RegistrationService.*(..))")
     public void setTenantId() {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId != null) {
