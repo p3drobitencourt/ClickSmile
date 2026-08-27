@@ -53,12 +53,16 @@ public class RefreshTokenService {
     }
 
     public Optional<RefreshToken> findByRaw(String rawToken) {
-        List<RefreshToken> all = repository.findAll();
-        for (RefreshToken t : all) {
-            if (!t.isRevoked() && t.getExpiresAt().isAfter(Instant.now())) {
-                if (encoder.matches(rawToken, t.getTokenHash())) {
-                    return Optional.of(t);
-                }
+        List<Object[]> all = repository.findAllHashesBypassingRls();
+        for (Object[] row : all) {
+            String idStr = row[0].toString();
+            String hash = row[1].toString();
+            String tenantIdStr = row[2].toString();
+            
+            if (encoder.matches(rawToken, hash)) {
+                // Seta o contexto temporariamente para permitir a busca completa do JPA sem bloqueio do RLS
+                TenantContext.setTenantId(UUID.fromString(tenantIdStr));
+                return repository.findById(UUID.fromString(idStr));
             }
         }
         return Optional.empty();

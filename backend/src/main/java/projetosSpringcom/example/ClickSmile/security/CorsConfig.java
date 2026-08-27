@@ -12,10 +12,14 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
+    @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins:https://click-smile.vercel.app,http://localhost:4200}")
+    private String allowedOrigins;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("https://*.vercel.app", "http://localhost:4200"));
+        List<String> originsList = Arrays.asList(allowedOrigins.split(","));
+        configuration.setAllowedOriginPatterns(originsList);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
         configuration.setExposedHeaders(List.of("X-Trace-Id"));

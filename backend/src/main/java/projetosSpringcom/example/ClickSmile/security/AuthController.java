@@ -109,12 +109,17 @@ public class AuthController {
 
         var optToken = refreshTokenService.findByRaw(raw);
         if (optToken.isEmpty()) return ResponseEntity.status(401).build();
-        var tokenEntity = optToken.get();
-        var usuario = tokenEntity.getUsuario();
-        // revoke the used token (rotation)
-        refreshTokenService.revokeToken(tokenEntity);
-        String access = jwtService.createAccessToken(usuario);
-        refreshTokenService.createRefreshToken(usuario, response);
-        return ResponseEntity.ok(new LoginResponse(access, usuario.getEmail(), usuario.getPerfil()));
+        
+        try {
+            var tokenEntity = optToken.get();
+            var usuario = tokenEntity.getUsuario();
+            // revoke the used token (rotation)
+            refreshTokenService.revokeToken(tokenEntity);
+            String access = jwtService.createAccessToken(usuario);
+            refreshTokenService.createRefreshToken(usuario, response);
+            return ResponseEntity.ok(new LoginResponse(access, usuario.getEmail(), usuario.getPerfil()));
+        } finally {
+            TenantContext.clear();
+        }
     }
 }

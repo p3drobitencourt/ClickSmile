@@ -34,10 +34,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.setUserDestinationPrefix("/user");
     }
 
+    @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins:https://click-smile.vercel.app,http://localhost:4200}")
+    private String allowedOrigins;
+
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        String[] origins = allowedOrigins.split(",");
         registry.addEndpoint("/ws-clicksmile")
-            .setAllowedOriginPatterns("https://*.vercel.app", "http://localhost:*", "http://127.0.0.1:*")
+            .setAllowedOriginPatterns(origins)
             .withSockJS();
     }
 
