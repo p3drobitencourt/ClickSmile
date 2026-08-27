@@ -52,8 +52,13 @@ export class LoginComponent {
       }
     } catch (err: unknown) {
       const e = err as { error?: { detail?: string; message?: string }, message?: string };
-      const msg = e?.error?.detail || e?.error?.message || e?.message || 'Falha no login. Verifique os dados.';
+      let msg = e?.error?.detail || e?.error?.message || e?.message || 'Falha no login. Verifique os dados.';
       
+      const errResponse = err as any;
+      if (errResponse && errResponse.status === 401) {
+          msg = 'Credenciais inválidas. Verifique seu e-mail e senha.';
+      }
+
       // Se for um erro de Chunk (nova versão na Vercel), force o reload da página
       if (msg.includes('Failed to fetch dynamically imported module') || msg.includes('ChunkLoadError')) {
          const role = this.auth.getRole();

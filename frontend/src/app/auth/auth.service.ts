@@ -26,6 +26,7 @@ export interface RegisterRequest {
   nomeClinica?: string;
   cnpj?: string;
   tenantId?: string;
+  cpf?: string;
 }
 
 @Injectable({ providedIn: 'root' })

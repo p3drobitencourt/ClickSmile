@@ -25,12 +25,13 @@ export class RegisterComponent implements OnInit {
       nome: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
       senha: ['', [Validators.required, Validators.minLength(8)]],
-      telefone: [''],
+      telefone: ['', [Validators.pattern('^\\d{10,11}$')]],
       cro: [''],
       especialidade: [''],
       nomeClinica: [''],
-      cnpj: [''],
+      cnpj: ['', [Validators.pattern('^\\d{14}$')]],
       tenantId: [''],
+      cpf: ['', [Validators.pattern('^\\d{11}$')]]
     });
   }
 
@@ -68,7 +69,8 @@ export class RegisterComponent implements OnInit {
         especialidade: value.perfil === 'DENTISTA' ? value.especialidade : undefined,
         nomeClinica: value.nomeClinica,
         cnpj: value.perfil === 'DENTISTA' ? value.cnpj : undefined,
-        tenantId: value.perfil === 'PACIENTE' ? value.tenantId : undefined,
+        cpf: value.perfil === 'PACIENTE' ? value.cpf : undefined,
+        tenantId: undefined, // Ignorar o tenantId do HTML para PACIENTE por segurança (o DTO proíbe injetar tenantId via payload no PACIENTE)
       });
 
       if (value.perfil === 'PACIENTE') {
@@ -78,7 +80,16 @@ export class RegisterComponent implements OnInit {
       }
     } catch (err: unknown) {
       const e = err as { error?: { detail?: string; message?: string }, message?: string };
-      this.erro = e?.error?.detail || e?.error?.message || e?.message || 'Não foi possível concluir o cadastro.';
+      const errResponse = err as any;
+      let msg = e?.error?.detail || e?.error?.message || e?.message || 'Não foi possível concluir o cadastro.';
+      
+      if (errResponse && errResponse.status === 409) {
+          msg = 'E-mail já cadastrado. Tente recuperar sua senha ou usar outro e-mail.';
+      } else if (errResponse && errResponse.status === 400) {
+          msg = 'Dados inválidos. Verifique se o CPF, CNPJ ou Telefone contêm apenas números e têm o tamanho correto.';
+      }
+      
+      this.erro = msg;
     } finally {
       this.loading = false;
       this.cdr.detectChanges();

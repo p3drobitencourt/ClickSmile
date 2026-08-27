@@ -49,7 +49,7 @@ export class DentistaDashboardComponent implements OnInit {
 
   weekdays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
 
-  mockRequests: any[] = [];
+
 
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
@@ -75,7 +75,7 @@ export class DentistaDashboardComponent implements OnInit {
     private service: AgendaAdminService, 
     private runtime: RuntimeConfigService,
     private auth: AuthService,
-    private chat: ChatService,
+    public chat: ChatService,
     private agendamentoService: AgendamentoService,
     private toast: ToastService
   ) {}

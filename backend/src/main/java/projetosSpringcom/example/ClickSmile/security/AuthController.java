@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 import projetosSpringcom.example.ClickSmile.domain.Usuario;
 import projetosSpringcom.example.ClickSmile.repository.UsuarioRepository;
 import projetosSpringcom.example.ClickSmile.security.dto.LoginRequest;
@@ -38,7 +39,12 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<LoginResponse> register(@RequestBody RegisterRequest request, HttpServletResponse response) {
+    public ResponseEntity<LoginResponse> register(@Valid @RequestBody RegisterRequest request, HttpServletResponse response) {
+        if (request.perfil() == projetosSpringcom.example.ClickSmile.domain.Perfil.PACIENTE && request.tenantId() != null) {
+            // No futuro, PACIENTE só se associa a um tenant via Convite explícito com Token JWT do Dentista, não arbitrário no JSON
+            throw new IllegalArgumentException("Pacientes não podem forçar tenantId arbitrário no cadastro.");
+        }
+
         Usuario usuario = registrationService.register(request);
         
         TenantContext.setTenantId(usuario.getTenantId());

@@ -16,7 +16,7 @@
   <div class="grid grid-cols-12 gap-6 mt-6">
     <!-- Chat Requests (Left side) -->
     <div class="col-span-12 xl:col-span-4 flex flex-col">
-      <app-dentista-chat-requests [requests]="mockRequests"></app-dentista-chat-requests>
+      <app-dentista-chat-requests [requests]="(chat.solicitacoes$ | async) || []"></app-dentista-chat-requests>
     </div>
 
     <!-- Calendar View (Right side) -->

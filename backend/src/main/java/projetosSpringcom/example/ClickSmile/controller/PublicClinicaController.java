@@ -24,7 +24,7 @@ public class PublicClinicaController {
     public ResponseEntity<List<ClinicaPublicResumoDTO>> listar() {
         List<ClinicaPublicResumoDTO> clinicas = tenantClinicaRepository.findAll().stream()
                 .filter(t -> "ACTIVE".equals(t.getStatus()))
-                .map(t -> new ClinicaPublicResumoDTO(t.getId(), t.getNomeFantasia(), t.getCnpj()))
+                .map(t -> new ClinicaPublicResumoDTO(t.getId(), t.getNomeFantasia(), t.getCnpj(), t.getLatitude(), t.getLongitude()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(clinicas);
     }
