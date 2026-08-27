@@ -33,6 +33,21 @@ public class Paciente implements TenantAware {
     @JoinColumn(name = "usuario_id", nullable = true)
     private PacienteUsuario pacienteUsuario;
 
+    @Column(length = 255)
+    private String email;
+
+    @Column(length = 20)
+    private String telefone;
+
+    @Column(length = 20)
+    private String documento;
+
+    @Column(name = "data_nascimento")
+    private java.time.LocalDate dataNascimento;
+
+    @Column(length = 20, nullable = false)
+    private String status = "ACTIVE";
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private java.time.OffsetDateTime createdAt;
 }

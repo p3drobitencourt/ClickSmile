@@ -22,6 +22,8 @@ import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import projetosSpringcom.example.ClickSmile.dto.PacienteRequestDTO;
+import java.time.OffsetDateTime;
 
 @Service
 public class RecepcaoService {
@@ -52,6 +54,44 @@ public class RecepcaoService {
             })
             .toList();
     }
+
+    @Transactional
+    public PacienteResponseDTO criarPaciente(PacienteRequestDTO dto) {
+        Paciente p = new Paciente();
+        p.setNome(dto.getNome());
+        p.setEmail(dto.getEmail());
+        p.setTelefone(dto.getTelefone());
+        p.setDocumento(dto.getCpf());
+        p.setDataNascimento(dto.getDataNascimento());
+        p.setStatus("ACTIVE");
+        p.setCreatedAt(OffsetDateTime.now());
+        
+        p = pacienteRepository.save(p);
+        return new PacienteResponseDTO(p.getId(), p.getNome(), p.getEmail(), p.getTelefone());
+    }
+
+    @Transactional
+    public PacienteResponseDTO atualizarPaciente(UUID id, PacienteRequestDTO dto) {
+        Paciente p = pacienteRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Paciente não encontrado"));
+            
+        p.setNome(dto.getNome());
+        p.setEmail(dto.getEmail());
+        p.setTelefone(dto.getTelefone());
+        p.setDocumento(dto.getCpf());
+        p.setDataNascimento(dto.getDataNascimento());
+        
+        p = pacienteRepository.save(p);
+        return new PacienteResponseDTO(p.getId(), p.getNome(), p.getEmail(), p.getTelefone());
+    }
+
+    @Transactional
+    public void excluirPaciente(UUID id) {
+        Paciente p = pacienteRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Paciente não encontrado"));
+        pacienteRepository.delete(p);
+    }
+
 
     @Transactional(readOnly = true)
     public List<AgendaDiaDentistaDTO> listarAgendasDoDia(LocalDate data) {

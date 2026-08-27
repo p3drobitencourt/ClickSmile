@@ -38,4 +38,9 @@ export class RecepcaoService {
   listarAgendasDoDia(data: string): Observable<AgendaDiaDentista[]> {
     return this.http.get<AgendaDiaDentista[]>(this.runtime.api(`/api/recepcao/agendas/dia?data=${data}`));
   }
+
+  criarPaciente(paciente: Partial<Paciente>): Observable<Paciente> {
+    return this.http.post<Paciente>(this.runtime.api('/api/dentista/pacientes'), paciente);
+  }
 }
+

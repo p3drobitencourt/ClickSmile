@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RecepcaoService, Paciente } from './services/recepcao.service';
 
 @Component({
@@ -13,7 +14,7 @@ import { RecepcaoService, Paciente } from './services/recepcao.service';
           <p class="text-sm font-semibold text-emerald-500 uppercase tracking-wider mb-1">Recepção</p>
           <h1 class="text-2xl font-bold text-slate-100 m-0">Pacientes da Clínica</h1>
         </div>
-        <button class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-emerald-500/20 flex items-center gap-2">
+        <button (click)="abrirModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-emerald-500/20 flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
@@ -73,6 +74,50 @@ import { RecepcaoService, Paciente } from './services/recepcao.service';
         </table>
       </div>
     </div>
+
+    <!-- Modal Novo Paciente -->
+    <div *ngIf="modalAberto" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="p-6 border-b border-slate-700 flex justify-between items-center">
+          <h2 class="text-xl font-bold text-slate-100">Cadastrar Paciente</h2>
+          <button (click)="fecharModal()" class="text-slate-400 hover:text-white transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <form (ngSubmit)="salvarPaciente()">
+          <div class="p-6 space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-400 mb-1">Nome Completo *</label>
+              <input type="text" [(ngModel)]="novoPaciente.nome" name="nome" required
+                     class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-400 mb-1">Email</label>
+              <input type="email" [(ngModel)]="novoPaciente.email" name="email"
+                     class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-400 mb-1">Telefone / WhatsApp</label>
+              <input type="text" [(ngModel)]="novoPaciente.telefone" name="telefone"
+                     class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-400 mb-1">CPF / Documento</label>
+              <input type="text" [(ngModel)]="novoPaciente.cpf" name="cpf"
+                     class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+            </div>
+          </div>
+          <div class="p-6 border-t border-slate-700 bg-slate-900/50 flex justify-end gap-3">
+            <button type="button" (click)="fecharModal()" class="px-4 py-2 text-slate-300 hover:text-white transition-colors">Cancelar</button>
+            <button type="submit" [disabled]="salvando" class="bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-emerald-500/20">
+              {{ salvando ? 'Salvando...' : 'Salvar Paciente' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   `
 })
 export class RecepcaoPacientesComponent implements OnInit {
@@ -80,6 +125,10 @@ export class RecepcaoPacientesComponent implements OnInit {
   pacientesFiltrados: Paciente[] = [];
   loading = false;
   termo = '';
+
+  modalAberto = false;
+  salvando = false;
+  novoPaciente: any = {};
 
   private recepcaoService = inject(RecepcaoService);
 
@@ -104,5 +153,30 @@ export class RecepcaoPacientesComponent implements OnInit {
   onSearch(event: any) {
     this.termo = event.target.value.toLowerCase();
     this.pacientesFiltrados = this.pacientes.filter(p => p.nome.toLowerCase().includes(this.termo));
+  }
+
+  abrirModal() {
+    this.novoPaciente = {};
+    this.modalAberto = true;
+  }
+
+  fecharModal() {
+    this.modalAberto = false;
+  }
+
+  salvarPaciente() {
+    if (!this.novoPaciente.nome) return;
+    this.salvando = true;
+    this.recepcaoService.criarPaciente(this.novoPaciente).subscribe({
+      next: (p) => {
+        this.salvando = false;
+        this.fecharModal();
+        this.carregarPacientes();
+      },
+      error: () => {
+        this.salvando = false;
+        alert('Erro ao salvar paciente.');
+      }
+    });
   }
 }
