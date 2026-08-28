@@ -24,7 +24,7 @@ export class RegisterComponent implements OnInit {
       perfil: ['PACIENTE' as 'PACIENTE' | 'DENTISTA' | 'RECEPCAO' | 'TENANT_ADMIN', Validators.required],
       nome: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
-      senha: ['', [Validators.required, Validators.minLength(8)]],
+      senha: ['', [Validators.required, Validators.minLength(6)]],
       telefone: ['', [Validators.pattern('^\\d{10,11}$')]],
       cro: [''],
       especialidade: [''],
@@ -58,19 +58,20 @@ export class RegisterComponent implements OnInit {
     this.erro = '';
 
     try {
+      const sanitizeNumbers = (val?: string) => val ? val.replace(/\D/g, '') : undefined;
       const value = this.form.getRawValue();
       await this.auth.register({
         perfil: value.perfil,
         nome: value.nome,
         email: value.email,
         senha: value.senha,
-        telefone: value.perfil === 'PACIENTE' ? value.telefone : undefined,
+        telefone: value.perfil === 'PACIENTE' ? sanitizeNumbers(value.telefone) : undefined,
         cro: value.perfil === 'DENTISTA' ? value.cro : undefined,
         especialidade: value.perfil === 'DENTISTA' ? value.especialidade : undefined,
         nomeClinica: value.nomeClinica,
-        cnpj: value.perfil === 'DENTISTA' ? value.cnpj : undefined,
-        cpf: value.perfil === 'PACIENTE' ? value.cpf : undefined,
-        tenantId: undefined, // Ignorar o tenantId do HTML para PACIENTE por segurança (o DTO proíbe injetar tenantId via payload no PACIENTE)
+        cnpj: value.perfil === 'DENTISTA' ? sanitizeNumbers(value.cnpj) : undefined,
+        cpf: value.perfil === 'PACIENTE' ? sanitizeNumbers(value.cpf) : undefined,
+        tenantId: value.perfil === 'PACIENTE' ? value.tenantId : undefined,
       });
 
       if (value.perfil === 'PACIENTE') {
@@ -81,12 +82,12 @@ export class RegisterComponent implements OnInit {
     } catch (err: unknown) {
       const e = err as { error?: { detail?: string; message?: string }, message?: string };
       const errResponse = err as any;
-      let msg = e?.error?.detail || e?.error?.message || e?.message || 'Não foi possível concluir o cadastro.';
+      let msg = e?.error?.message || e?.error?.detail || e?.message || 'Não foi possível concluir o cadastro.';
       
       if (errResponse && errResponse.status === 409) {
           msg = 'E-mail já cadastrado. Tente recuperar sua senha ou usar outro e-mail.';
-      } else if (errResponse && errResponse.status === 400) {
-          msg = 'Dados inválidos. Verifique se o CPF, CNPJ ou Telefone contêm apenas números e têm o tamanho correto.';
+      } else if (errResponse && errResponse.status === 400 && e?.error?.message) {
+          msg = e.error.message;
       }
       
       this.erro = msg;
