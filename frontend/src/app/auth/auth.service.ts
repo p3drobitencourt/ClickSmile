@@ -97,13 +97,13 @@ export class AuthService {
   }
 
   bootstrapSession() {
-    const hasSessionHint = !!localStorage.getItem('clicksmile.role') || !!localStorage.getItem('clicksmile.email');
-    if (!hasSessionHint) {
-      return Promise.resolve();
-    }
-
     this.role = localStorage.getItem('clicksmile.role');
     this.email = localStorage.getItem('clicksmile.email');
+
+    // A refresh token is the source of truth for the session.
+    // The auth interceptor intentionally does not retry auth endpoints,
+    // so a missing/expired cookie fails silently here instead of showing
+    // a misleading "session expired" toast on the login page.
     return this.refreshOnce().catch(() => {
       this.clearSession();
     });
