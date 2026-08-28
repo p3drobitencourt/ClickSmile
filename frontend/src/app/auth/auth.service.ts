@@ -40,7 +40,7 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   login(email: string, senha: string) {
-    return firstValueFrom(this.http.post<LoginResponse>(`${this.api}/login`, { email, senha }, { withCredentials: true }))
+    return firstValueFrom(this.http.post<LoginResponse>(`${this.api}/login`, { email: email.trim(), senha }, { withCredentials: true }))
       .then(r => this.setSession(r));
   }
 
@@ -97,9 +97,16 @@ export class AuthService {
   }
 
   bootstrapSession() {
+    const hasSessionHint = !!localStorage.getItem('clicksmile.role') || !!localStorage.getItem('clicksmile.email');
+    if (!hasSessionHint) {
+      return Promise.resolve();
+    }
+
     this.role = localStorage.getItem('clicksmile.role');
     this.email = localStorage.getItem('clicksmile.email');
-    return this.refreshOnce().catch(() => undefined);
+    return this.refreshOnce().catch(() => {
+      this.clearSession();
+    });
   }
 
   getProfile(): Promise<UserProfile | null> {

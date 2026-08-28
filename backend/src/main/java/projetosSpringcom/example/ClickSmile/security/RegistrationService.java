@@ -13,10 +13,9 @@ import projetosSpringcom.example.ClickSmile.repository.UsuarioRepository;
 import projetosSpringcom.example.ClickSmile.repository.PacienteRepository;
 import projetosSpringcom.example.ClickSmile.domain.Paciente;
 import projetosSpringcom.example.ClickSmile.security.dto.RegisterRequest;
-import projetosSpringcom.example.ClickSmile.security.TenantContext;
 
-import java.security.SecureRandom;
 import java.time.OffsetDateTime;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -26,7 +25,6 @@ public class RegistrationService {
     private final TenantClinicaRepository tenantRepository;
     private final PacienteRepository pacienteRepository;
     private final PasswordEncoder passwordEncoder;
-    private final SecureRandom secureRandom = new SecureRandom();
 
     public RegistrationService(UsuarioRepository usuarioRepository,
                                TenantClinicaRepository tenantRepository,
@@ -40,55 +38,37 @@ public class RegistrationService {
 
     @Transactional
     public Usuario register(RegisterRequest request) {
-        if (usuarioRepository.findByEmail(request.email()).isPresent()) {
+        String email = request.email().trim().toLowerCase(Locale.ROOT);
+
+        if (usuarioRepository.findByEmail(email).isPresent()) {
             throw new IllegalArgumentException("Já existe um usuário com este e-mail.");
         }
 
         Perfil perfil = request.perfil();
-        if (perfil == Perfil.TENANT_ADMIN) {
-            throw new IllegalArgumentException("Cadastro público não pode criar TENANT_ADMIN.");
-        }
-
         TenantClinica tenant;
-        
-        if (perfil == Perfil.DENTISTA) {
-            if (isBlank(request.cnpj())) {
-                throw new IllegalArgumentException("O CNPJ da clínica é obrigatório para cadastro de dentistas.");
-            }
-            if (request.cnpj().length() > 14) {
-                throw new IllegalArgumentException("CNPJ inválido.");
-            }
-            if (tenantRepository.findByCnpj(request.cnpj()).isPresent()) {
-                throw new IllegalArgumentException("Já existe uma clínica com este CNPJ.");
-            }
-            
-            tenant = new TenantClinica();
-            tenant.setId(UUID.randomUUID());
-            tenant.setCnpj(request.cnpj());
-            tenant.setRazaoSocial(resolveRazaoSocial(request));
-            tenant.setNomeFantasia(resolveNomeFantasia(request));
-            tenant.setStatus("ACTIVE");
-            tenant.setTimezone("America/Sao_Paulo");
-            tenant.setCreatedAt(OffsetDateTime.now());
-            tenant.setUpdatedAt(OffsetDateTime.now());
-            tenantRepository.save(tenant);
-        } else {
+
+        if (perfil == Perfil.TENANT_ADMIN || perfil == Perfil.DENTISTA) {
+            tenant = createTenant(request);
+        } else if (perfil == Perfil.PACIENTE) {
             if (request.tenantId() == null) {
-                throw new IllegalArgumentException("É obrigatório selecionar uma clínica existente para pacientes.");
+                throw new IllegalArgumentException("É obrigatório selecionar uma clínica para o cadastro do paciente.");
             }
             tenant = tenantRepository.findById(request.tenantId())
                     .orElseThrow(() -> new IllegalArgumentException("Clínica não encontrada."));
+        } else {
+            throw new IllegalArgumentException("O perfil informado não pode ser criado pelo cadastro público.");
         }
 
         Usuario usuario = createUsuario(perfil, request);
         usuario.setTenantId(tenant.getId());
-        usuario.setEmail(request.email());
+        usuario.setEmail(email);
         usuario.setSenha(passwordEncoder.encode(request.senha()));
         usuario.setPerfil(perfil);
 
         TenantContext.setTenantId(tenant.getId());
         try {
             Usuario savedUsuario = usuarioRepository.save(usuario);
+
             if (savedUsuario instanceof PacienteUsuario pu) {
                 Paciente paciente = new Paciente();
                 paciente.setNome(pu.getNome());
@@ -97,19 +77,52 @@ public class RegistrationService {
                 paciente.setCreatedAt(OffsetDateTime.now());
                 pacienteRepository.save(paciente);
             }
+
             return savedUsuario;
         } finally {
             TenantContext.clear();
         }
     }
 
+    private TenantClinica createTenant(RegisterRequest request) {
+        String cnpj = request.cnpj() == null ? "" : request.cnpj().replaceAll("\\D", "");
+        if (cnpj.length() != 14) {
+            throw new IllegalArgumentException("O CNPJ da clínica deve conter 14 dígitos.");
+        }
+
+        if (isBlank(request.nomeClinica())) {
+            throw new IllegalArgumentException("O nome da clínica é obrigatório.");
+        }
+
+        if (tenantRepository.findByCnpj(cnpj).isPresent()) {
+            throw new IllegalArgumentException("Já existe uma clínica com este CNPJ.");
+        }
+
+        TenantClinica tenant = new TenantClinica();
+        tenant.setId(UUID.randomUUID());
+        tenant.setCnpj(cnpj);
+        tenant.setRazaoSocial(request.nomeClinica().trim());
+        tenant.setNomeFantasia(request.nomeClinica().trim());
+        tenant.setStatus("ACTIVE");
+        tenant.setTimezone("America/Sao_Paulo");
+        tenant.setCreatedAt(OffsetDateTime.now());
+        tenant.setUpdatedAt(OffsetDateTime.now());
+        return tenantRepository.save(tenant);
+    }
+
     private Usuario createUsuario(Perfil perfil, RegisterRequest request) {
+        if (perfil == Perfil.TENANT_ADMIN) {
+            Usuario admin = new Usuario();
+            admin.setNome(request.nome().trim());
+            return admin;
+        }
+
         if (perfil == Perfil.DENTISTA) {
             if (isBlank(request.cro()) || isBlank(request.especialidade())) {
                 throw new IllegalArgumentException("Para dentista, informe CRO e especialidade.");
             }
             Dentista dentista = new Dentista();
-            dentista.setNome(request.nome());
+            dentista.setNome(request.nome().trim());
             dentista.setCro(request.cro().trim());
             dentista.setEspecialidade(request.especialidade().trim());
             return dentista;
@@ -119,25 +132,9 @@ public class RegistrationService {
             throw new IllegalArgumentException("Para paciente, informe o telefone.");
         }
         PacienteUsuario pacienteUsuario = new PacienteUsuario();
-        pacienteUsuario.setNome(request.nome());
-        pacienteUsuario.setTelefone(request.telefone().trim());
+        pacienteUsuario.setNome(request.nome().trim());
+        pacienteUsuario.setTelefone(request.telefone().replaceAll("\\D", ""));
         return pacienteUsuario;
-    }
-
-    private String resolveRazaoSocial(RegisterRequest request) {
-        String nomeClinica = request.nomeClinica();
-        if (!isBlank(nomeClinica)) {
-            return nomeClinica.trim();
-        }
-        return "";
-    }
-
-    private String resolveNomeFantasia(RegisterRequest request) {
-        String nomeClinica = request.nomeClinica();
-        if (!isBlank(nomeClinica)) {
-            return nomeClinica.trim();
-        }
-        return "";
     }
 
     private boolean isBlank(String value) {

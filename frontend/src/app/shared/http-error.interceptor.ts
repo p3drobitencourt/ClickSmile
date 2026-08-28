@@ -16,7 +16,9 @@ export class HttpErrorInterceptor implements HttpInterceptor {
     return next.handle(req).pipe(
       catchError((err: unknown) => {
         if (err instanceof HttpErrorResponse) {
+          const isAuthEndpoint = /\/api\/auth\/(login|register|refresh|logout)(?:$|\/)/i.test(req.url);
           let detail = 'Falha inesperada na requisição.';
+
           if (err.error) {
             if (typeof err.error === 'string') {
               detail = err.error;
@@ -28,20 +30,18 @@ export class HttpErrorInterceptor implements HttpInterceptor {
           } else if (err.message) {
             detail = err.message;
           }
+
           if (err.status === 0) {
             this.toast.show('Não foi possível alcançar a API. Verifique o backend.', 'Rede indisponível', 'warning');
-          } else if (err.status === 401) {
-            this.toast.show('Sua sessão expirou ou o acesso não foi autorizado.', 'Acesso negado', 'error');
-            if (this.auth.isAuthenticated()) {
-              this.auth.logout().catch(() => undefined);
-            }
+          } else if (err.status === 401 && !isAuthEndpoint) {
+            this.toast.show('Sua sessão expirou. Faça login novamente.', 'Sessão expirada', 'error');
+            this.auth.clearSession();
             this.router.navigateByUrl('/login');
           } else if (err.status === 409 && req.url.includes('/agendamentos')) {
-            // Conflito de agendamento (concorrência)
             this.toast.show('Horário já reservado', 'Conflito', 'warning');
           } else if (err.status >= 500) {
             this.toast.show(detail, 'Erro no servidor', 'error');
-          } else {
+          } else if (err.status !== 401) {
             this.toast.show(detail, 'Operação não concluída', 'warning');
           }
         }

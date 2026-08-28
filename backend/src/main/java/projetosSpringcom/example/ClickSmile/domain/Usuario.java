@@ -22,7 +22,7 @@ import projetosSpringcom.example.ClickSmile.security.TenantAware;
 @EntityListeners(TenantEntityListener.class)
 @FilterDef(name = "tenantFilter", parameters = {@ParamDef(name = "tenantId", type = UUID.class)})
 @Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
-public abstract class Usuario implements TenantAware {
+public class Usuario implements TenantAware {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -32,7 +32,7 @@ public abstract class Usuario implements TenantAware {
 
     @NotBlank(message = "O e-mail não pode estar vazio.")
     @Email(message = "O formato do e-mail é inválido.")
-    @Column(nullable = false, unique = true) // Regra de SGBD: Impede duplicidade a nível de banco de dados.
+    @Column(nullable = false, unique = true)
     private String email;
 
     @NotBlank(message = "A senha não pode estar vazia.")

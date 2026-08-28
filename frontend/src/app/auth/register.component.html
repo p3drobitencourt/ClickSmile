@@ -8,7 +8,7 @@
     <div class="auth-card-head">
       <p class="kicker">Novo cadastro</p>
       <h2>Criar acesso</h2>
-      <p>Crie um usuário, vincule a clínica e entre no onboarding com a sessão pronta.</p>
+      <p>Crie seu acesso e entre no sistema com a sessão pronta.</p>
     </div>
 
     <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()">
@@ -17,6 +17,7 @@
         <select formControlName="perfil">
           <option value="PACIENTE">Paciente</option>
           <option value="DENTISTA">Dentista</option>
+          <option value="TENANT_ADMIN">Administrador da clínica</option>
         </select>
       </label>
 
@@ -32,7 +33,7 @@
 
       <label>
         <span>Senha</span>
-        <input type="password" formControlName="senha" placeholder="Crie uma senha forte (mínimo 8 caracteres)" />
+        <input type="password" formControlName="senha" placeholder="Crie uma senha forte (mínimo 6 caracteres)" />
       </label>
 
       @if (perfil === 'PACIENTE') {
@@ -46,6 +47,15 @@
             <option value="" disabled selected>Selecione a clínica</option>
             <option *ngFor="let c of clinicas" [value]="c.id">{{ c.nomeFantasia }}</option>
           </select>
+        </label>
+      } @else if (perfil === 'TENANT_ADMIN') {
+        <label>
+          <span>Nome da clínica</span>
+          <input type="text" formControlName="nomeClinica" placeholder="Clínica Sorria Bem" />
+        </label>
+        <label>
+          <span>CNPJ da clínica</span>
+          <input type="text" formControlName="cnpj" placeholder="00.000.000/0000-00" />
         </label>
       } @else {
         <label>
