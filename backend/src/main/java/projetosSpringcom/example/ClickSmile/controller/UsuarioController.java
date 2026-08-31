@@ -6,19 +6,28 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import projetosSpringcom.example.ClickSmile.domain.Usuario;
-import projetosSpringcom.example.ClickSmile.repository.UsuarioRepository;
+import projetosSpringcom.example.ClickSmile.service.UsuarioService;
 
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Controller de usuário — thin layer, delega toda lógica de acesso ao banco
+ * para UsuarioService (@Transactional), garantindo que o TenantAspect + RLS
+ * funcionem corretamente dentro de uma transação ativa.
+ *
+ * NÃO acessa repositórios diretamente. Controllers que chamam repositórios sem
+ * transação fazem o TenantAspect executar SET LOCAL fora de TX, o que resulta
+ * na RLS do PostgreSQL bloqueando as linhas do tenant correto.
+ */
 @RestController
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
 
-    private final UsuarioRepository usuarioRepository;
+    private final UsuarioService usuarioService;
 
-    public UsuarioController(UsuarioRepository usuarioRepository) {
-        this.usuarioRepository = usuarioRepository;
+    public UsuarioController(UsuarioService usuarioService) {
+        this.usuarioService = usuarioService;
     }
 
     @GetMapping("/me")
@@ -29,35 +38,27 @@ public class UsuarioController {
         }
 
         Jwt jwt = (Jwt) authentication.getPrincipal();
-        java.util.UUID id = java.util.UUID.fromString(jwt.getSubject());
+        UUID id = UUID.fromString(jwt.getSubject());
 
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
-
-        return Map.of(
-            "id", usuario.getId(),
-            "email", usuario.getEmail(),
-            "perfil", usuario.getPerfil(),
-            "tenantId", usuario.getTenantId()
-        );
+        return usuarioService.getProfile(id);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> findById(@PathVariable UUID id) {
-        return usuarioRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            return ResponseEntity.ok(usuarioService.findById(id));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> atualizarCadastro(@PathVariable UUID id, @RequestBody java.util.Map<String, String> body) {
-        Usuario usuario = usuarioRepository.findById(id).orElse(null);
-        if (usuario == null) return ResponseEntity.notFound().build();
-
-        if (body.containsKey("nome")) usuario.setNome(body.get("nome"));
-        if (body.containsKey("email")) usuario.setEmail(body.get("email"));
-
-        usuarioRepository.save(usuario);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> atualizarCadastro(@PathVariable UUID id, @RequestBody Map<String, String> body) {
+        try {
+            usuarioService.update(id, body);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

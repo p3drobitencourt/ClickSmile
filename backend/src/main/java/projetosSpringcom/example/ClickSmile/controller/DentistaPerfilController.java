@@ -25,6 +25,7 @@ public class DentistaPerfilController {
     }
 
     @GetMapping("/{id}/perfil")
+    @Transactional(readOnly = true)
     public ResponseEntity<DentistaPerfilDTO> getPerfil(@PathVariable UUID id) {
         return usuarioRepository.findById(id)
                 .filter(Dentista.class::isInstance)

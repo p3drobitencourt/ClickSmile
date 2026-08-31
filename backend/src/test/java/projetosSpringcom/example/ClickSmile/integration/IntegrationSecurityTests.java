@@ -39,6 +39,7 @@ public class IntegrationSecurityTests extends BaseIntegrationTest {
                 "Clínica Geral",
                 "ClickSmile Teste Produção",
                 "12345678000199",
+                null,
                 null
         );
 
@@ -68,6 +69,7 @@ public class IntegrationSecurityTests extends BaseIntegrationTest {
                 "Geral",
                 "Clinica Dup",
                 "12345678000199", // CNPJ duplicado
+                null,
                 null
         );
 
@@ -89,6 +91,7 @@ public class IntegrationSecurityTests extends BaseIntegrationTest {
                 "Geral",
                 "Clinica Sem CNPJ",
                 null, // CNPJ nulo
+                null,
                 null
         );
 
@@ -106,7 +109,7 @@ public class IntegrationSecurityTests extends BaseIntegrationTest {
                 "paciente.sem@mock.local",
                 "123456",
                 "11999999999",
-                null, null, null, null, null
+                null, null, null, null, null, null
         );
 
         mockMvc.perform(post("/api/auth/register")
@@ -128,6 +131,7 @@ public class IntegrationSecurityTests extends BaseIntegrationTest {
                 "Geral",
                 "Clinica Publica Teste",
                 "99999999000199",
+                null,
                 null
         );
         mockMvc.perform(post("/api/auth/register")
@@ -160,7 +164,8 @@ public class IntegrationSecurityTests extends BaseIntegrationTest {
                 "123456",
                 "11999999999",
                 null, null, null, null,
-                UUID.fromString(tenantId)
+                UUID.fromString(tenantId),
+                null
         );
 
         mockMvc.perform(post("/api/auth/register")
