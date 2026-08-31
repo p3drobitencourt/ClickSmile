@@ -1,126 +1,54 @@
 package projetosSpringcom.example.ClickSmile.security;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
-import projetosSpringcom.example.ClickSmile.domain.Usuario;
-import projetosSpringcom.example.ClickSmile.repository.UsuarioRepository;
 import projetosSpringcom.example.ClickSmile.security.dto.LoginRequest;
 import projetosSpringcom.example.ClickSmile.security.dto.LoginResponse;
 import projetosSpringcom.example.ClickSmile.security.dto.RegisterRequest;
-
-import java.util.Optional;
+import projetosSpringcom.example.ClickSmile.service.AuthService;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
-    private final JwtService jwtService;
-    private final RefreshTokenService refreshTokenService;
-    private final UsuarioRepository usuarioRepository;
-    private final RegistrationService registrationService;
+    private final AuthService authService;
 
-    public AuthController(AuthenticationManager authenticationManager,
-                          JwtService jwtService,
-                          RefreshTokenService refreshTokenService,
-                          UsuarioRepository usuarioRepository,
-                          RegistrationService registrationService) {
-        this.authenticationManager = authenticationManager;
-        this.jwtService = jwtService;
-        this.refreshTokenService = refreshTokenService;
-        this.usuarioRepository = usuarioRepository;
-        this.registrationService = registrationService;
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
 
     @PostMapping("/register")
     public ResponseEntity<LoginResponse> register(@Valid @RequestBody RegisterRequest request, HttpServletResponse response) {
-        Usuario usuario = registrationService.register(request);
-        
-        TenantContext.setTenantId(usuario.getTenantId());
-        try {
-            String access = jwtService.createAccessToken(usuario);
-            refreshTokenService.createRefreshToken(usuario, response);
-            return ResponseEntity.ok(new LoginResponse(access, usuario.getEmail(), usuario.getPerfil()));
-        } finally {
-            TenantContext.clear();
-        }
+        LoginResponse loginResponse = authService.register(request, response);
+        return ResponseEntity.ok(loginResponse);
     }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request, HttpServletResponse response) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.email(), request.senha())
-        );
-
-        var optUser = usuarioRepository.findAuthUserByEmail(request.email());
-        if (optUser.isEmpty()) return ResponseEntity.status(401).build();
-
-        var authUser = optUser.get();
-        TenantContext.setTenantId(authUser.getTenantId());
         try {
-            Usuario usuario = usuarioRepository.findById(authUser.getId()).orElseThrow();
-            String access = jwtService.createAccessToken(usuario);
-            refreshTokenService.createRefreshToken(usuario, response);
-            return ResponseEntity.ok(new LoginResponse(access, usuario.getEmail(), usuario.getPerfil()));
-        } finally {
-            TenantContext.clear();
+            LoginResponse loginResponse = authService.login(request, response);
+            return ResponseEntity.ok(loginResponse);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(401).build();
         }
     }
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie c : cookies) {
-                if ("refreshToken".equals(c.getName())) {
-                    String raw = c.getValue();
-                    refreshTokenService.findByRaw(raw).ifPresent(rt -> refreshTokenService.revokeToken(rt));
-                }
-            }
-        }
-        org.springframework.http.ResponseCookie clear = org.springframework.http.ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .secure(true)
-                .path("/api/auth")
-                .maxAge(0)
-                .sameSite("None")
-                .build();
-        response.addHeader("Set-Cookie", clear.toString());
+        authService.logout(request, response);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<LoginResponse> refresh(HttpServletRequest request, HttpServletResponse response) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) return ResponseEntity.status(401).build();
-        String raw = null;
-        for (Cookie c : cookies) {
-            if ("refreshToken".equals(c.getName())) {
-                raw = c.getValue();
-                break;
-            }
-        }
-        if (raw == null) return ResponseEntity.status(401).build();
-
-        var optToken = refreshTokenService.findByRaw(raw);
-        if (optToken.isEmpty()) return ResponseEntity.status(401).build();
-        
         try {
-            var tokenEntity = optToken.get();
-            var usuario = tokenEntity.getUsuario();
-            // revoke the used token (rotation)
-            refreshTokenService.revokeToken(tokenEntity);
-            String access = jwtService.createAccessToken(usuario);
-            refreshTokenService.createRefreshToken(usuario, response);
-            return ResponseEntity.ok(new LoginResponse(access, usuario.getEmail(), usuario.getPerfil()));
-        } finally {
-            TenantContext.clear();
+            LoginResponse loginResponse = authService.refresh(request, response);
+            return ResponseEntity.ok(loginResponse);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(401).build();
         }
     }
 }

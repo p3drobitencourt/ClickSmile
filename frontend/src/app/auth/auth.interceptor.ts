@@ -3,11 +3,9 @@ import { inject } from '@angular/core';
 import { Observable, from, throwError } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
-import { ToastService } from '../shared/toast.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
-  const toastService = inject(ToastService);
 
   // Auth endpoints should not trigger refresh-on-401 recursion.
   const isAuthEndpoint =
@@ -16,7 +14,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     req.url.includes('/api/auth/logout') ||
     req.url.includes('/auth/login') ||
     req.url.includes('/auth/refresh') ||
-    req.url.includes('/auth/logout');
+    req.url.includes('/auth/logout') ||
+    req.url.includes('/api/auth/register');
 
   const token = authService.getAccessToken();
   const authReq = token ? req.clone({ headers: req.headers.set('Authorization', 'Bearer ' + token) }) : req;
@@ -32,22 +31,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
               const retryReq = newToken ? req.clone({ headers: req.headers.set('Authorization', 'Bearer ' + newToken) }) : req;
               return next(retryReq);
             }),
-            catchError(e => throwError(() => e))
-          );
-            } else if (err.status === 409 && req.url.includes('/agendamentos')) {
-              toastService.show(
-                'Este horário acabou de ser reservado por outra pessoa. Por favor, escolha outro.',
-                'Conflito de Agendamento',
-                'warning'
-              );
-            } else if (err.status === 409 && !req.url.includes('/agendamentos')) {
-               // Let the component handle it (e.g. Register component showing 'Email already exists')
-            } else if (err.status >= 500) {
-          const traceId = err.headers.get('X-Trace-Id');
-          toastService.show(
-            `Ocorreu um erro inesperado no servidor.${traceId ? ' (Trace ID: ' + traceId + ')' : ''}`,
-            'Erro Interno',
-            'error'
+            catchError((e: unknown) => {
+              // Ensure we throw the 401 from the refresh attempt so HttpErrorInterceptor can clear session
+              if (e instanceof HttpErrorResponse && e.status === 401) {
+                  return throwError(() => Object.assign({}, e, { isRefreshFailure: true }));
+              }
+              return throwError(() => e);
+            })
           );
         }
       }

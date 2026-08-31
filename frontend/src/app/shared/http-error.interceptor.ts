@@ -17,6 +17,7 @@ export class HttpErrorInterceptor implements HttpInterceptor {
       catchError((err: unknown) => {
         if (err instanceof HttpErrorResponse) {
           const isAuthEndpoint = /\/api\/auth\/(login|register|refresh|logout)(?:$|\/)/i.test(req.url);
+          const isRefreshFailure = (err as any).isRefreshFailure === true;
           let detail = 'Falha inesperada na requisição.';
 
           if (err.error) {
@@ -33,16 +34,27 @@ export class HttpErrorInterceptor implements HttpInterceptor {
 
           if (err.status === 0) {
             this.toast.show('Não foi possível alcançar a API. Verifique o backend.', 'Rede indisponível', 'warning');
-          } else if (err.status === 401 && !isAuthEndpoint) {
-            this.toast.show('Sua sessão expirou. Faça login novamente.', 'Sessão expirada', 'error');
+          } else if (err.status === 401 && (!isAuthEndpoint || isRefreshFailure)) {
+            // Only show session expired if we actually failed a refresh or a protected endpoint
+            if (!req.url.includes('/api/usuarios/me')) {
+                this.toast.show('Sua sessão expirou. Faça login novamente.', 'Sessão expirada', 'error');
+            }
             this.auth.clearSession();
+            this.router.navigateByUrl('/login');
+          } else if (err.status === 403) {
+            this.toast.show('Acesso negado.', 'Permissão insuficiente', 'error');
             this.router.navigateByUrl('/login');
           } else if (err.status === 409 && req.url.includes('/agendamentos')) {
             this.toast.show('Horário já reservado', 'Conflito', 'warning');
           } else if (err.status >= 500) {
-            this.toast.show(detail, 'Erro no servidor', 'error');
+             // Let components handle specific 500 errors if needed by not universally showing a toast
+             if (!req.url.includes('/api/auth/register')) {
+                this.toast.show(detail, 'Erro no servidor', 'error');
+             }
           } else if (err.status !== 401) {
-            this.toast.show(detail, 'Operação não concluída', 'warning');
+             if (!req.url.includes('/api/auth/register')) {
+                this.toast.show(detail, 'Operação não concluída', 'warning');
+             }
           }
         }
 

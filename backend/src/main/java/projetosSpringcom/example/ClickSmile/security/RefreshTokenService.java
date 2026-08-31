@@ -6,7 +6,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import projetosSpringcom.example.ClickSmile.domain.Usuario;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import java.time.Instant;
@@ -23,11 +22,13 @@ public class RefreshTokenService {
     @Value("${app.security.jwt.refresh-token-ttl:30d}")
     private String refreshTtl;
 
+    @Value("${app.security.cookie.secure:true}")
+    private boolean secureCookie;
+
     public RefreshTokenService(RefreshTokenRepository repository) {
         this.repository = repository;
     }
 
-    @org.springframework.transaction.annotation.Transactional
     public String createRefreshToken(Usuario usuario, HttpServletResponse response) {
         String raw = UUID.randomUUID().toString();
         String hashed = encoder.encode(raw);
@@ -39,10 +40,10 @@ public class RefreshTokenService {
 
         org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("refreshToken", raw)
                 .httpOnly(true)
-                .secure(true)
+                .secure(secureCookie)
                 .path("/api/auth")
                 .maxAge(ttl.getSeconds())
-                .sameSite("None")
+                .sameSite(secureCookie ? "None" : "Lax")
                 .build();
         response.addHeader("Set-Cookie", cookie.toString());
         return raw;
@@ -77,6 +78,17 @@ public class RefreshTokenService {
     public void revokeToken(RefreshToken t) {
         t.setRevokedAt(Instant.now());
         repository.save(t);
+    }
+
+    public void clearRefreshTokenCookie(HttpServletResponse response) {
+        org.springframework.http.ResponseCookie clear = org.springframework.http.ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(secureCookie)
+                .path("/api/auth")
+                .maxAge(0)
+                .sameSite(secureCookie ? "None" : "Lax")
+                .build();
+        response.addHeader("Set-Cookie", clear.toString());
     }
 
     private Duration parseDuration(String value, Duration fallback) {
