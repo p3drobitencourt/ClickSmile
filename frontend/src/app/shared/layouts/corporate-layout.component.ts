@@ -6,6 +6,8 @@ import { Subscription } from 'rxjs';
 import { DashboardStateService, DashboardTab } from '../../services/dashboard-state.service';
 
 
+import { ThemeService } from '../services/theme.service';
+
 @Component({
   selector: 'app-corporate-layout',
   standalone: true,
@@ -23,6 +25,7 @@ export class CorporateLayoutComponent implements OnInit, OnDestroy {
   private auth = inject(AuthService);
   private router = inject(Router);
   private dashboardState = inject(DashboardStateService);
+  public themeService = inject(ThemeService);
   private sub = new Subscription();
 
   ngOnInit() {
@@ -56,4 +59,10 @@ export class CorporateLayoutComponent implements OnInit, OnDestroy {
     this.auth.clearSession();
     this.router.navigate(['/login']);
   }
+
+  toggleTheme(event: Event) {
+    event.preventDefault();
+    this.themeService.toggleTheme();
+  }
+
 }

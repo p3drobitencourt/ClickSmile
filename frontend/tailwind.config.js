@@ -9,13 +9,20 @@ module.exports = {
       colors: {
         cs: {
           bg: 'var(--cs-bg)',
+          'bg-elevated': 'var(--cs-bg-elevated)',
           surface: 'var(--cs-surface)',
+          border: 'var(--cs-border)',
           text: 'var(--cs-text)',
           muted: 'var(--cs-text-muted)',
           primary: {
-            DEFAULT: '#06b6d4', // cyan-500
-            dark: '#0891b2'
-          }
+            DEFAULT: 'var(--cs-primary)',
+            hover: 'var(--cs-primary-hover)',
+            active: 'var(--cs-primary-active)'
+          },
+          success: 'var(--cs-success)',
+          warning: 'var(--cs-warning)',
+          danger: 'var(--cs-danger)',
+          info: 'var(--cs-info)'
         }
       },
       borderRadius: {

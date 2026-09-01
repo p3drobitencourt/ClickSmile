@@ -39,7 +39,13 @@
       <div class="info">
         <strong>Meu Perfil</strong>
         <small>{{ userEmail }}</small>
-        <a href="#" (click)="logout($event)" class="logout-link">Sair</a>
+        <div class="user-actions">
+          <a href="#" (click)="toggleTheme($event)" class="theme-toggle">
+            <i class="pi" [ngClass]="themeService.isDarkMode() ? 'pi-sun' : 'pi-moon'"></i>
+            {{ themeService.isDarkMode() ? 'Modo Claro' : 'Modo Escuro' }}
+          </a>
+          <a href="#" (click)="logout($event)" class="logout-link">Sair</a>
+        </div>
       </div>
     </div>
   </aside>

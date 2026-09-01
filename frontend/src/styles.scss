@@ -6,19 +6,40 @@
 @import "primeicons/primeicons.css";
 
 :root {
+	color-scheme: light;
+	--cs-bg: #f8fafc;
+	--cs-bg-elevated: #f1f5f9;
+	--cs-surface: #ffffff;
+	--cs-border: #e2e8f0;
+	--cs-text: #0f172a;
+	--cs-text-muted: #64748b;
+	--cs-primary: #0ea5e9;
+	--cs-primary-hover: #0284c7;
+	--cs-primary-active: #0369a1;
+	--cs-success: #10b981;
+	--cs-warning: #f59e0b;
+	--cs-danger: #ef4444;
+	--cs-info: #3b82f6;
+	
+	--cs-radius-xl: 28px;
+	--cs-radius-lg: 20px;
+	--cs-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+	--cs-font: "Space Grotesk", Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+[data-theme="dark"] {
 	color-scheme: dark;
 	--cs-bg: #0f172a;
 	--cs-bg-elevated: rgba(15, 23, 42, 0.72);
 	--cs-surface: rgba(30, 41, 59, 0.84);
 	--cs-border: rgba(148, 163, 184, 0.14);
-	--cs-text: #e2e8f0;
+	--cs-text: #f8fafc;
 	--cs-text-muted: #94a3b8;
-	--cs-primary: #8b5cf6;
-	--cs-success: #14b8a6;
-	--cs-radius-xl: 28px;
-	--cs-radius-lg: 20px;
+	--cs-primary: #0ea5e9;
+	--cs-primary-hover: #38bdf8;
+	--cs-primary-active: #7dd3fc;
+	
 	--cs-shadow: 0 24px 70px rgba(2, 6, 23, 0.45);
-	--cs-font: "Space Grotesk", Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 html,
@@ -29,11 +50,9 @@ body {
 body {
 	margin: 0;
 	font-family: var(--cs-font);
-	background:
-		radial-gradient(circle at 10% 10%, rgba(139, 92, 246, 0.16), transparent 28%),
-		radial-gradient(circle at 86% 16%, rgba(20, 184, 166, 0.14), transparent 24%),
-		linear-gradient(180deg, #020617 0%, #0f172a 52%, #020617 100%);
+	background: var(--cs-bg);
 	color: var(--cs-text);
+	transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 * {
