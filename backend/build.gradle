@@ -51,4 +51,36 @@ tasks.named('test') {
 	environment "SPRING_DATASOURCE_URL", System.getenv("SPRING_DATASOURCE_URL")
 	environment "SPRING_DATASOURCE_USERNAME", System.getenv("SPRING_DATASOURCE_USERNAME")
 	environment "SPRING_DATASOURCE_PASSWORD", System.getenv("SPRING_DATASOURCE_PASSWORD")
+
+	// The default CI suite must be deterministic and must not execute
+	// production-audit or integration suites against external infrastructure.
+	// Integration tests remain available through the dedicated tasks below.
+	exclude '**/*IT.class'
+	exclude '**/*AuditorTest.class'
+	exclude '**/IntegrationSecurityTests.class'
+}
+
+tasks.register('integrationTest', Test) {
+	description = 'Runs local/Testcontainers integration tests (does not run production audit tests).'
+	group = 'verification'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform()
+	filter {
+		includeTestsMatching '*IT'
+		includeTestsMatching '*IntegrationSecurityTests'
+	}
+	shouldRunAfter tasks.named('test')
+}
+
+tasks.register('productionAuditTest', Test) {
+	description = 'Runs the explicit production audit tests. Use only against the intended production environment.'
+	group = 'verification'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform()
+	filter {
+		includeTestsMatching '*AuditorTest'
+	}
+	shouldRunAfter tasks.named('test')
 }
