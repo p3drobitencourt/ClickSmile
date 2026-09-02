@@ -40,7 +40,7 @@ jobs:
       uses: gradle/actions/setup-gradle@v6
     - name: Start Database and Cache
       run: |
-        docker compose up -d postgres redis
+        docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d postgres redis
         echo "Waiting for PostgreSQL to be ready..."
         while ! docker exec clicksmile-postgres pg_isready -U clicksmile -d clicksmile; do
           sleep 2

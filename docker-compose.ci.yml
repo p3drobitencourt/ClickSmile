@@ -15,3 +15,6 @@ services:
       APP_WEBSOCKET_ALLOWED_ORIGINS: http://localhost:4200,http://127.0.0.1:4200
     ports:
       - "127.0.0.1:8080:8080"
+  postgres:
+    volumes:
+      - ./backend/src/main/resources/db/init-ci.sql:/docker-entrypoint-initdb.d/init-ci.sql
