@@ -3,7 +3,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: ci
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/clicksmile
-      SPRING_DATASOURCE_USERNAME: clicksmile
+      SPRING_DATASOURCE_USERNAME: clicksmile_app
       SPRING_DATASOURCE_PASSWORD: clicksmile_dev
       SPRING_FLYWAY_URL: jdbc:postgresql://postgres:5432/clicksmile
       SPRING_FLYWAY_USER: clicksmile
