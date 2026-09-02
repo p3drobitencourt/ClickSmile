@@ -29,8 +29,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
             SELECT
                 id,
                 email,
-                senha_hash AS senhaHash,
-                tenant_id AS tenantId,
+                senha_hash AS "senhaHash",
+                tenant_id AS "tenantId",
                 perfil,
                 status
             FROM public.get_auth_user_by_email(CAST(:email AS CITEXT))

@@ -113,15 +113,20 @@ public class AuthService {
 
     @Transactional
     public void logout(HttpServletRequest request, HttpServletResponse response) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie c : cookies) {
-                if ("refreshToken".equals(c.getName())) {
-                    String raw = c.getValue();
-                    refreshTokenService.findByRaw(raw).ifPresent(rt -> refreshTokenService.revokeToken(rt));
+        try {
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie c : cookies) {
+                    if ("refreshToken".equals(c.getName())) {
+                        String raw = c.getValue();
+                        refreshTokenService.findByRaw(raw).ifPresent(rt -> refreshTokenService.revokeToken(rt));
+                    }
                 }
             }
+            refreshTokenService.clearRefreshTokenCookie(response);
+            org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        } finally {
+            TenantContext.clear();
         }
-        refreshTokenService.clearRefreshTokenCookie(response);
     }
 }

@@ -10,4 +10,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
 
     @org.springframework.data.jpa.repository.Query(value = "SELECT id, token_hash, tenant_id FROM public.get_all_refresh_tokens_hashes()", nativeQuery = true)
     List<Object[]> findAllHashesBypassingRls();
+
+    @org.springframework.data.jpa.repository.Query(value = "SELECT id, token_hash, tenant_id FROM public.get_refresh_token_hash_by_id(:id)", nativeQuery = true)
+    List<Object[]> findHashByIdBypassingRls(@org.springframework.data.repository.query.Param("id") UUID id);
 }

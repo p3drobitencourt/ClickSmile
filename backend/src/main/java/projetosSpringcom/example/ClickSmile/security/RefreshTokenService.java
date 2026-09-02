@@ -30,15 +30,17 @@ public class RefreshTokenService {
     }
 
     public String createRefreshToken(Usuario usuario, HttpServletResponse response) {
-        String raw = UUID.randomUUID().toString();
-        String hashed = encoder.encode(raw);
+        String rawSecret = UUID.randomUUID().toString();
+        String hashed = encoder.encode(rawSecret);
         Duration ttl = parseDuration(refreshTtl, Duration.ofDays(30));
         // revoke existing tokens for this user to enforce single active refresh token
         revokeAllForUser(usuario);
         RefreshToken entity = new RefreshToken(hashed, usuario, Instant.now().plus(ttl));
-        repository.save(entity);
+        entity = repository.saveAndFlush(entity);
 
-        org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("refreshToken", raw)
+        String cookieValue = entity.getId().toString() + ":" + rawSecret;
+
+        org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("refreshToken", cookieValue)
                 .httpOnly(true)
                 .secure(secureCookie)
                 .path("/api/auth")
@@ -46,7 +48,7 @@ public class RefreshTokenService {
                 .sameSite(secureCookie ? "None" : "Lax")
                 .build();
         response.addHeader("Set-Cookie", cookie.toString());
-        return raw;
+        return cookieValue;
     }
 
     public Optional<Usuario> validateAndGetUser(String rawToken) {
@@ -54,18 +56,35 @@ public class RefreshTokenService {
     }
 
     public Optional<RefreshToken> findByRaw(String rawToken) {
-        List<Object[]> all = repository.findAllHashesBypassingRls();
-        for (Object[] row : all) {
-            String idStr = row[0].toString();
-            String hash = row[1].toString();
-            String tenantIdStr = row[2].toString();
-            
-            if (encoder.matches(rawToken, hash)) {
-                // Seta o contexto temporariamente para permitir a busca completa do JPA sem bloqueio do RLS
-                TenantContext.setTenantId(UUID.fromString(tenantIdStr));
-                return repository.findById(UUID.fromString(idStr));
-            }
+        if (rawToken == null || !rawToken.contains(":")) {
+            return Optional.empty(); // Formato legado ou invalido
         }
+        
+        String[] parts = rawToken.split(":");
+        if (parts.length != 2) return Optional.empty();
+        
+        UUID id;
+        try {
+            id = UUID.fromString(parts[0]);
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+        String secret = parts[1];
+
+        List<Object[]> rows = repository.findHashByIdBypassingRls(id);
+        if (rows.isEmpty()) return Optional.empty();
+        
+        Object[] row = rows.get(0);
+        String idStr = row[0].toString();
+        String hash = row[1].toString();
+        String tenantIdStr = row[2].toString();
+        
+        if (encoder.matches(secret, hash)) {
+            // Seta o contexto temporariamente para permitir a busca completa do JPA sem bloqueio do RLS
+            TenantContext.setTenantId(UUID.fromString(tenantIdStr));
+            return repository.findById(UUID.fromString(idStr));
+        }
+        
         return Optional.empty();
     }
 
