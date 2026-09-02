@@ -65,8 +65,8 @@ public class AuthService {
 
         Object[] authUser = rows.get(0);
         // SELECT id, email, senha_hash, tenant_id, perfil, status
-        java.util.UUID authId = (java.util.UUID) authUser[0];
-        java.util.UUID tenantId = (java.util.UUID) authUser[3];
+        java.util.UUID authId = java.util.UUID.fromString(authUser[0].toString());
+        java.util.UUID tenantId = java.util.UUID.fromString(authUser[3].toString());
 
         TenantContext.setTenantId(tenantId);
         try {

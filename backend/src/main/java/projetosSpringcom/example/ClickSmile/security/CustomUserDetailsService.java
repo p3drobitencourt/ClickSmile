@@ -31,9 +31,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         
         Object[] row = rows.get(0);
         // SELECT id, email, senha_hash, tenant_id, perfil, status
-        String email = (String) row[1];
-        String senhaHash = (String) row[2];
-        String perfil = (String) row[4];
+        String email = row[1] != null ? row[1].toString() : null;
+        String senhaHash = row[2] != null ? row[2].toString() : null;
+        String perfil = row[4] != null ? row[4].toString() : null;
         
         GrantedAuthority auth = new SimpleGrantedAuthority("ROLE_" + perfil);
         return new User(email, senhaHash, Collections.singletonList(auth));
