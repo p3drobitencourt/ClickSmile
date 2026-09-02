@@ -31,12 +31,68 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
+    - name: Set up JDK 21
+      uses: actions/setup-java@v5
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v6
+    - name: Start Database and Cache
+      run: |
+        docker compose up -d postgres redis
+        echo "Waiting for PostgreSQL to be ready..."
+        while ! docker exec clicksmile-postgres pg_isready -U clicksmile -d clicksmile; do
+          sleep 2
+        done
+        echo "Waiting for Redis to be ready..."
+        while ! docker exec clicksmile-redis redis-cli -a clicksmile_dev ping; do
+          sleep 2
+        done
+    - name: Start Spring Boot Backend
+      working-directory: ./backend
+      env:
+        SPRING_PROFILES_ACTIVE: ci
+        PORT: 8080
+        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/clicksmile
+        SPRING_DATASOURCE_USERNAME: clicksmile
+        SPRING_DATASOURCE_PASSWORD: clicksmile_dev
+        SPRING_FLYWAY_URL: jdbc:postgresql://localhost:5432/clicksmile
+        SPRING_FLYWAY_USER: clicksmile
+        SPRING_FLYWAY_PASSWORD: clicksmile_dev
+        SPRING_DATA_REDIS_HOST: localhost
+        SPRING_DATA_REDIS_PORT: 6379
+        SPRING_DATA_REDIS_PASSWORD: clicksmile_dev
+        APP_CORS_ALLOWED_ORIGINS: http://localhost:4200,http://localhost:8081
+        APP_WEBSOCKET_ALLOWED_ORIGINS: http://localhost:4200,http://localhost:8081
+      run: |
+        chmod +x gradlew
+        ./gradlew bootRun > /tmp/spring-boot.log 2>&1 &
+    - name: Wait for Backend Health
+      run: |
+        echo "Waiting for backend to be ready on port 8080..."
+        ATTEMPTS=0
+        while ! curl -s http://localhost:8080/actuator/health | grep -q '"status":"UP"'; do
+          if [ $ATTEMPTS -eq 36 ]; then
+            echo "Backend failed to start in time! Dumping log:"
+            cat /tmp/spring-boot.log || true
+            exit 1
+          fi
+          sleep 5
+          ATTEMPTS=$((ATTEMPTS+1))
+        done
+        echo "Backend is UP!"
     - name: Use Node.js 22.x
       uses: actions/setup-node@v5
       with:
         node-version: '22.x'
         cache: 'npm'
         cache-dependency-path: './frontend/package-lock.json'
+    - name: Configure CI E2E Environment
+      working-directory: ./frontend
+      run: |
+        sed -i "s|https://clicksmile-backend.onrender.com|http://localhost:8080|g" src/environments/environment.ts
+        sed -i "s|https://clicksmile-backend.onrender.com|http://localhost:8080|g" src/environments/environment.development.ts
     - name: Install dependencies
       working-directory: ./frontend
       run: npm ci
