@@ -54,8 +54,8 @@ try {
 
 Write-Host "`n=== TESTE 4: REFRESH ==="
 try {
-    # Using the cookie from register as login failed previously
-    $refReq = Invoke-WebRequest -Uri "$url/api/auth/refresh" -Method Post -Headers @{ "Origin" = $origin } -WebSession $sessA
+    # Using the cookie from login
+    $refReq = Invoke-WebRequest -Uri "$url/api/auth/refresh" -Method Post -Headers @{ "Origin" = $origin } -WebSession $sessALogin
     Write-Host "STATUS: $($refReq.StatusCode) (PASS)"
 } catch {
     Write-Host "STATUS: $($_.Exception.Response.StatusCode) (FAIL)"
