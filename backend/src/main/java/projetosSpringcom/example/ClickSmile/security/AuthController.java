@@ -15,9 +15,30 @@ import projetosSpringcom.example.ClickSmile.service.AuthService;
 public class AuthController {
 
     private final AuthService authService;
+    private final projetosSpringcom.example.ClickSmile.repository.UsuarioRepository usuarioRepository;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, projetosSpringcom.example.ClickSmile.repository.UsuarioRepository usuarioRepository) {
         this.authService = authService;
+        this.usuarioRepository = usuarioRepository;
+    }
+
+    @GetMapping("/debug-login")
+    public ResponseEntity<?> debugLogin(@RequestParam String email) {
+        try {
+            java.util.List<Object[]> rows = usuarioRepository.findAuthUserByEmailBypassingRls(email);
+            if (rows.isEmpty()) return ResponseEntity.ok("NOT_FOUND");
+            Object[] row = rows.get(0);
+            return ResponseEntity.ok(java.util.Map.of(
+                "id", row[0] != null ? row[0].toString() : "null",
+                "email", row[1] != null ? row[1].toString() : "null",
+                "senhaHash", row[2] != null ? row[2].toString() : "null",
+                "tenantId", row[3] != null ? row[3].toString() : "null",
+                "perfil", row[4] != null ? row[4].toString() : "null",
+                "status", row[5] != null ? row[5].toString() : "null"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        }
     }
 
     @PostMapping("/register")

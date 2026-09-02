@@ -5,7 +5,8 @@ $timestamp = $([datetime]::now.ticks)
 
 Write-Host "`n=== TESTE 1: REGISTER ==="
 $emailA = "user_A_$timestamp@test.com"
-$bodyA = @{ perfil = "TENANT_ADMIN"; nome = "Admin A"; email = $emailA; senha = "password123"; nomeClinica = "Clinica A"; cnpj = "99888777000199" } | ConvertTo-Json
+$cnpjA = "$timestamp".Substring(0,14)
+$bodyA = @{ perfil = "TENANT_ADMIN"; nome = "Admin A"; email = $emailA; senha = "password123"; nomeClinica = "Clinica A"; cnpj = $cnpjA } | ConvertTo-Json
 try {
     $regReq = Invoke-WebRequest -Uri "$url/api/auth/register" -Method Post -Body $bodyA -ContentType "application/json" -Headers @{ "Origin" = $origin } -SessionVariable sessA
     Write-Host "STATUS: $($regReq.StatusCode) (PASS)"
@@ -15,6 +16,8 @@ try {
     Write-Host "Cookie Recebido: $(if($cookieA -match 'refreshToken'){'SIM'}else{'NAO'})"
 } catch {
     Write-Host "STATUS: $($_.Exception.Response.StatusCode) (FAIL)"
+    $stream = $_.Exception.Response.GetResponseStream()
+    if($stream) { $reader = New-Object System.IO.StreamReader($stream); Write-Host "Erro: $($reader.ReadToEnd())" }
     exit
 }
 
@@ -38,8 +41,15 @@ try {
 } catch {
     Write-Host "STATUS: $($_.Exception.Response.StatusCode) (FAIL)"
     $stream = $_.Exception.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($stream)
-    Write-Host "Erro: $($reader.ReadToEnd())"
+    if($stream) { $reader = New-Object System.IO.StreamReader($stream); Write-Host "Erro: $($reader.ReadToEnd())" }
+
+    Write-Host "`n--- DEBUG LOGIN FETCH ---"
+    try {
+        $dbgReq = Invoke-WebRequest -Uri "$url/api/auth/debug-login?email=$emailA" -Method Get -Headers @{ "Origin" = $origin }
+        Write-Host $dbgReq.Content
+    } catch {
+        Write-Host "DEBUG FAILED: $($_.Exception.Message)"
+    }
 }
 
 Write-Host "`n=== TESTE 4: REFRESH ==="
@@ -66,7 +76,8 @@ try {
 
 Write-Host "`n=== TESTE 9: TENANT ISOLATION ==="
 $emailB = "user_B_$timestamp@test.com"
-$bodyB = @{ perfil = "TENANT_ADMIN"; nome = "Admin B"; email = $emailB; senha = "password123"; nomeClinica = "Clinica B"; cnpj = "99888777000299" } | ConvertTo-Json
+$cnpjB = "$timestamp".Substring(2,14)
+$bodyB = @{ perfil = "TENANT_ADMIN"; nome = "Admin B"; email = $emailB; senha = "password123"; nomeClinica = "Clinica B"; cnpj = $cnpjB } | ConvertTo-Json
 try {
     $regReqB = Invoke-WebRequest -Uri "$url/api/auth/register" -Method Post -Body $bodyB -ContentType "application/json" -Headers @{ "Origin" = $origin }
     Write-Host "REGISTER TENANT B STATUS: $($regReqB.StatusCode) (PASS)"
@@ -79,4 +90,6 @@ try {
     Write-Host "ISOLATION: $(if($meDataA.tenantId -ne $meDataB.tenantId){'PASS'}else{'FAIL'})"
 } catch {
     Write-Host "STATUS: $($_.Exception.Response.StatusCode) (FAIL)"
+    $stream = $_.Exception.Response.GetResponseStream()
+    if($stream) { $reader = New-Object System.IO.StreamReader($stream); Write-Host "Erro: $($reader.ReadToEnd())" }
 }
