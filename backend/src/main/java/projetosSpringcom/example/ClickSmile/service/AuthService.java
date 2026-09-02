@@ -58,15 +58,19 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(request.email(), request.senha())
         );
 
-        var optUser = usuarioRepository.findAuthUserByEmail(request.email());
-        if (optUser.isEmpty()) {
+        var rows = usuarioRepository.findAuthUserByEmailBypassingRls(request.email());
+        if (rows.isEmpty()) {
             throw new IllegalArgumentException("Credenciais inválidas");
         }
 
-        var authUser = optUser.get();
-        TenantContext.setTenantId(authUser.getTenantId());
+        Object[] authUser = rows.get(0);
+        // SELECT id, email, senha_hash, tenant_id, perfil, status
+        java.util.UUID authId = (java.util.UUID) authUser[0];
+        java.util.UUID tenantId = (java.util.UUID) authUser[3];
+
+        TenantContext.setTenantId(tenantId);
         try {
-            Usuario usuario = usuarioRepository.findById(authUser.getId())
+            Usuario usuario = usuarioRepository.findById(authId)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
             
             String access = jwtService.createAccessToken(usuario);

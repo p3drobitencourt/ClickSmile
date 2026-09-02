@@ -24,9 +24,18 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        AuthUserProjection u = usuarioRepository.findAuthUserByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + username));
-        GrantedAuthority auth = new SimpleGrantedAuthority("ROLE_" + u.getPerfil());
-        return new User(u.getEmail(), u.getSenhaHash(), Collections.singletonList(auth));
+        List<Object[]> rows = usuarioRepository.findAuthUserByEmailBypassingRls(username);
+        if (rows.isEmpty()) {
+            throw new UsernameNotFoundException("Usuário não encontrado: " + username);
+        }
+        
+        Object[] row = rows.get(0);
+        // SELECT id, email, senha_hash, tenant_id, perfil, status
+        String email = (String) row[1];
+        String senhaHash = (String) row[2];
+        String perfil = (String) row[4];
+        
+        GrantedAuthority auth = new SimpleGrantedAuthority("ROLE_" + perfil);
+        return new User(email, senhaHash, Collections.singletonList(auth));
     }
 }

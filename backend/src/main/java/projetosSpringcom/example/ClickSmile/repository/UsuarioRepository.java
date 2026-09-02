@@ -29,14 +29,14 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
             SELECT
                 id,
                 email,
-                senha_hash AS "senhaHash",
-                tenant_id AS "tenantId",
+                senha_hash,
+                tenant_id,
                 perfil,
                 status
             FROM public.get_auth_user_by_email(CAST(:email AS CITEXT))
             """
     )
-    Optional<AuthUserProjection> findAuthUserByEmail(@Param("email") String email);
+    List<Object[]> findAuthUserByEmailBypassingRls(@Param("email") String email);
 
     Optional<Usuario> findByTenantIdAndEmail(UUID tenantId, String email);
     long countByPerfil(Perfil perfil);
