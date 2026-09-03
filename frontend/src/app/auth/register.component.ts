@@ -164,10 +164,8 @@ export class RegisterComponent implements OnInit, OnDestroy {
       const errResponse = err as any;
       let msg = e?.error?.detail || e?.error?.message || e?.message || 'Não foi possível concluir o cadastro.';
 
-      if (errResponse && errResponse.status === 409) {
-        msg = 'E-mail ou CNPJ já cadastrado. Verifique os dados e tente novamente.';
-      }
-
+      // Removida a conversão genérica do 409 para dar prioridade à mensagem real do backend (CRO, CNPJ, Email, etc.)
+      
       this.erro = msg;
     } finally {
       this.loading = false;

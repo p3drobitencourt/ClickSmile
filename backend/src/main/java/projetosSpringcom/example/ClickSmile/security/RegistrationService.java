@@ -11,6 +11,7 @@ import projetosSpringcom.example.ClickSmile.domain.Usuario;
 import projetosSpringcom.example.ClickSmile.repository.TenantClinicaRepository;
 import projetosSpringcom.example.ClickSmile.repository.UsuarioRepository;
 import projetosSpringcom.example.ClickSmile.repository.PacienteRepository;
+import projetosSpringcom.example.ClickSmile.repository.DentistaRepository;
 import projetosSpringcom.example.ClickSmile.domain.Paciente;
 import projetosSpringcom.example.ClickSmile.security.dto.RegisterRequest;
 
@@ -24,15 +25,18 @@ public class RegistrationService {
     private final UsuarioRepository usuarioRepository;
     private final TenantClinicaRepository tenantRepository;
     private final PacienteRepository pacienteRepository;
+    private final DentistaRepository dentistaRepository;
     private final PasswordEncoder passwordEncoder;
 
     public RegistrationService(UsuarioRepository usuarioRepository,
                                TenantClinicaRepository tenantRepository,
                                PacienteRepository pacienteRepository,
+                               DentistaRepository dentistaRepository,
                                PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.tenantRepository = tenantRepository;
         this.pacienteRepository = pacienteRepository;
+        this.dentistaRepository = dentistaRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -40,7 +44,7 @@ public class RegistrationService {
     public Usuario register(RegisterRequest request) {
         String email = request.email().trim().toLowerCase(Locale.ROOT);
 
-        if (usuarioRepository.findByEmail(email).isPresent()) {
+        if (!usuarioRepository.findAuthUserByEmailBypassingRls(email).isEmpty()) {
             throw new IllegalArgumentException("Já existe um usuário com este e-mail.");
         }
 
@@ -48,7 +52,31 @@ public class RegistrationService {
         TenantClinica tenant;
 
         if (perfil == Perfil.TENANT_ADMIN || perfil == Perfil.DENTISTA) {
-            tenant = createTenant(request);
+            
+            if (isBlank(request.nomeClinica())) {
+                throw new IllegalArgumentException("O nome da clínica é obrigatório.");
+            }
+
+            String cnpj = request.cnpj() == null ? "" : request.cnpj().replaceAll("\\D", "");
+            if (cnpj.length() != 14) {
+                throw new IllegalArgumentException("O CNPJ da clínica deve conter 14 dígitos.");
+            }
+
+            if (tenantRepository.findByCnpj(cnpj).isPresent()) {
+                throw new IllegalArgumentException("Já existe uma clínica com este CNPJ.");
+            }
+
+            if (perfil == Perfil.DENTISTA) {
+                if (isBlank(request.cro()) || isBlank(request.especialidade())) {
+                    throw new IllegalArgumentException("Para dentista, informe CRO e especialidade.");
+                }
+                String cro = request.cro().trim();
+                if (dentistaRepository.existsByCro(cro)) {
+                    throw new IllegalArgumentException("Já existe um dentista com este CRO.");
+                }
+            }
+
+            tenant = createTenant(request, cnpj);
         } else if (perfil == Perfil.PACIENTE) {
             if (request.tenantId() == null) {
                 throw new IllegalArgumentException("É obrigatório selecionar uma clínica para o cadastro do paciente.");
@@ -84,20 +112,7 @@ public class RegistrationService {
         }
     }
 
-    private TenantClinica createTenant(RegisterRequest request) {
-        String cnpj = request.cnpj() == null ? "" : request.cnpj().replaceAll("\\D", "");
-        if (cnpj.length() != 14) {
-            throw new IllegalArgumentException("O CNPJ da clínica deve conter 14 dígitos.");
-        }
-
-        if (isBlank(request.nomeClinica())) {
-            throw new IllegalArgumentException("O nome da clínica é obrigatório.");
-        }
-
-        if (tenantRepository.findByCnpj(cnpj).isPresent()) {
-            throw new IllegalArgumentException("Já existe uma clínica com este CNPJ.");
-        }
-
+    private TenantClinica createTenant(RegisterRequest request, String cnpj) {
         TenantClinica tenant = new TenantClinica();
         tenant.setId(UUID.randomUUID());
         tenant.setCnpj(cnpj);
@@ -118,9 +133,6 @@ public class RegistrationService {
         }
 
         if (perfil == Perfil.DENTISTA) {
-            if (isBlank(request.cro()) || isBlank(request.especialidade())) {
-                throw new IllegalArgumentException("Para dentista, informe CRO e especialidade.");
-            }
             Dentista dentista = new Dentista();
             dentista.setNome(request.nome().trim());
             dentista.setCro(request.cro().trim());

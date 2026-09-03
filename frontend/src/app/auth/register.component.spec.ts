@@ -155,4 +155,31 @@ describe('RegisterComponent', () => {
     });
     expect(component.form.valid).toBe(true);
   });
+
+  it('J) status 409 + detail "Já existe um dentista com este CRO." => exibe exatamente essa mensagem', async () => {
+    authServiceSpy.register.mockRejectedValue({ status: 409, error: { detail: 'Já existe um dentista com este CRO.' } });
+    component.form.patchValue({ perfil: 'DENTISTA', nome: 'A', email: 'a@a.com', senha: '123', cro: 'CRO-123', especialidade: 'Ortodontia', nomeClinica: 'B', cnpj: '11111111111111' });
+    
+    await component.submit();
+
+    expect(component.erro).toBe('Já existe um dentista com este CRO.');
+  });
+
+  it('K) status 409 + detail "Já existe uma clínica com este CNPJ." => exibe exatamente essa mensagem', async () => {
+    authServiceSpy.register.mockRejectedValue({ status: 409, error: { detail: 'Já existe uma clínica com este CNPJ.' } });
+    component.form.patchValue({ perfil: 'DENTISTA', nome: 'A', email: 'a@a.com', senha: '123', cro: 'CRO-123', especialidade: 'Ortodontia', nomeClinica: 'B', cnpj: '11111111111111' });
+    
+    await component.submit();
+
+    expect(component.erro).toBe('Já existe uma clínica com este CNPJ.');
+  });
+
+  it('L) status 409 + detail "Já existe um usuário com este e-mail." => exibe exatamente essa mensagem', async () => {
+    authServiceSpy.register.mockRejectedValue({ status: 409, error: { detail: 'Já existe um usuário com este e-mail.' } });
+    component.form.patchValue({ perfil: 'DENTISTA', nome: 'A', email: 'a@a.com', senha: '123', cro: 'CRO-123', especialidade: 'Ortodontia', nomeClinica: 'B', cnpj: '11111111111111' });
+    
+    await component.submit();
+
+    expect(component.erro).toBe('Já existe um usuário com este e-mail.');
+  });
 });
