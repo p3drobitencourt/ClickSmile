@@ -65,6 +65,23 @@ test.describe('Buscar Dentistas Flow', () => {
     expect(profileRes.ok()).toBeTruthy();
     const profileData = await profileRes.json();
     const clinicId = profileData.tenantId;
+    const dentistaId = profileData.id;
+
+    // Obtém o perfil atual do dentista
+    const getPerfilRes = await request.get(`http://127.0.0.1:8080/api/dentistas/${dentistaId}/perfil`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+    expect(getPerfilRes.ok()).toBeTruthy();
+    const perfilDto = await getPerfilRes.json();
+
+    // Atualiza o perfil com latitude e longitude para a clínica aparecer na busca
+    perfilDto.latitude = -23.5505;
+    perfilDto.longitude = -46.6333;
+    const putPerfilRes = await request.put(`http://127.0.0.1:8080/api/dentistas/${dentistaId}/perfil`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+      data: perfilDto
+    });
+    expect(putPerfilRes.ok()).toBeTruthy();
 
     // Registra o Paciente
     const pacienteRes = await request.post('http://127.0.0.1:8080/api/auth/register', {
