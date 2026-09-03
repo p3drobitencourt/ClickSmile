@@ -11,7 +11,7 @@ services:
     networks:
       - data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U clicksmile -d clicksmile"]
+      test: ["CMD-SHELL", "pg_isready -U clicksmile -d clicksmile -h 127.0.0.1"]
       interval: 10s
       timeout: 5s
       retries: 10
