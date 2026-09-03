@@ -1,9 +1,40 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
 import { LogoComponent } from '../shared/logo.component';
+import { Subscription } from 'rxjs';
+
+export function sanitizedPhoneValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+    if (!value) return null;
+    const digits = value.replace(/\D/g, '');
+    if (digits.length === 10 || digits.length === 11) return null;
+    return { invalidPhone: true };
+  };
+}
+
+export function sanitizedCnpjValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+    if (!value) return null;
+    const digits = value.replace(/\D/g, '');
+    if (digits.length === 14) return null;
+    return { invalidCnpj: true };
+  };
+}
+
+export function sanitizedCpfValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+    if (!value) return null;
+    const digits = value.replace(/\D/g, '');
+    if (digits.length === 11) return null;
+    return { invalidCpf: true };
+  };
+}
 
 @Component({
   selector: 'app-register',
@@ -12,12 +43,13 @@ import { LogoComponent } from '../shared/logo.component';
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',
 })
-export class RegisterComponent implements OnInit {
+export class RegisterComponent implements OnInit, OnDestroy {
   loading = false;
   erro = '';
   clinicas: {id: string, nomeFantasia: string, cnpj: string}[] = [];
 
   form: FormGroup;
+  private sub: Subscription;
 
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router, private cdr: ChangeDetectorRef) {
     this.form = this.fb.nonNullable.group({
@@ -25,14 +57,60 @@ export class RegisterComponent implements OnInit {
       nome: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
       senha: ['', [Validators.required, Validators.minLength(6)]],
-      telefone: ['', [Validators.pattern('^\\d{10,11}$')]],
+      telefone: [''],
       cro: [''],
       especialidade: [''],
       nomeClinica: [''],
-      cnpj: ['', [Validators.pattern('^\\d{14}$')]],
+      cnpj: [''],
       tenantId: [''],
-      cpf: ['', [Validators.pattern('^\\d{11}$')]]
+      cpf: ['', [sanitizedCpfValidator()]]
     });
+
+    this.sub = this.form.get('perfil')!.valueChanges.subscribe(perfil => {
+      this.updateConditionalValidators(perfil);
+    });
+    
+    this.updateConditionalValidators(this.perfil);
+  }
+
+  ngOnDestroy() {
+    if (this.sub) this.sub.unsubscribe();
+  }
+
+  private updateConditionalValidators(perfil: string) {
+    const telefone = this.form.get('telefone');
+    const tenantId = this.form.get('tenantId');
+    const cro = this.form.get('cro');
+    const especialidade = this.form.get('especialidade');
+    const nomeClinica = this.form.get('nomeClinica');
+    const cnpj = this.form.get('cnpj');
+    
+    telefone?.clearValidators();
+    tenantId?.clearValidators();
+    cro?.clearValidators();
+    especialidade?.clearValidators();
+    nomeClinica?.clearValidators();
+    cnpj?.clearValidators();
+
+    if (perfil === 'PACIENTE') {
+      telefone?.setValidators([Validators.required, sanitizedPhoneValidator()]);
+      tenantId?.setValidators([Validators.required]);
+    } else if (perfil === 'DENTISTA') {
+      nomeClinica?.setValidators([Validators.required]);
+      cnpj?.setValidators([Validators.required, sanitizedCnpjValidator()]);
+      cro?.setValidators([Validators.required]);
+      especialidade?.setValidators([Validators.required]);
+    } else if (perfil === 'TENANT_ADMIN') {
+      nomeClinica?.setValidators([Validators.required]);
+      cnpj?.setValidators([Validators.required, sanitizedCnpjValidator()]);
+    }
+
+    telefone?.updateValueAndValidity();
+    tenantId?.updateValueAndValidity();
+    cro?.updateValueAndValidity();
+    especialidade?.updateValueAndValidity();
+    nomeClinica?.updateValueAndValidity();
+    cnpj?.updateValueAndValidity();
   }
 
   get perfil() {
