@@ -56,7 +56,12 @@ jobs:
       run: |
         echo "Waiting for backend to be ready on port 8080..."
         ATTEMPTS=0
-        while ! curl -s http://127.0.0.1:8080/actuator/health | grep -q '"status":"UP"'; do
+        while true; do
+          RESPONSE=$(curl -s http://127.0.0.1:8080/actuator/health || echo "CURL_FAILED")
+          echo "Healthcheck response: $RESPONSE"
+          if echo "$RESPONSE" | grep -q '"status":"UP"'; then
+            break
+          fi
           if [ $ATTEMPTS -eq 36 ]; then
             echo "Backend failed to start in time! Dumping log:"
             docker compose -f docker-compose.yml -f docker-compose.ci.yml logs backend > backend_failure.log || true
