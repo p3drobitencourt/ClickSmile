@@ -56,6 +56,15 @@ test.describe('Buscar Dentistas Flow', () => {
       console.error('Body:', await dentistaRes.text());
     }
     expect(dentistaRes.ok()).toBeTruthy();
+    const dentistaData = await dentistaRes.json();
+    const accessToken = dentistaData.accessToken;
+
+    const profileRes = await request.get('http://127.0.0.1:8080/api/usuarios/me', {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+    expect(profileRes.ok()).toBeTruthy();
+    const profileData = await profileRes.json();
+    const clinicId = profileData.tenantId;
 
     // Registra o Paciente
     const pacienteRes = await request.post('http://127.0.0.1:8080/api/auth/register', {
@@ -65,7 +74,8 @@ test.describe('Buscar Dentistas Flow', () => {
         email: pacienteCredentials.email,
         senha: pacienteCredentials.senha,
         telefone: pacienteCredentials.telefone,
-        cpf: generateCpf()
+        cpf: generateCpf(),
+        tenantId: clinicId
       }
     });
 
