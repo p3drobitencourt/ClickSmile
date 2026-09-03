@@ -1,22 +1,66 @@
 import { test, expect } from '@playwright/test';
 
+// Function to generate a random user to avoid conflicts
+function generateUser(prefix: string) {
+  const timestamp = Date.now();
+  return {
+    nome: `${prefix} Teste ${timestamp}`,
+    email: `${prefix.toLowerCase()}_${timestamp}@teste.com`,
+    senha: 'password123',
+    telefone: '11999999999'
+  };
+}
+
 test.describe('Buscar Dentistas Flow', () => {
+  let pacienteCredentials: any;
+  let dentistaCredentials: any;
+
   test.use({
     geolocation: { latitude: -23.5505, longitude: -46.6333 },
     permissions: ['geolocation'],
   });
 
-  test('Deve permitir buscar dentistas, ver detalhes e iniciar chat', async ({ page }) => {
-    // Navigate to patient dashboard (auto redirects to login if not authenticated)
-    await page.goto('/paciente');
+  test.beforeAll(async ({ request }) => {
+    // Generate real unique users for this test run
+    pacienteCredentials = generateUser('Paciente');
+    dentistaCredentials = generateUser('Dentista');
 
-    // Login as a patient if needed
-    if (page.url().includes('/login')) {
-      await page.fill('input[type="email"]', 'paciente@teste.com'); // Mock credentials
-      await page.fill('input[type="password"]', '123456');
-      await page.click('button:has-text("Entrar")');
-      await page.waitForURL('**/paciente');
-    }
+    // Register a Dentist to ensure there is at least one in the directory
+    await request.post('/api/public/auth/register', {
+      data: {
+        perfil: 'DENTISTA',
+        nome: dentistaCredentials.nome,
+        email: dentistaCredentials.email,
+        senha: dentistaCredentials.senha,
+        telefone: dentistaCredentials.telefone,
+        especialidade: 'Ortodontia',
+        cro: '12345'
+      }
+    });
+
+    // Register a Patient
+    await request.post('/api/public/auth/register', {
+      data: {
+        perfil: 'PACIENTE',
+        nome: pacienteCredentials.nome,
+        email: pacienteCredentials.email,
+        senha: pacienteCredentials.senha,
+        telefone: pacienteCredentials.telefone
+      }
+    });
+  });
+
+  test('Deve permitir buscar dentistas, ver detalhes e iniciar chat', async ({ page }) => {
+    // Navigate to login
+    await page.goto('/login');
+
+    // Login with dynamically created Patient
+    await page.fill('input[type="email"]', pacienteCredentials.email);
+    await page.fill('input[type="password"]', pacienteCredentials.senha);
+    await page.click('button:has-text("Entrar")');
+    
+    // Wait to be redirected to /paciente
+    await page.waitForURL('**/paciente');
 
     // Go to the "Buscar Dentistas" tab if not already there
     const buscarTab = page.locator('button', { hasText: 'Buscar Dentistas' });
@@ -24,41 +68,35 @@ test.describe('Buscar Dentistas Flow', () => {
       await buscarTab.click();
     }
 
-    // Since we granted geolocation permission, the "Usar minha localização" should work immediately
-    // Wait for the map to appear
-    await expect(page.locator('#map')).toBeVisible();
+    // Since we granted geolocation permission, the "Usar minha localização" will work if we click it
+    // Wait for the map to appear using the correct selector
+    await expect(page.locator('#dentist-map')).toBeVisible();
 
     // Verify initial load of dentists (there should be a list in the UI)
-    // Looking for the Dentist cards (they have class shadow-sm, bg-cs-surface, etc.)
-    // We can just wait for some cards to show up or if empty, at least the filter is there
     const searchInput = page.locator('input[placeholder="Dr. João..."]');
     await expect(searchInput).toBeVisible();
 
-    // Fill filter to test if it filters
-    await searchInput.fill('Dentista Inexistente XYZ');
-    // Wait for results to be filtered (assuming it's fast on the client)
-    // Clear filter
-    await searchInput.fill('');
+    // The created Dentist should appear in the results
+    // We expect at least one "Ver Detalhes" button
+    const detalhesButton = page.locator('button', { hasText: 'Ver Detalhes' }).first();
+    await expect(detalhesButton).toBeVisible({ timeout: 10000 });
 
-    // Wait for cards to appear (assuming mock data exists or real DB has at least one)
-    // If there is a dentist, click "Ver Detalhes"
-    const firstDentist = page.locator('button', { hasText: 'Ver Detalhes' }).first();
+    // Click "Ver Detalhes" to open the sidebar
+    await detalhesButton.click();
+
+    // Check if details panel opened by verifying the Chat button exists
+    const chatButton = page.locator('button', { hasText: 'Iniciar Chat' });
+    await expect(chatButton).toBeVisible();
+
+    // Click Chat
+    await chatButton.click();
+
+    // Ensure it switched to the Chat tab and textarea is visible
+    const chatInput = page.locator('textarea[placeholder="Digite sua mensagem..."]');
+    await expect(chatInput).toBeVisible();
     
-    // We check if there are dentists to test the rest of the flow
-    if (await firstDentist.isVisible()) {
-      await firstDentist.click();
-
-      // Check if details panel opened
-      const chatButton = page.locator('button', { hasText: 'Iniciar Chat' });
-      await expect(chatButton).toBeVisible();
-
-      // Click Chat
-      await chatButton.click();
-
-      // Ensure it switched to the Chat tab
-      // In the layout, the textarea for chat should be visible
-      const chatInput = page.locator('textarea[placeholder="Digite sua mensagem..."]');
-      await expect(chatInput).toBeVisible();
-    }
+    // Test typing a message
+    await chatInput.fill('Olá, tudo bem?');
+    await expect(chatInput).toHaveValue('Olá, tudo bem?');
   });
 });
