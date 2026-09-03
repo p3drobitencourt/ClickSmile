@@ -1,2 +1,11 @@
 // Estilos SCSS vazios para o Cliente Dashboard
 // Todas as responsabilidades de UI foram migradas para utilitários do Tailwind CSS (Modo Escuro)
+
+.custom-active-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: transparent;
+}

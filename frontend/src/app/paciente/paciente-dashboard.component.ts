@@ -1,20 +1,19 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject, DestroyRef, signal, effect } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, DestroyRef, signal, effect, ChangeDetectorRef, NgZone } from '@angular/core';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import * as L from 'leaflet';
+import 'leaflet.heat';
 import { AuthService } from '../auth/auth.service';
 import { AgendamentoService } from '../services/agendamento';
 import { ChatMessageView, ChatService, SessaoChatStatus } from '../services/chat.service';
 import { DentistDirectoryService, DentistSummary, ScheduleSlot } from '../services/dentist-directory.service';
 import { RuntimeConfigService } from '../services/runtime-config.service';
-import { ChangeDetectorRef, NgZone } from '@angular/core';
 import { MeusAgendamentosComponent } from './meus-agendamentos.component';
 import { SkeletonCardComponent } from '../shared/components/skeleton-card.component';
-
 import { DashboardStateService, DashboardTab } from '../services/dashboard-state.service';
 
 export interface DaySchedule {
@@ -38,14 +37,12 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
   dentists: DentistSummary[] = [];
   selectedDentist: DentistSummary | null = null;
   
-  // Substitui calendarSlots puros
   calendarSlots: ScheduleSlot[] = [];
   groupedSchedule: DaySchedule[] = [];
   
-  // Loading flags
   isLoadingDentists = false;
   isLoadingSlots = false;
-  hasError = false; // Flag for robust error handling
+  hasError = false; 
   
   messages: ChatMessageView[] = [];
   draftMessage = '';
@@ -56,14 +53,24 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
   sessionStatus: SessaoChatStatus | null = null;
   SessaoChatStatus = SessaoChatStatus; 
   userLocation: {lat: number, lng: number} | undefined;
-  private map: L.Map | undefined;
-  private marker: L.Marker | undefined;
   
-  // Reatividade do Mapa
+  // Location UX
+  locationState: 'PENDING' | 'GRANTED' | 'DENIED' | 'PROMPTING' = 'PROMPTING';
+
+  // Filters
+  filters = {
+    nome: '',
+    especialidade: '',
+    distanciaMax: 30
+  };
+  sortOption: 'nearest' | 'availability' | 'name' = 'nearest';
+  
+  private map: L.Map | undefined;
+  private heatLayer: any;
+  
   hoveredDentistaId = signal<string | null>(null);
   private markerMap = new Map<string, L.Marker>();
   
-  // Custom marker icon to fix Angular asset path issues for Leaflet
   private defaultIcon = L.icon({
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -75,10 +82,7 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
   private chatSubscription?: Subscription;
   private sessionStatusSub?: Subscription;
 
-  // Optimistic ID para o Slot
   reservingSlotIso: string | null = null;
-
-  diagnosticsResult = '';
 
   constructor(
     private auth: AuthService,
@@ -93,9 +97,14 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router
   ) {
+    this.setupMarkerEffects();
+  }
+
+  private destroyRef = inject(DestroyRef);
+
+  private setupMarkerEffects() {
     effect(() => {
       const activeId = this.hoveredDentistaId();
-      
       this.markerMap.forEach((marker, id) => {
         if (id === activeId) {
           const activeIcon = L.divIcon({
@@ -116,31 +125,11 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Diagnostics code removed for production
-
-  private destroyRef = inject(DestroyRef);
-
   ngOnInit(): void {
     this.currentUserId = this.auth.getSubject() ?? '';
     this.currentUserLabel = this.auth.getEmail() ?? 'Cliente';
 
-    if (!this.currentUserId) {
-      return; 
-    }
-    
-    // Listen to custom events from Leaflet popups
-    document.addEventListener('selectDentist', (e: any) => {
-      this.ngZone.run(() => {
-        const id = e.detail;
-        const d = this.dentists.find(x => x.id === id);
-        if (d) {
-          this.selectDentist(d);
-        }
-      });
-    });
-
-    this.isLoadingDentists = true;
-    this.hasError = false;
+    if (!this.currentUserId) return; 
 
     this.dashboardState.activeTab$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(tab => {
       this.setActiveTab(tab);
@@ -154,42 +143,68 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
           this.dashboardState.setActiveTab(tab as DashboardTab);
         }
       } else {
-        // Default to BUSCAR if no valid tab is provided
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: { tab: 'buscar' },
-          queryParamsHandling: 'merge'
-        });
+        this.router.navigate([], { relativeTo: this.route, queryParams: { tab: 'buscar' }, queryParamsHandling: 'merge' });
       }
     });
+  }
 
+  requestLocation() {
+    this.locationState = 'PENDING';
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           this.ngZone.run(() => {
             this.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            this.locationState = 'GRANTED';
             this.loadDentists(pos.coords.latitude, pos.coords.longitude);
           });
         },
         () => {
           this.ngZone.run(() => {
+            this.locationState = 'DENIED';
             this.loadDentists(); 
           });
         }
       );
     } else {
+      this.locationState = 'DENIED';
       this.loadDentists();
     }
   }
 
+  get filteredDentists(): DentistSummary[] {
+    let result = this.dentists.filter(d => {
+      if (this.filters.nome && !d.nome.toLowerCase().includes(this.filters.nome.toLowerCase())) return false;
+      if (this.filters.especialidade && d.especialidade.toLowerCase() !== this.filters.especialidade.toLowerCase() && this.filters.especialidade !== 'Todas') return false;
+      if (this.filters.distanciaMax < 30 && d.distanciaKm && d.distanciaKm > this.filters.distanciaMax) return false;
+      return true;
+    });
+
+    result.sort((a, b) => {
+      if (this.sortOption === 'nearest') {
+        return (a.distanciaKm || 999) - (b.distanciaKm || 999);
+      } else if (this.sortOption === 'name') {
+        return a.nome.localeCompare(b.nome);
+      }
+      return 0;
+    });
+    return result;
+  }
+
+  applyFilters() {
+    this.updateMapMarkers();
+  }
+
+  get especialidadesUnicas(): string[] {
+    const specs = this.dentists.map(d => d.especialidade).filter(Boolean);
+    return ['Todas', ...Array.from(new Set(specs))];
+  }
+
   setActiveTab(tab: DashboardTab): void {
     this.activeTab = tab;
-    // Resize map when entering the BUSCAR tab if map already exists
-    if (tab === 'BUSCAR' && this.selectedDentist) {
+    if (tab === 'BUSCAR' && !this.selectedDentist) {
       setTimeout(() => {
-        if (this.map) {
-          this.map.invalidateSize();
-        }
+        if (this.map) this.map.invalidateSize();
       }, 100);
     }
   }
@@ -202,21 +217,22 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
     this.hoveredDentistaId.set(null);
   }
 
-  private loadDentists(lat?: number, lng?: number): void {
+  loadDentists(lat?: number, lng?: number): void {
+    this.isLoadingDentists = true;
+    this.hasError = false;
     this.dentistDirectory.listDentists(lat, lng).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (dentists) => {
         this.isLoadingDentists = false;
         if (dentists && dentists.length > 0) {
           this.dentists = dentists;
-          this.voltarAoMapa();
         } else if (lat !== undefined && lng !== undefined) {
-          // Se a busca por proximidade não retornar ninguém, busca todos os dentistas
           this.isLoadingDentists = true;
-          this.loadDentists();
+          this.loadDentists(); // Fallback to global
+          return;
         } else {
           this.dentists = [];
-          this.voltarAoMapa();
         }
+        this.voltarAoMapa();
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -231,43 +247,38 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.chatSubscription?.unsubscribe();
     this.sessionStatusSub?.unsubscribe();
+    if (this.map) {
+      this.map.remove();
+    }
   }
 
   selectDentist(dentist: DentistSummary): void {
     if (!dentist) return; 
     this.selectedDentist = dentist;
-    this.bookingStatus = `Agenda de ${dentist.nome} carregada.`;
+    this.bookingStatus = \`Agenda de \${dentist.nome} carregada.\`;
     this.roomId = ''; 
     this.sessionStatus = null;
     this.chatService.sessionStatus$.next(null);
     this.messages = [];
     
-    // Strictly after selectedDentist is confirmed
     this.loadSlots(dentist.id);
   }
 
   carregarChatDoAgendamento(dentistaId: string): void {
     let d = this.dentists.find(x => x.id === dentistaId);
     if (!d) {
-      // Mock minimalista se não achou na lista principal
-      d = {
-        id: dentistaId,
-        nome: 'Especialista da Consulta',
-        especialidade: 'Odontologia'
-      } as DentistSummary;
+      d = { id: dentistaId, nome: 'Especialista da Consulta', especialidade: 'Odontologia' } as DentistSummary;
     }
     
-    // Seta a tab ativa primeiro
     if (this.activeTab !== 'CHAT_AGENDA') {
        this.dashboardState.setActiveTab('CHAT_AGENDA');
     }
 
     this.selectDentist(d!);
     
-    // Inicia o chat automaticamente se for necessário
     setTimeout(() => {
        if (!this.roomId) {
-           this.iniciarChat();
+           this.iniciarChat(d!);
        }
     }, 300);
   }
@@ -276,7 +287,7 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
     this.selectedDentist = null;
     
     setTimeout(() => {
-      let lat = -23.5505; // Default SP
+      let lat = -23.5505;
       let lng = -46.6333;
       if (this.userLocation) {
         lat = this.userLocation.lat;
@@ -302,7 +313,6 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
       attribution: '© OpenStreetMap contributors'
     }).addTo(this.map);
 
-    // Add marker for user
     if (this.userLocation) {
       const userIcon = L.icon({
         ...this.defaultIcon.options,
@@ -314,43 +324,70 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
         .openPopup();
     }
 
-    // Add markers for dentists
+    this.updateMapMarkers();
+  }
+
+  private updateMapMarkers(): void {
+    if (!this.map) return;
+    
+    // Clear existing
+    this.markerMap.forEach(m => m.remove());
     this.markerMap.clear();
-    this.dentists.forEach(d => {
+    if (this.heatLayer) {
+      this.map.removeLayer(this.heatLayer);
+    }
+
+    const heatData: any[] = [];
+    const bounds = L.latLngBounds([]);
+
+    this.filteredDentists.forEach(d => {
       if (d.latitude && d.longitude) {
         const marker = L.marker([d.latitude, d.longitude], { icon: this.defaultIcon })
           .addTo(this.map!)
-          .bindPopup(`<b>${d.nome}</b><br>${d.especialidade}<br><button class="mt-2 px-2 py-1 bg-blue-600 text-white rounded text-xs border-none cursor-pointer" onclick="document.dispatchEvent(new CustomEvent('selectDentist', {detail: '${d.id}'}))">Agendar</button>`);
+          .on('click', () => {
+             this.ngZone.run(() => this.selectDentist(d));
+          });
         
+        // Custom popup not needed since click opens the detail panel directly now
+        marker.bindTooltip(\`<b>\${d.nome}</b><br>\${d.especialidade}\`);
         this.markerMap.set(d.id, marker);
+        heatData.push([d.latitude, d.longitude, 1]); // intensity 1
+        bounds.extend([d.latitude, d.longitude]);
       }
     });
-    
-    // Resize just in case
-    setTimeout(() => {
-      if (this.map) {
-        this.map.invalidateSize();
-      }
-    }, 200);
+
+    if (this.userLocation) {
+      bounds.extend([this.userLocation.lat, this.userLocation.lng]);
+    }
+
+    if (heatData.length > 0) {
+      this.heatLayer = (L as any).heatLayer(heatData, {radius: 40, blur: 25, maxZoom: 14}).addTo(this.map);
+    }
+
+    if (bounds.isValid() && this.map) {
+      this.map.fitBounds(bounds, { padding: [50, 50] });
+    }
   }
 
-  iniciarChat(): void {
-    if (!this.selectedDentist) return;
-    this.chatService.solicitarChat(this.currentUserId, this.selectedDentist.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(response => {
+  iniciarChat(dentist: DentistSummary): void {
+    this.chatService.solicitarChat(this.currentUserId, dentist.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(response => {
       this.roomId = response.id;
       this.sessionStatus = response.status;
       this.chatService.sessionStatus$.next(response.status);
-      this.bindChat(this.selectedDentist!);
+      this.bindChat(dentist);
+      
+      // Auto-navigate to CHAT_AGENDA if not already there
+      if (this.activeTab !== 'CHAT_AGENDA') {
+         this.dashboardState.setActiveTab('CHAT_AGENDA');
+      }
     });
   }
-
-  // Dev methods removed
 
   aceitarConvite(dataHora: string): void {
     if (!this.roomId) return;
     this.chatService.aceitarConviteAgendamento(this.roomId, dataHora).subscribe({
       next: () => {
-        this.bookingStatus = `Consulta aceita para ${new Date(dataHora).toLocaleString('pt-BR')}.`;
+        this.bookingStatus = \`Consulta aceita para \${new Date(dataHora).toLocaleString('pt-BR')}.\`;
       },
       error: (err) => {
         alert('Não foi possível agendar. O horário pode ter sido ocupado por outro cliente. Erro: ' + (err.error || err.message));
@@ -359,9 +396,7 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
   }
 
   sendMessage(): void {
-    if (!this.selectedDentist || !this.draftMessage.trim()) {
-      return;
-    }
+    if (!this.selectedDentist || !this.draftMessage.trim()) return;
     this.chatService.send(
       this.roomId,
       this.currentUserId,
@@ -383,7 +418,7 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
       dataHora: startIso,
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
-        this.bookingStatus = `Consulta agendada para ${new Date(startIso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}.`;
+        this.bookingStatus = \`Consulta agendada para \${new Date(startIso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}.\`;
         this.reservingSlotIso = null;
         this.loadSlots(this.selectedDentist?.id ?? '');
       },
@@ -396,12 +431,7 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
 
   initials(name: string): string {
     if (!name) return '';
-    return name
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase())
-      .join('');
+    return name.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('');
   }
 
   private loadSlots(dentistId: string): void {
@@ -409,21 +439,26 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
     this.calendarSlots = [];
     this.groupedSchedule = [];
     
+    // We could fetch them again if they are missing, but public API usually loads them?
+    // According to public API logic, slots are pre-loaded in DentistSummary
     if (this.selectedDentist && this.selectedDentist.slots) {
       this.calendarSlots = this.selectedDentist.slots;
       this.groupSlotsByDay(this.calendarSlots);
+    } else {
+      // If not, we can call dentistDirectory.getSlots (not implemented in the controller though, but let's see)
+      this.dentistDirectory.getSlots(dentistId).subscribe(slots => {
+         this.calendarSlots = slots;
+         this.groupSlotsByDay(this.calendarSlots);
+      });
     }
     this.isLoadingSlots = false;
   }
 
   private groupSlotsByDay(slots: ScheduleSlot[]): void {
     const map = new Map<string, DaySchedule>();
-    
     slots.forEach(slot => {
-      if (slot.title !== 'Disponível') return;
-
+      // Assuming 'title' logic from old code
       const dateObj = new Date(slot.start);
-      // Ensure we format localized strings safely (assuming pt-BR locale mostly for this app)
       const dateString = dateObj.toISOString().split('T')[0];
 
       if (!map.has(dateString)) {
@@ -438,14 +473,10 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
           slots: []
         });
       }
-
       map.get(dateString)?.slots.push(slot);
     });
 
-    // Converter para array e ordenar por data
     this.groupedSchedule = Array.from(map.values()).sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
-    
-    // Sort slots within each day
     this.groupedSchedule.forEach(day => {
       day.slots.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
     });
@@ -480,8 +511,6 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
     const rawCep = cep.replace(/\D/g, '');
     if (rawCep.length === 8) {
       console.log('Buscando CEP...', rawCep);
-      // O ViaCepService deverá ser implementado ou injetado aqui
-      // fetch(`https://viacep.com.br/ws/${rawCep}/json/`)...
     }
   }
 }
