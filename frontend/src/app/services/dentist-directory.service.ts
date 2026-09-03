@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { catchError, map, Observable, of } from 'rxjs';
+import { catchError, map, Observable, of, throwError } from 'rxjs';
 import { RuntimeConfigService } from './runtime-config.service';
 
 export interface DentistSummary {
@@ -48,7 +48,7 @@ export class DentistDirectoryService {
       url += `?lat=${lat}&lng=${lng}`;
     }
     return this.http.get<DentistSummary[]>(url).pipe(
-      catchError(() => of([]))
+      catchError(err => throwError(() => err))
     );
   }
 

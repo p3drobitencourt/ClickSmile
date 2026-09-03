@@ -131,6 +131,9 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
 
     if (!this.currentUserId) return; 
 
+    // Carrega os dentistas imediatamente antes mesmo da permissão de localização
+    this.loadDentists();
+
     this.dashboardState.activeTab$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(tab => {
       this.setActiveTab(tab);
       this.cdr.detectChanges();
@@ -156,19 +159,18 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
           this.ngZone.run(() => {
             this.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
             this.locationState = 'GRANTED';
+            // Atualiza os dentistas para incluir distâncias precisas
             this.loadDentists(pos.coords.latitude, pos.coords.longitude);
           });
         },
         () => {
           this.ngZone.run(() => {
             this.locationState = 'DENIED';
-            this.loadDentists(); 
           });
         }
       );
     } else {
       this.locationState = 'DENIED';
-      this.loadDentists();
     }
   }
 
@@ -176,7 +178,7 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
     let result = this.dentists.filter(d => {
       if (this.filters.nome && !d.nome.toLowerCase().includes(this.filters.nome.toLowerCase())) return false;
       if (this.filters.especialidade && d.especialidade.toLowerCase() !== this.filters.especialidade.toLowerCase() && this.filters.especialidade !== 'Todas') return false;
-      if (this.filters.distanciaMax < 30 && d.distanciaKm && d.distanciaKm > this.filters.distanciaMax) return false;
+      if (d.distanciaKm != null && d.distanciaKm > this.filters.distanciaMax) return false;
       return true;
     });
 
@@ -225,10 +227,6 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
         this.isLoadingDentists = false;
         if (dentists && dentists.length > 0) {
           this.dentists = dentists;
-        } else if (lat !== undefined && lng !== undefined) {
-          this.isLoadingDentists = true;
-          this.loadDentists(); // Fallback to global
-          return;
         } else {
           this.dentists = [];
         }
@@ -390,7 +388,8 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
         this.bookingStatus = \`Consulta aceita para \${new Date(dataHora).toLocaleString('pt-BR')}.\`;
       },
       error: (err) => {
-        alert('Não foi possível agendar. O horário pode ter sido ocupado por outro cliente. Erro: ' + (err.error || err.message));
+        this.hasError = true;
+        this.bookingStatus = 'Não foi possível agendar. O horário pode ter sido ocupado.';
       }
     });
   }
