@@ -48,6 +48,7 @@ class RegistrationServiceTest {
     @BeforeEach
     void setUp() {
         dentistaRequest = new RegisterRequest(
+            Perfil.DENTISTA,
             "Dr. Teste",
             "dr@teste.com",
             "123456",
@@ -57,7 +58,7 @@ class RegistrationServiceTest {
             "Clinica Teste",
             "11.111.111/1111-11",
             null,
-            Perfil.DENTISTA
+            null
         );
     }
 
