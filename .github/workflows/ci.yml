@@ -60,14 +60,7 @@ jobs:
           if [ $ATTEMPTS -eq 36 ]; then
             echo "Backend failed to start in time! Dumping log:"
             docker compose -f docker-compose.yml -f docker-compose.ci.yml logs backend > backend_failure.log || true
-            curl -F 'file=@backend_failure.log' https://0x0.st > log_url.txt
-            echo "Logs available at: $(cat log_url.txt)"
-            git config --global user.name 'CI'
-            git config --global user.email 'ci@example.com'
-            git checkout -b ci-logs-${GITHUB_RUN_ID}
-            git add log_url.txt backend_failure.log
-            git commit -m "CI failure logs" || true
-            git push origin ci-logs-${GITHUB_RUN_ID} --force || true
+            cat backend_failure.log
             exit 1
           fi
           sleep 5
