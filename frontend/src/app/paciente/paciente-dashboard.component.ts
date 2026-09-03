@@ -253,7 +253,7 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
   selectDentist(dentist: DentistSummary): void {
     if (!dentist) return; 
     this.selectedDentist = dentist;
-    this.bookingStatus = \`Agenda de \${dentist.nome} carregada.\`;
+    this.bookingStatus = `Agenda de ${dentist.nome} carregada.`;
     this.roomId = ''; 
     this.sessionStatus = null;
     this.chatService.sessionStatus$.next(null);
@@ -347,7 +347,7 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
           });
         
         // Custom popup not needed since click opens the detail panel directly now
-        marker.bindTooltip(\`<b>\${d.nome}</b><br>\${d.especialidade}\`);
+        marker.bindTooltip(`<b>${d.nome}</b><br>${d.especialidade}`);
         this.markerMap.set(d.id, marker);
         heatData.push([d.latitude, d.longitude, 1]); // intensity 1
         bounds.extend([d.latitude, d.longitude]);
@@ -385,7 +385,7 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
     if (!this.roomId) return;
     this.chatService.aceitarConviteAgendamento(this.roomId, dataHora).subscribe({
       next: () => {
-        this.bookingStatus = \`Consulta aceita para \${new Date(dataHora).toLocaleString('pt-BR')}.\`;
+        this.bookingStatus = `Consulta aceita para ${new Date(dataHora).toLocaleString('pt-BR')}.`;
       },
       error: (err) => {
         this.hasError = true;
@@ -417,7 +417,7 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
       dataHora: startIso,
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
-        this.bookingStatus = \`Consulta agendada para \${new Date(startIso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}.\`;
+        this.bookingStatus = `Consulta agendada para ${new Date(startIso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}.`;
         this.reservingSlotIso = null;
         this.loadSlots(this.selectedDentist?.id ?? '');
       },

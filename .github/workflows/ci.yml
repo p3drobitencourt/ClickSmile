@@ -54,9 +54,18 @@ jobs:
         docker compose -f docker-compose.yml -f docker-compose.ci.yml up --build -d backend
     - name: Wait for Backend Health
       run: |
+        echo "--- DOCKER COMPOSE CONFIG ---"
+        docker compose -f docker-compose.yml -f docker-compose.ci.yml config
+        echo "--- DOCKER INSPECT PORT BINDINGS ---"
+        docker inspect clicksmile-backend --format '{{json .HostConfig.PortBindings}}' || true
+        echo "--- DOCKER PS ---"
+        docker compose -f docker-compose.yml -f docker-compose.ci.yml ps
         echo "Waiting for backend to be ready on port 8080..."
         ATTEMPTS=0
         while true; do
+          echo "--- CHECKING INSIDE CONTAINER ---"
+          docker exec clicksmile-backend sh -c "curl -fsS http://127.0.0.1:8080/actuator/health || wget -qO- http://127.0.0.1:8080/actuator/health" || echo "CONTAINER_HTTP_FAIL"
+          echo "--- CHECKING FROM RUNNER (HOST) ---"
           RESPONSE=$(curl -s --fail -v http://127.0.0.1:8080/actuator/health 2> curl_err.log || echo "CURL_FAILED")
           echo "Healthcheck response: $RESPONSE"
           if echo "$RESPONSE" | grep -q '"status":"UP"'; then
