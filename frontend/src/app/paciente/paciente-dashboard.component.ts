@@ -3,7 +3,7 @@ import { Component, OnDestroy, OnInit, inject, DestroyRef, signal, effect } from
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import * as L from 'leaflet';
 import { AuthService } from '../auth/auth.service';
@@ -89,7 +89,9 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
     private runtime: RuntimeConfigService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
-    private dashboardState: DashboardStateService
+    private dashboardState: DashboardStateService,
+    private route: ActivatedRoute,
+    private router: Router
   ) {
     effect(() => {
       const activeId = this.hoveredDentistaId();
@@ -114,38 +116,7 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  runDiagnostics(): void {
-    this.diagnosticsResult = 'Iniciando teste de conectividade (aguarde até 60s se o Render estiver dormindo)...\n\n';
-    const dentistaUrl = this.runtime.api('/api/public/dentistas');
-    
-    const startDentista = Date.now();
-    this.http.get<any[]>(dentistaUrl, { observe: 'response' }).subscribe({
-      next: (res) => {
-        const time = Date.now() - startDentista;
-        this.diagnosticsResult += `[✅ Dentistas] Status: ${res.status} | Tempo: ${time}ms | Array Size: ${res.body?.length || 0}\n`;
-        if (res.body?.length === 0) {
-           this.diagnosticsResult += `   -> ⚠️ O array está VAZIO. Ninguém com perfil DENTISTA foi retornado pelo banco!\n`;
-        } else {
-           this.diagnosticsResult += `   -> Dados da primeira posição: ${JSON.stringify(res.body?.[0])}\n`;
-        }
-      },
-      error: (err) => {
-        this.diagnosticsResult += `[❌ Dentistas] Erro HTTP: ${err.status} | StatusText: ${err.statusText} | Mensagem: ${err.message}\n`;
-      }
-    });
-
-    const agendamentosUrl = this.runtime.api(`/api/agendamentos/paciente/${this.currentUserId}`);
-    const startAg = Date.now();
-    this.http.get<any[]>(agendamentosUrl, { observe: 'response' }).subscribe({
-      next: (res) => {
-        const time = Date.now() - startAg;
-        this.diagnosticsResult += `[✅ Agendamentos] Status: ${res.status} | Tempo: ${time}ms | Array Size: ${res.body?.length || 0}\n`;
-      },
-      error: (err) => {
-        this.diagnosticsResult += `[❌ Agendamentos] Erro HTTP: ${err.status} | StatusText: ${err.statusText} | Mensagem: ${err.message}\n`;
-      }
-    });
-  }
+  // Diagnostics code removed for production
 
   private destroyRef = inject(DestroyRef);
 
@@ -174,6 +145,22 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
     this.dashboardState.activeTab$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(tab => {
       this.setActiveTab(tab);
       this.cdr.detectChanges();
+    });
+
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      const tab = params['tab']?.toUpperCase();
+      if (tab === 'BUSCAR' || tab === 'CHAT_AGENDA' || tab === 'PERFIL') {
+        if (this.activeTab !== tab) {
+          this.dashboardState.setActiveTab(tab as DashboardTab);
+        }
+      } else {
+        // Default to BUSCAR if no valid tab is provided
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { tab: 'buscar' },
+          queryParamsHandling: 'merge'
+        });
+      }
     });
 
     if (navigator.geolocation) {
@@ -357,21 +344,7 @@ export class PacienteDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  devAceitarChat(): void {
-    if (!this.roomId) return;
-    this.chatService.aceitarChat(this.roomId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(response => {
-      this.sessionStatus = response.status;
-      this.chatService.sessionStatus$.next(response.status);
-    });
-  }
-
-  devEnviarConvite(): void {
-    if (!this.roomId || !this.selectedDentist) return;
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(10, 0, 0, 0);
-    this.chatService.enviarConviteDev(this.roomId, this.selectedDentist.id, this.selectedDentist.nome, this.currentUserId, tomorrow.toISOString());
-  }
+  // Dev methods removed
 
   aceitarConvite(dataHora: string): void {
     if (!this.roomId) return;

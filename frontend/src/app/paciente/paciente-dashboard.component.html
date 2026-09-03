@@ -1,14 +1,6 @@
-<div class="bg-slate-900 text-slate-100 min-h-screen p-6">
+<div class="bg-cs-bg text-cs-text min-h-screen p-6">
   
-  <div *ngIf="diagnosticsResult" class="bg-slate-800 border border-green-500 rounded-lg p-4 mb-6 whitespace-pre-wrap font-mono text-sm text-green-400">
-    <h3 class="text-green-500 mt-0 flex justify-between items-center">
-      <span>Resultados do Diagnóstico da API</span>
-      <button (click)="diagnosticsResult = ''" class="bg-transparent border-none cursor-pointer text-green-500 hover:text-green-300">X</button>
-    </h3>
-    {{ diagnosticsResult }}
-  </div>
-
-  <div *ngIf="hasError" class="bg-slate-800 border border-red-500 rounded-lg p-4 mb-6">
+  <div *ngIf="hasError" class="bg-cs-surface border border-red-500 rounded-lg p-4 mb-6">
     <h3 class="text-red-500 mt-0">Falha de Conexão</h3>
     <p class="text-red-400">Ocorreu um erro ao carregar os dados. Verifique sua conexão e tente novamente.</p>
   </div>
@@ -21,18 +13,18 @@
     <div *ngSwitchCase="'CHAT_AGENDA'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
       <!-- Coluna Esquerda: Agendamentos (Resumo) -->
-      <div class="lg:col-span-1 bg-slate-800 text-slate-200 border border-slate-700 rounded-lg shadow-md p-6 flex flex-col h-[calc(100vh-16rem)] overflow-y-auto">
-        <h2 class="text-xl font-bold mb-4 text-slate-100">Próximos Agendamentos</h2>
+      <div class="lg:col-span-1 bg-cs-surface text-cs-text border border-cs-border rounded-lg shadow-md p-6 flex flex-col h-[calc(100vh-16rem)] overflow-y-auto">
+        <h2 class="text-xl font-bold mb-4 text-cs-text">Próximos Agendamentos</h2>
         <!-- O componente de agendamentos gerencia a listagem, botões de cancelamento e status -->
         <app-meus-agendamentos (abrirChat)="carregarChatDoAgendamento($event)"></app-meus-agendamentos>
       </div>
 
       <!-- Coluna Direita: Chat Integrado -->
-      <div class="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-lg shadow-md p-6 flex flex-col h-[calc(100vh-16rem)]">
-        <div class="flex justify-between items-center border-b border-slate-700 pb-4 mb-4">
+      <div class="lg:col-span-2 bg-cs-surface border border-cs-border rounded-lg shadow-md p-6 flex flex-col h-[calc(100vh-16rem)]">
+        <div class="flex justify-between items-center border-b border-cs-border pb-4 mb-4">
           <div>
-            <p class="text-xs text-slate-400 uppercase tracking-wider m-0">Chat Online</p>
-            <h2 class="text-xl font-bold m-0 text-slate-100 flex items-center gap-2" *ngIf="selectedDentist">
+            <p class="text-xs text-cs-muted uppercase tracking-wider m-0">Chat Online</p>
+            <h2 class="text-xl font-bold m-0 text-cs-text flex items-center gap-2" *ngIf="selectedDentist">
               Conversar com {{ selectedDentist.nome }}
               <a *ngIf="selectedDentist.latitude && selectedDentist.longitude"
                  [href]="'https://maps.google.com/?q=' + selectedDentist.latitude + ',' + selectedDentist.longitude"
@@ -42,11 +34,11 @@
                 Como Chegar
               </a>
             </h2>
-            <h2 class="text-xl font-bold m-0 text-slate-500" *ngIf="!selectedDentist">Nenhum chat aberto</h2>
+            <h2 class="text-xl font-bold m-0 text-cs-muted" *ngIf="!selectedDentist">Nenhum chat aberto</h2>
           </div>
           <div class="flex gap-2" *ngIf="selectedDentist">
-            <span class="px-3 py-1 bg-slate-700 text-slate-300 text-xs rounded-full" *ngIf="roomId">Sala {{ roomId }}</span>
-            <button class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded-full border-none cursor-pointer" *ngIf="sessionStatus === SessaoChatStatus.ACTIVE" (click)="devEnviarConvite()" title="Dev Tool">Convite Dev</button>
+            <span class="px-3 py-1 bg-cs-bg-elevated text-cs-text text-xs rounded-full" *ngIf="roomId">Sala {{ roomId }}</span>
+            
           </div>
         </div>
 
@@ -54,8 +46,8 @@
           <div class="flex-1 overflow-y-auto pr-2 mb-4" *ngIf="sessionStatus === SessaoChatStatus.ACTIVE">
             <div *ngFor="let message of messages" class="mb-4 flex flex-col" [class.items-end]="message.mine" [class.items-start]="!message.mine && !message.isSystem" [class.items-center]="message.isSystem">
               
-              <span class="text-xs text-slate-400 mb-1" *ngIf="!message.isSystem">
-                <strong class="text-slate-300">{{ message.senderName }}</strong> • {{ message.sentAt | date : 'shortTime' }}
+              <span class="text-xs text-cs-muted mb-1" *ngIf="!message.isSystem">
+                <strong class="text-cs-text">{{ message.senderName }}</strong> • {{ message.sentAt | date : 'shortTime' }}
               </span>
               
               <ng-container *ngIf="message.isInvite">
@@ -68,12 +60,12 @@
 
               <div *ngIf="!message.isInvite" 
                    class="px-4 py-2 rounded-2xl max-w-[80%]"
-                   [class.bg-blue-600]="message.mine && !message.isSystem"
+                   [class.bg-cs-primary]="message.mine && !message.isSystem"
                    [class.text-white]="message.mine && !message.isSystem"
-                   [class.bg-slate-700]="!message.mine && !message.isSystem"
-                   [class.text-slate-200]="!message.mine && !message.isSystem"
+                   [class.bg-cs-bg-elevated]="!message.mine && !message.isSystem"
+                   [class.text-cs-text]="!message.mine && !message.isSystem"
                    [class.bg-transparent]="message.isSystem"
-                   [class.text-slate-500]="message.isSystem"
+                   [class.text-cs-muted]="message.isSystem"
                    [class.text-xs]="message.isSystem">
                 {{ message.message }}
               </div>
@@ -81,13 +73,13 @@
           </div>
 
           <div class="flex-1 flex flex-col justify-center items-center text-center p-6" *ngIf="!sessionStatus">
-            <p class="text-slate-400 mb-4">Inicie o chat para tirar dúvidas com o especialista antes de agendar.</p>
-            <button type="button" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg border-none cursor-pointer" (click)="iniciarChat()">Iniciar Chat</button>
+            <p class="text-cs-muted mb-4">Inicie o chat para tirar dúvidas com o especialista antes de agendar.</p>
+            <button type="button" class="px-6 py-2 bg-cs-primary hover:bg-cs-primary-hover text-white rounded-lg border-none cursor-pointer" (click)="iniciarChat()">Iniciar Chat</button>
           </div>
 
           <div class="flex-1 flex flex-col justify-center items-center text-center p-6" *ngIf="sessionStatus === SessaoChatStatus.PENDING">
-            <p class="text-slate-400 mb-4">Aguardando o dentista aceitar a solicitação...</p>
-            <button type="button" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded cursor-pointer border-none" (click)="devAceitarChat()" title="Ferramenta de Desenvolvedor">Simular Aceite (Dev)</button>
+            <p class="text-cs-muted mb-4">Aguardando o dentista aceitar a solicitação...</p>
+            
           </div>
 
           <form class="mt-auto flex gap-2" (ngSubmit)="sendMessage()" *ngIf="sessionStatus === SessaoChatStatus.ACTIVE">
@@ -95,11 +87,11 @@
               name="draftMessage"
               [(ngModel)]="draftMessage"
               rows="1"
-              class="flex-1 bg-slate-900 border border-slate-700 text-white rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-inner"
+              class="flex-1 bg-cs-bg border border-cs-border text-white rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-cs-primary focus:border-cs-primary transition-all shadow-inner"
               placeholder="Digite sua mensagem..."
               (keydown.enter)="sendMessage(); $event.preventDefault()"
             ></textarea>
-            <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white w-12 h-12 rounded-full flex items-center justify-center border-none cursor-pointer shadow-md transition-transform active:scale-95" title="Enviar Mensagem">
+            <button type="submit" class="bg-cs-primary hover:bg-cs-primary-hover text-white w-12 h-12 rounded-full flex items-center justify-center border-none cursor-pointer shadow-md transition-transform active:scale-95" title="Enviar Mensagem">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13"></line>
                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -110,10 +102,10 @@
 
         <ng-template #noChatSelected>
           <div class="flex-1 flex flex-col justify-center items-center text-center p-6">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-16 h-16 text-slate-600 mb-4">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-16 h-16 text-cs-muted mb-4">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
             </svg>
-            <p class="text-slate-400">Vá até a aba "Buscar Dentistas" e selecione um profissional para iniciar ou retomar uma conversa.</p>
+            <p class="text-cs-muted">Vá até a aba "Buscar Dentistas" e selecione um profissional para iniciar ou retomar uma conversa.</p>
           </div>
         </ng-template>
 
@@ -127,21 +119,21 @@
       <div class="w-full lg:w-[400px] flex flex-col h-full">
         <div class="flex justify-between items-end mb-4 shrink-0">
           <div>
-            <p class="text-xs text-slate-400 uppercase tracking-wider m-0">Especialistas</p>
-            <h2 class="text-xl font-bold m-0 text-slate-100">Disponíveis agora</h2>
+            <p class="text-xs text-cs-muted uppercase tracking-wider m-0">Especialistas</p>
+            <h2 class="text-xl font-bold m-0 text-cs-text">Disponíveis agora</h2>
           </div>
-          <span class="px-2 py-1 bg-slate-700 text-slate-300 text-xs rounded" *ngIf="!isLoadingDentists">{{ dentists.length }} perfis</span>
-          <span class="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full" *ngIf="isLoadingDentists"></span>
+          <span class="px-2 py-1 bg-cs-bg-elevated text-cs-text text-xs rounded" *ngIf="!isLoadingDentists">{{ dentists.length }} perfis</span>
+          <span class="animate-spin h-5 w-5 border-2 border-cs-primary border-t-transparent rounded-full" *ngIf="isLoadingDentists"></span>
         </div>
 
         @defer (when !isLoadingDentists) {
           <div class="flex-1 overflow-y-auto pr-2 space-y-4" *ngIf="dentists.length > 0">
             <div *ngFor="let dentist of dentists" 
-                 class="bg-slate-800 text-slate-200 hover:bg-slate-700 transition-all cursor-pointer border border-slate-700 rounded-lg shadow-sm p-4"
-                 [class.border-blue-500]="selectedDentist?.id === dentist.id"
-                 [class.bg-slate-700]="selectedDentist?.id === dentist.id"
+                 class="bg-cs-surface text-cs-text hover:bg-cs-bg-elevated transition-all cursor-pointer border border-cs-border rounded-lg shadow-sm p-4"
+                 [class.border-cs-primary]="selectedDentist?.id === dentist.id"
+                 [class.bg-cs-bg-elevated]="selectedDentist?.id === dentist.id"
                  [class.ring-2]="hoveredDentistaId() === dentist.id"
-                 [class.ring-blue-500]="hoveredDentistaId() === dentist.id"
+                 [class.ring-cs-primary]="hoveredDentistaId() === dentist.id"
                  (mouseenter)="onCardMouseEnter(dentist.id)"
                  (mouseleave)="onCardMouseLeave()">
               <div class="flex items-center gap-4 mb-3">
@@ -149,20 +141,20 @@
                   {{ initials(dentist?.nome || '') }}
                 </div>
                 <div class="flex-1 min-w-0">
-                  <strong class="block text-slate-100 text-lg truncate">{{ dentist?.nome }}</strong>
-                  <small class="block text-slate-400 truncate">{{ dentist?.especialidade }} <span *ngIf="dentist?.distanciaKm">({{ dentist?.distanciaKm | number:'1.1-1' }} km)</span></small>
+                  <strong class="block text-cs-text text-lg truncate">{{ dentist?.nome }}</strong>
+                  <small class="block text-cs-muted truncate">{{ dentist?.especialidade }} <span *ngIf="dentist?.distanciaKm">({{ dentist?.distanciaKm | number:'1.1-1' }} km)</span></small>
                 </div>
               </div>
               <button 
                 type="button" 
-                class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium transition-colors border-none cursor-pointer"
+                class="w-full py-2 bg-cs-primary hover:bg-cs-primary-hover text-white rounded font-medium transition-colors border-none cursor-pointer"
                 (click)="selectDentist(dentist)">
                 {{ selectedDentist?.id === dentist.id ? 'Visualizando Horários' : 'Ver Horários' }}
               </button>
             </div>
           </div>
 
-          <div *ngIf="dentists.length === 0" class="flex-1 flex flex-col items-center justify-center text-slate-500 bg-slate-800 rounded-lg border border-slate-700 p-6">
+          <div *ngIf="dentists.length === 0" class="flex-1 flex flex-col items-center justify-center text-cs-muted bg-cs-surface rounded-lg border border-cs-border p-6">
             <p>Nenhum especialista disponível no momento.</p>
           </div>
         } @loading (minimum 500ms) {
@@ -175,58 +167,58 @@
       </div>
 
       <!-- Painel Direito (Mapa ou Slots) -->
-      <div class="flex-1 flex flex-col h-full bg-slate-800 border border-slate-700 rounded-lg shadow-md overflow-hidden relative">
+      <div class="flex-1 flex flex-col h-full bg-cs-surface border border-cs-border rounded-lg shadow-md overflow-hidden relative">
         
         <!-- Estado 1: Se NÃO há dentista selecionado, exibe o MAPA ocupando tudo -->
         <ng-container *ngIf="!selectedDentist">
-          <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800 z-20">
-            <h3 class="text-lg font-bold m-0 text-slate-100">Mapa de Proximidade</h3>
-            <span class="text-sm text-slate-400">Selecione um especialista para agendar</span>
+          <div class="p-4 border-b border-cs-border flex justify-between items-center bg-cs-surface z-20">
+            <h3 class="text-lg font-bold m-0 text-cs-text">Mapa de Proximidade</h3>
+            <span class="text-sm text-cs-muted">Selecione um especialista para agendar</span>
           </div>
           <div class="flex-1 relative" *ngIf="userLocation">
             <div id="dentist-map" class="absolute inset-0 z-10"></div>
           </div>
-          <div *ngIf="!userLocation" class="flex-1 flex items-center justify-center text-slate-500">
+          <div *ngIf="!userLocation" class="flex-1 flex items-center justify-center text-cs-muted">
             Carregando sua localização no mapa...
           </div>
         </ng-container>
 
         <!-- Estado 2: Se HÁ dentista selecionado, exibe a AGENDA/SLOTS e Detalhes ocupando tudo -->
         <ng-container *ngIf="selectedDentist">
-          <div class="p-6 border-b border-slate-700 bg-slate-800 flex justify-between items-center shrink-0">
+          <div class="p-6 border-b border-cs-border bg-cs-surface flex justify-between items-center shrink-0">
              <div>
                <div class="flex items-center gap-2">
-                 <h2 class="text-xl font-bold m-0 text-slate-100 flex items-center gap-2">
+                 <h2 class="text-xl font-bold m-0 text-cs-text flex items-center gap-2">
                    <span class="w-8 h-8 rounded-full bg-emerald-900 text-emerald-400 flex items-center justify-center text-sm font-bold">{{ selectedDentist.nome.charAt(0) }}</span>
                    Dr(a). {{ selectedDentist.nome }}
                  </h2>
                  <a *ngIf="selectedDentist.latitude && selectedDentist.longitude"
                     [href]="'https://maps.google.com/?q=' + selectedDentist.latitude + ',' + selectedDentist.longitude"
                     target="_blank"
-                    class="ml-auto text-xs px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded flex items-center gap-1 transition-colors no-underline">
+                    class="ml-auto text-xs px-2 py-1 bg-cs-primary hover:bg-cs-primary-hover text-white rounded flex items-center gap-1 transition-colors no-underline">
                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
                    Como Chegar
                  </a>
                </div>
              </div>
              <div class="flex gap-3">
-               <button type="button" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded border-none cursor-pointer text-sm" (click)="voltarAoMapa()">
+               <button type="button" class="px-4 py-2 bg-cs-bg-elevated hover:bg-slate-600 text-cs-text rounded border-none cursor-pointer text-sm" (click)="voltarAoMapa()">
                  Voltar ao Mapa
                </button>
              </div>
           </div>
 
-          <div class="flex-1 overflow-y-auto p-6 bg-slate-900">
+          <div class="flex-1 overflow-y-auto p-6 bg-cs-bg">
             <div class="flex justify-between items-center mb-6">
-              <h3 class="text-xl font-bold m-0 text-slate-100">Escolha o Melhor Horário</h3>
-              <span class="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full" *ngIf="isLoadingSlots"></span>
+              <h3 class="text-xl font-bold m-0 text-cs-text">Escolha o Melhor Horário</h3>
+              <span class="animate-spin h-5 w-5 border-2 border-cs-primary border-t-transparent rounded-full" *ngIf="isLoadingSlots"></span>
             </div>
 
             <div class="flex flex-wrap gap-6" *ngIf="!isLoadingSlots && groupedSchedule.length > 0; else noSlotsBusca">
-              <div class="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] xl:w-[calc(25%-1.125rem)] border border-slate-700 rounded-lg bg-slate-800 overflow-hidden flex flex-col" *ngFor="let day of groupedSchedule">
-                <div class="bg-slate-700 p-3 text-center border-b border-slate-600 shrink-0">
-                  <span class="block text-sm font-semibold text-slate-300 uppercase">{{ day.weekday }}</span>
-                  <span class="block text-base font-bold text-slate-100">{{ day.dayAndMonth }}</span>
+              <div class="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] xl:w-[calc(25%-1.125rem)] border border-cs-border rounded-lg bg-cs-surface overflow-hidden flex flex-col" *ngFor="let day of groupedSchedule">
+                <div class="bg-cs-bg-elevated p-3 text-center border-b border-cs-border shrink-0">
+                  <span class="block text-sm font-semibold text-cs-text uppercase">{{ day.weekday }}</span>
+                  <span class="block text-base font-bold text-cs-text">{{ day.dayAndMonth }}</span>
                 </div>
                 <div class="p-3 flex-1 flex flex-col gap-2 overflow-y-auto max-h-[300px]">
                   <button 
@@ -234,22 +226,22 @@
                     *ngFor="let slot of day.slots"
                     (click)="bookSlot(slot.start)"
                     [disabled]="reservingSlotIso === slot.start"
-                    class="w-full py-2 px-3 text-sm rounded bg-slate-900 text-slate-200 border border-slate-600 hover:border-blue-500 hover:text-blue-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium">
+                    class="w-full py-2 px-3 text-sm rounded bg-cs-bg text-cs-text border border-cs-border hover:border-cs-primary hover:text-cs-primary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium">
                     <span *ngIf="reservingSlotIso !== slot.start">{{ getSlotTime(slot.start) }}</span>
-                    <span *ngIf="reservingSlotIso === slot.start" class="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full inline-block"></span>
+                    <span *ngIf="reservingSlotIso === slot.start" class="animate-spin h-4 w-4 border-2 border-cs-primary border-t-transparent rounded-full inline-block"></span>
                   </button>
-                  <div class="text-center text-sm text-slate-500 py-4 font-medium" *ngIf="day.slots.length === 0">Agenda Lotada</div>
+                  <div class="text-center text-sm text-cs-muted py-4 font-medium" *ngIf="day.slots.length === 0">Agenda Lotada</div>
                 </div>
               </div>
             </div>
 
             <ng-template #noSlotsBusca>
-              <div class="flex flex-col items-center justify-center p-12 bg-slate-800 rounded-lg border border-slate-700 mt-4" *ngIf="!isLoadingSlots">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-16 h-16 text-slate-600 mb-4">
+              <div class="flex flex-col items-center justify-center p-12 bg-cs-surface rounded-lg border border-cs-border mt-4" *ngIf="!isLoadingSlots">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-16 h-16 text-cs-muted mb-4">
                   <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <h4 class="text-xl text-slate-300 font-bold m-0 mb-2">Agenda Bloqueada</h4>
-                <p class="text-slate-500 text-base m-0">O especialista não possui horários abertos para agendamento online neste momento.</p>
+                <h4 class="text-xl text-cs-text font-bold m-0 mb-2">Agenda Bloqueada</h4>
+                <p class="text-cs-muted text-base m-0">O especialista não possui horários abertos para agendamento online neste momento.</p>
               </div>
             </ng-template>
           </div>
@@ -258,59 +250,59 @@
     </div>
 
     <!-- ABA 3: PERFIL -->
-    <div *ngSwitchCase="'PERFIL'" class="bg-slate-800 border border-slate-700 rounded-lg shadow-md p-8 max-w-4xl mx-auto">
-      <h2 class="text-2xl font-bold mb-8 text-slate-100">Configurações de Perfil</h2>
+    <div *ngSwitchCase="'PERFIL'" class="bg-cs-surface border border-cs-border rounded-lg shadow-md p-8 max-w-4xl mx-auto">
+      <h2 class="text-2xl font-bold mb-8 text-cs-text">Configurações de Perfil</h2>
       
       <form class="space-y-8">
         <!-- Seção: Dados Pessoais -->
         <div>
-          <h3 class="text-lg font-semibold text-slate-200 border-b border-slate-700 pb-2 mb-4">Dados Pessoais</h3>
+          <h3 class="text-lg font-semibold text-cs-text border-b border-cs-border pb-2 mb-4">Dados Pessoais</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="flex flex-col gap-2">
-              <label for="nome" class="text-slate-300 text-sm font-medium">Nome Completo</label>
-              <input type="text" id="nome" name="nome" placeholder="Seu nome" class="bg-slate-900 border border-slate-700 text-white rounded-md p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+              <label for="nome" class="text-cs-text text-sm font-medium">Nome Completo</label>
+              <input type="text" id="nome" name="nome" placeholder="Seu nome" class="bg-cs-bg border border-cs-border text-white rounded-md p-2.5 focus:ring-2 focus:ring-cs-primary outline-none">
             </div>
             <div class="flex flex-col gap-2">
-              <label for="email" class="text-slate-300 text-sm font-medium">E-mail</label>
-              <input type="email" id="email" name="email" placeholder="seu@email.com" class="bg-slate-900 border border-slate-700 text-white rounded-md p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+              <label for="email" class="text-cs-text text-sm font-medium">E-mail</label>
+              <input type="email" id="email" name="email" placeholder="seu@email.com" class="bg-cs-bg border border-cs-border text-white rounded-md p-2.5 focus:ring-2 focus:ring-cs-primary outline-none">
             </div>
             <div class="flex flex-col gap-2">
-              <label for="telefone" class="text-slate-300 text-sm font-medium">Telefone / WhatsApp</label>
-              <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000" class="bg-slate-900 border border-slate-700 text-white rounded-md p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+              <label for="telefone" class="text-cs-text text-sm font-medium">Telefone / WhatsApp</label>
+              <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000" class="bg-cs-bg border border-cs-border text-white rounded-md p-2.5 focus:ring-2 focus:ring-cs-primary outline-none">
             </div>
             <div class="flex flex-col gap-2">
-              <label for="nascimento" class="text-slate-300 text-sm font-medium">Data de Nascimento</label>
-              <input type="date" id="nascimento" name="nascimento" class="bg-slate-900 border border-slate-700 text-white rounded-md p-2.5 focus:ring-2 focus:ring-blue-500 outline-none [color-scheme:dark]">
+              <label for="nascimento" class="text-cs-text text-sm font-medium">Data de Nascimento</label>
+              <input type="date" id="nascimento" name="nascimento" class="bg-cs-bg border border-cs-border text-white rounded-md p-2.5 focus:ring-2 focus:ring-cs-primary outline-none [color-scheme:dark]">
             </div>
           </div>
         </div>
 
         <!-- Seção: Endereço -->
         <div>
-          <h3 class="text-lg font-semibold text-slate-200 border-b border-slate-700 pb-2 mb-4">Endereço</h3>
+          <h3 class="text-lg font-semibold text-cs-text border-b border-cs-border pb-2 mb-4">Endereço</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="flex flex-col gap-2 md:col-span-1">
-              <label for="cep" class="text-slate-300 text-sm font-medium">CEP</label>
-              <input type="text" id="cep" name="cep" #cepInput (blur)="buscarCep(cepInput.value)" placeholder="00000-000" class="bg-slate-900 border border-slate-700 text-white rounded-md p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+              <label for="cep" class="text-cs-text text-sm font-medium">CEP</label>
+              <input type="text" id="cep" name="cep" #cepInput (blur)="buscarCep(cepInput.value)" placeholder="00000-000" class="bg-cs-bg border border-cs-border text-white rounded-md p-2.5 focus:ring-2 focus:ring-cs-primary outline-none">
             </div>
             <div class="flex flex-col gap-2 md:col-span-2">
-              <label for="rua" class="text-slate-300 text-sm font-medium">Rua / Logradouro</label>
-              <input type="text" id="rua" name="rua" placeholder="Nome da rua" class="bg-slate-900 border border-slate-700 text-white rounded-md p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+              <label for="rua" class="text-cs-text text-sm font-medium">Rua / Logradouro</label>
+              <input type="text" id="rua" name="rua" placeholder="Nome da rua" class="bg-cs-bg border border-cs-border text-white rounded-md p-2.5 focus:ring-2 focus:ring-cs-primary outline-none">
             </div>
             
             <div class="flex flex-col gap-2 md:col-span-1">
-              <label for="numero" class="text-slate-300 text-sm font-medium">Número</label>
-              <input type="text" id="numero" name="numero" placeholder="123" class="bg-slate-900 border border-slate-700 text-white rounded-md p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+              <label for="numero" class="text-cs-text text-sm font-medium">Número</label>
+              <input type="text" id="numero" name="numero" placeholder="123" class="bg-cs-bg border border-cs-border text-white rounded-md p-2.5 focus:ring-2 focus:ring-cs-primary outline-none">
             </div>
             <div class="flex flex-col gap-2 md:col-span-1">
-              <label for="bairro" class="text-slate-300 text-sm font-medium">Bairro</label>
-              <input type="text" id="bairro" name="bairro" placeholder="Seu bairro" class="bg-slate-900 border border-slate-700 text-white rounded-md p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+              <label for="bairro" class="text-cs-text text-sm font-medium">Bairro</label>
+              <input type="text" id="bairro" name="bairro" placeholder="Seu bairro" class="bg-cs-bg border border-cs-border text-white rounded-md p-2.5 focus:ring-2 focus:ring-cs-primary outline-none">
             </div>
             <div class="flex flex-col gap-2 md:col-span-1">
-              <label for="cidade_estado" class="text-slate-300 text-sm font-medium">Cidade - UF</label>
+              <label for="cidade_estado" class="text-cs-text text-sm font-medium">Cidade - UF</label>
               <div class="flex gap-2">
-                <input type="text" id="cidade" name="cidade" placeholder="Cidade" class="flex-1 bg-slate-900 border border-slate-700 text-white rounded-md p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
-                <input type="text" id="estado" name="estado" placeholder="UF" maxlength="2" class="w-16 bg-slate-900 border border-slate-700 text-white rounded-md p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-center">
+                <input type="text" id="cidade" name="cidade" placeholder="Cidade" class="flex-1 bg-cs-bg border border-cs-border text-white rounded-md p-2.5 focus:ring-2 focus:ring-cs-primary outline-none">
+                <input type="text" id="estado" name="estado" placeholder="UF" maxlength="2" class="w-16 bg-cs-bg border border-cs-border text-white rounded-md p-2.5 focus:ring-2 focus:ring-cs-primary outline-none text-center">
               </div>
             </div>
           </div>
@@ -318,7 +310,7 @@
 
         <!-- Botão de Salvar -->
         <div class="flex justify-end pt-4">
-          <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-6 rounded shadow cursor-pointer border-none transition-colors">
+          <button type="submit" class="bg-cs-primary hover:bg-cs-primary-hover text-white font-semibold py-2 px-6 rounded shadow cursor-pointer border-none transition-colors">
             Salvar Alterações
           </button>
         </div>

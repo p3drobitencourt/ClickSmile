@@ -22,13 +22,13 @@
       </ng-container>
 
       <ng-container *ngIf="!isDentista && !isAdmin && !isRecepcao">
-        <a href="#" [class.active]="activeTab === 'BUSCAR'" (click)="setTab('BUSCAR', $event)">
+        <a [routerLink]="['/paciente']" [queryParams]="{tab: 'buscar'}" routerLinkActive="active" [routerLinkActiveOptions]="{matrixParams: 'ignored', queryParams: 'exact', paths: 'exact', fragment: 'ignored'}">
           Buscar Dentistas
         </a>
-        <a href="#" [class.active]="activeTab === 'CHAT_AGENDA'" (click)="setTab('CHAT_AGENDA', $event)">
+        <a [routerLink]="['/paciente']" [queryParams]="{tab: 'chat_agenda'}" routerLinkActive="active" [routerLinkActiveOptions]="{matrixParams: 'ignored', queryParams: 'exact', paths: 'exact', fragment: 'ignored'}">
           Minhas Consultas
         </a>
-        <a href="#" [class.active]="activeTab === 'PERFIL'" (click)="setTab('PERFIL', $event)">
+        <a [routerLink]="['/paciente']" [queryParams]="{tab: 'perfil'}" routerLinkActive="active" [routerLinkActiveOptions]="{matrixParams: 'ignored', queryParams: 'exact', paths: 'exact', fragment: 'ignored'}">
           Meu Perfil
         </a>
       </ng-container>

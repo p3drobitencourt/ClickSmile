@@ -33,25 +33,10 @@ export class CorporateLayoutComponent implements OnInit, OnDestroy {
     this.isDentista = this.auth.getRole() === 'DENTISTA';
     this.isAdmin = this.auth.getRole() === 'ADMIN' || this.auth.getRole() === 'TENANT_ADMIN';
     this.isRecepcao = this.auth.getRole() === 'RECEPCAO';
-    
-    if (!this.isDentista && !this.isAdmin && !this.isRecepcao) {
-      this.sub.add(
-        this.dashboardState.activeTab$.subscribe(tab => this.activeTab = tab)
-      );
-    }
   }
 
   ngOnDestroy() {
     this.sub.unsubscribe();
-  }
-
-  setTab(tab: DashboardTab, event: Event) {
-    event.preventDefault();
-    this.dashboardState.setActiveTab(tab);
-    // If the user is somewhere else inside /cliente, force navigation back to the root of /cliente
-    if (this.router.url !== '/paciente') {
-      this.router.navigate(['/paciente']);
-    }
   }
 
   logout(event: Event) {
