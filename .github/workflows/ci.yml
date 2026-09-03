@@ -57,13 +57,20 @@ jobs:
         echo "Waiting for backend to be ready on port 8080..."
         ATTEMPTS=0
         while true; do
-          RESPONSE=$(curl -s http://127.0.0.1:8080/actuator/health || echo "CURL_FAILED")
+          RESPONSE=$(curl -s --fail -v http://127.0.0.1:8080/actuator/health 2> curl_err.log || echo "CURL_FAILED")
           echo "Healthcheck response: $RESPONSE"
           if echo "$RESPONSE" | grep -q '"status":"UP"'; then
             break
           fi
           if [ $ATTEMPTS -eq 36 ]; then
-            echo "Backend failed to start in time! Dumping log:"
+            echo "Backend failed to start in time or cannot be reached!"
+            echo "--- DOCKER PS ---"
+            docker compose -f docker-compose.yml -f docker-compose.ci.yml ps
+            echo "--- DOCKER PORT ---"
+            docker port clicksmile-backend || true
+            echo "--- CURL STDERR ---"
+            cat curl_err.log || true
+            echo "--- BACKEND LOGS ---"
             docker compose -f docker-compose.yml -f docker-compose.ci.yml logs backend > backend_failure.log || true
             cat backend_failure.log
             exit 1
