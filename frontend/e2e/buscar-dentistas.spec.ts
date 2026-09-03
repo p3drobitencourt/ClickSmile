@@ -36,7 +36,7 @@ test.describe('Buscar Dentistas Flow', () => {
     dentistaCredentials = generateUser('Dentista');
 
     // Registra o Dentista usando o endpoint real
-    const dentistaRes = await request.post('/api/auth/register', {
+    const dentistaRes = await request.post('http://127.0.0.1:8080/api/auth/register', {
       data: {
         perfil: 'DENTISTA',
         nome: dentistaCredentials.nome,
@@ -58,7 +58,7 @@ test.describe('Buscar Dentistas Flow', () => {
     expect(dentistaRes.ok()).toBeTruthy();
 
     // Registra o Paciente
-    const pacienteRes = await request.post('/api/auth/register', {
+    const pacienteRes = await request.post('http://127.0.0.1:8080/api/auth/register', {
       data: {
         perfil: 'PACIENTE',
         nome: pacienteCredentials.nome,

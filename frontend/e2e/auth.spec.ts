@@ -8,5 +8,5 @@ test('has title and login works', async ({ page }) => {
   
   // Try navigating to login explicitly
   await page.goto('/login');
-  await expect(page.getByRole('heading', { name: 'Bem-vindo de volta' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible();
 });
