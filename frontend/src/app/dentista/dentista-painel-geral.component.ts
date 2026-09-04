@@ -85,16 +85,16 @@ export class DentistaPainelGeralComponent implements OnInit {
       next: (agendamentos) => {
         const events = agendamentos.map(a => ({
           id: a.id?.toString(),
-          title: a.cliente?.nome ? `Consulta: ${a.cliente.nome}` : 'Consulta Agendada',
-          start: a.dataHora,
+          title: a.pacienteNome ? `Consulta: ${a.pacienteNome}` : 'Consulta Agendada',
+          start: a.inicioAt,
           // Vamos assumir duração padrão de 30 min se não houver fim (ou se vier da API)
-          end: new Date(new Date(a.dataHora).getTime() + 30 * 60000).toISOString(),
+          end: a.inicioAt ? new Date(new Date(a.inicioAt).getTime() + 30 * 60000).toISOString() : undefined,
           backgroundColor: '#3b82f6', // blue-500
           borderColor: '#2563eb', // blue-600
           textColor: '#ffffff',
           extendedProps: {
-            clienteId: a.cliente?.id,
-            clienteNome: a.cliente?.nome
+            clienteId: a.pacienteId,
+            clienteNome: a.pacienteNome
           }
         }));
         

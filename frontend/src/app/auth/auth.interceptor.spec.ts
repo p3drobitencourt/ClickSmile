@@ -5,16 +5,20 @@ import { AuthService } from './auth.service';
 import { ToastService } from '../shared/toast.service';
 import { of, throwError, Observable } from 'rxjs';
 import { Router } from '@angular/router';
+import { vi } from 'vitest';
 
 describe('authInterceptor', () => {
-  let authServiceSpy: jasmine.SpyObj<AuthService>;
-  let routerSpy: jasmine.SpyObj<Router>;
-  let toastServiceSpy: jasmine.SpyObj<ToastService>;
+  let authServiceSpy: any;
+  let routerSpy: any;
+  let toastServiceSpy: any;
 
   beforeEach(() => {
-    authServiceSpy = jasmine.createSpyObj('AuthService', ['getAccessToken', 'refresh']);
-    routerSpy = jasmine.createSpyObj('Router', ['navigate']);
-    toastServiceSpy = jasmine.createSpyObj('ToastService', ['show']);
+    authServiceSpy = {
+      getAccessToken: vi.fn(),
+      refresh: vi.fn()
+    };
+    routerSpy = { navigate: vi.fn() };
+    toastServiceSpy = { show: vi.fn() };
 
     TestBed.configureTestingModule({
       providers: [
@@ -26,7 +30,7 @@ describe('authInterceptor', () => {
   });
 
   it('should add Authorization header if token exists', (done) => {
-    authServiceSpy.getAccessToken.and.returnValue('mock-token');
+    authServiceSpy.getAccessToken.mockReturnValue('mock-token');
 
     const next: HttpHandlerFn = (req: HttpRequest<unknown>): Observable<HttpEvent<unknown>> => {
       expect(req.headers.get('Authorization')).toBe('Bearer mock-token');
@@ -40,7 +44,7 @@ describe('authInterceptor', () => {
   });
 
   it('should handle 409 conflict error', (done) => {
-    authServiceSpy.getAccessToken.and.returnValue(null);
+    authServiceSpy.getAccessToken.mockReturnValue(null);
 
     const next: HttpHandlerFn = (req: HttpRequest<unknown>): Observable<HttpEvent<unknown>> => {
       return throwError(() => new HttpErrorResponse({ status: 409 }));
@@ -61,3 +65,4 @@ describe('authInterceptor', () => {
     });
   });
 });
+

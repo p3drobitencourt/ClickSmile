@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { ChatService } from './chat.service';
 import { RuntimeConfigService } from './runtime-config.service';
+import { vi } from 'vitest';
 
 describe('ChatService', () => {
   let service: ChatService;
@@ -28,10 +29,11 @@ describe('ChatService', () => {
 
   it('should deactivate STOMP client on destroy', () => {
     // We mock the client to spy on deactivate
-    (service as any).client = { deactivate: jasmine.createSpy('deactivate') };
+    (service as any).client = { deactivate: vi.fn() };
     
     service.ngOnDestroy();
     
     expect((service as any).client.deactivate).toHaveBeenCalled();
   });
 });
+

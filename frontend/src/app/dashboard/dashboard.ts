@@ -123,10 +123,10 @@ export class DashboardComponent implements OnInit {
         // Extract Patients
         const uniquePatients = new Map<number, AgendaPacienteOption>();
         res.forEach(agendamento => {
-          if (agendamento.cliente && !uniquePatients.has(agendamento.cliente.id!)) {
-             uniquePatients.set(agendamento.cliente.id!, { 
-               id: agendamento.cliente.id!, 
-               nome: agendamento.cliente.nome || 'Paciente Sem Nome'
+          if (agendamento.pacienteId && !uniquePatients.has(Number(agendamento.pacienteId))) {
+             uniquePatients.set(Number(agendamento.pacienteId), { 
+               id: agendamento.pacienteId, 
+               nome: agendamento.pacienteNome || 'Paciente Sem Nome'
              });
           }
         });
@@ -134,7 +134,7 @@ export class DashboardComponent implements OnInit {
 
         // Computar metricas básicas (ex: consultas de hoje)
         const todayStr = new Date().toISOString().split('T')[0];
-        const consultasHoje = res.filter(a => a.dataHora?.startsWith(todayStr)).length;
+        const consultasHoje = res.filter(a => a.inicioAt?.startsWith(todayStr)).length;
         
         this.metrics.set([
           { label: 'Consultas hoje', value: consultasHoje, delta: '-', tone: 'primary' },
@@ -258,21 +258,22 @@ export class DashboardComponent implements OnInit {
   private toCalendarEvent(agendamento: AgendamentoResumo): EventInput {
     return {
       title: this.formatarTitulo(agendamento),
-      start: agendamento.dataHora,
+      start: agendamento.inicioAt,
       backgroundColor: this.pickEventTone(agendamento.status),
       borderColor: this.pickEventTone(agendamento.status),
     };
   }
 
   private formatarTitulo(agendamento: AgendamentoResumo): string {
-    const cliente = agendamento?.cliente;
+    const pacienteNome = agendamento?.pacienteNome;
+    const pacienteId = agendamento?.pacienteId;
 
-    if (cliente?.nome) {
-      return `Cliente: ${cliente.nome}`;
+    if (pacienteNome) {
+      return `Cliente: ${pacienteNome}`;
     }
 
-    if (cliente?.id) {
-      return `Cliente: ${cliente.id}`;
+    if (pacienteId) {
+      return `Cliente: ${pacienteId}`;
     }
 
     return 'Agendamento';
