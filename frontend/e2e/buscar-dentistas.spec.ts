@@ -112,8 +112,8 @@ test.describe('Buscar Dentistas Flow', () => {
     await page.click('button:has-text("Entrar")');
     
     // Confirmar redirecionamento real
-    await page.waitForURL('**/paciente');
-    expect(page.url()).toContain('/paciente');
+    await page.waitForURL('**/paciente/dashboard');
+    expect(page.url()).toContain('/paciente/dashboard');
 
     // Navegar para Buscar Dentistas
     const buscarTab = page.locator('button', { hasText: 'Buscar Dentistas' });

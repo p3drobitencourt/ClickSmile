@@ -6,7 +6,7 @@ test.describe('Calendar and Chat flow', () => {
     // Assuming user is already logged in or we mock the login.
     
     // We navigate to the client dashboard
-    await page.goto('/cliente');
+    await page.goto('/paciente/dashboard');
 
     // For a real test, we would need to mock the API responses or have a seeded database.
     // Here we assert the basic elements are present in the DOM.
@@ -27,8 +27,8 @@ test.describe('Calendar and Chat flow', () => {
       await page.fill('input[type="password"]', '123456');
       await page.click('button:has-text("Entrar")');
       
-      // Now we should be on /cliente
-      await page.waitForURL('**/cliente');
+      // Now we should be on /paciente/dashboard
+      await page.waitForURL('**/paciente/dashboard');
     }
 
     // Now test if elements are visible
