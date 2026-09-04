@@ -147,6 +147,10 @@ export class ChatService implements OnDestroy {
     return this.http.get<ChatMessageView[]>(this.runtime.api(`/api/mensagens/historico/${roomId}`));
   }
 
+  getSessoesAtivas(): Observable<any[]> {
+    return this.http.get<any[]>(this.runtime.api(`/api/chat/sessoes`));
+  }
+
   parseMessageForComponent(msg: any, currentUserId: string): ChatMessageView {
     return this.parseMessage(msg, currentUserId);
   }

@@ -93,6 +93,26 @@ public class ChatController {
     }
 
 
+    @GetMapping("/api/chat/sessoes")
+    @ResponseBody
+    public ResponseEntity<?> getSessoes() {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        String userIdStr;
+        if (auth.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt) {
+            userIdStr = ((org.springframework.security.oauth2.jwt.Jwt) auth.getPrincipal()).getSubject();
+        } else {
+            userIdStr = auth.getName();
+        }
+        UUID userId = UUID.fromString(userIdStr);
+
+        List<projetosSpringcom.example.ClickSmile.dto.SessaoChatDetalheDTO> sessoes = chatService.getSessoesPorUsuario(userId);
+        return ResponseEntity.ok(sessoes);
+    }
+
     @PostMapping("/api/chat/sessao/{roomId}/aceitar")
     public ResponseEntity<SessaoChatResponseDTO> aceitarSessao(@PathVariable String roomId) {
         ChatService.AceitarSessaoResult result = chatService.aceitarSessao(roomId);

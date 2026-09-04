@@ -25,13 +25,13 @@ export interface DaySchedule {
 }
 
 @Component({
-  selector: 'app-paciente-dashboard',
+  selector: 'app-buscar-dentistas',
   standalone: true,
   imports: [CommonModule, RouterModule, HttpClientModule, FormsModule, MeusAgendamentosComponent, SkeletonCardComponent],
-  templateUrl: './paciente-dashboard.component.html',
-  styleUrl: './paciente-dashboard.component.scss',
+  templateUrl: './buscar-dentistas.component.html',
+  styleUrl: './buscar-dentistas.component.scss',
 })
-export class PacienteDashboardComponent implements OnInit, OnDestroy {
+export class BuscarDentistasComponent implements OnInit, OnDestroy {
   activeTab: DashboardTab = 'BUSCAR';
   
   dentists: DentistSummary[] = [];

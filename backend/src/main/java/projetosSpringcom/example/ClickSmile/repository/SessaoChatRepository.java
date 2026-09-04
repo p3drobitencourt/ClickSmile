@@ -19,4 +19,7 @@ public interface SessaoChatRepository extends JpaRepository<SessaoChat, UUID> {
     @Modifying
     @Query("DELETE FROM SessaoChat s WHERE s.id = :id")
     void deleteById(@Param("id") UUID id);
+
+    @Query("SELECT s FROM SessaoChat s WHERE s.clienteId = :userId OR s.dentistaId = :userId")
+    java.util.List<SessaoChat> findByParticipanteId(@Param("userId") UUID userId);
 }

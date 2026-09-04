@@ -190,6 +190,33 @@ public class ChatService {
         return new AgendarConviteResult(systemMessage, agendamentoInfo, sessao.getClienteId(), sessao.getDentistaId());
     }
 
+    public List<SessaoChatDetalheDTO> getSessoesPorUsuario(UUID userId) {
+        List<SessaoChat> sessoes = sessaoChatRepository.findByParticipanteId(userId);
+        List<SessaoChatDetalheDTO> detalhes = new java.util.ArrayList<>();
+
+        for (SessaoChat s : sessoes) {
+            String clienteNome = "Paciente";
+            String dentistaNome = "Dentista";
+            
+            Usuario cliente = usuarioRepository.findById(s.getClienteId()).orElse(null);
+            if (cliente != null) clienteNome = cliente.getNome();
+
+            Usuario dentista = usuarioRepository.findById(s.getDentistaId()).orElse(null);
+            if (dentista != null) dentistaNome = dentista.getNome();
+
+            detalhes.add(new SessaoChatDetalheDTO(
+                s.getId(),
+                s.getClienteId(),
+                clienteNome,
+                s.getDentistaId(),
+                dentistaNome,
+                s.getStatus()
+            ));
+        }
+
+        return detalhes;
+    }
+
     private Map<String, Object> buildAgendamentoInfoMap(AgendamentoResponseDTO agendamento) {
         Map<String, Object> dtoAgendamento = new HashMap<>();
         dtoAgendamento.put("id", agendamento.id());

@@ -22,13 +22,19 @@
       </ng-container>
 
       <ng-container *ngIf="!isDentista && !isAdmin && !isRecepcao">
-        <a [routerLink]="['/paciente']" [queryParams]="{tab: 'buscar'}" routerLinkActive="active" [routerLinkActiveOptions]="{matrixParams: 'ignored', queryParams: 'exact', paths: 'exact', fragment: 'ignored'}">
+        <a routerLink="/paciente/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+          Resumo
+        </a>
+        <a routerLink="/paciente/buscar" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
           Buscar Dentistas
         </a>
-        <a [routerLink]="['/paciente']" [queryParams]="{tab: 'chat_agenda'}" routerLinkActive="active" [routerLinkActiveOptions]="{matrixParams: 'ignored', queryParams: 'exact', paths: 'exact', fragment: 'ignored'}">
+        <a routerLink="/paciente/consultas" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
           Minhas Consultas
         </a>
-        <a [routerLink]="['/paciente']" [queryParams]="{tab: 'perfil'}" routerLinkActive="active" [routerLinkActiveOptions]="{matrixParams: 'ignored', queryParams: 'exact', paths: 'exact', fragment: 'ignored'}">
+        <a routerLink="/paciente/chat" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+          Mensagens
+        </a>
+        <a routerLink="/paciente/perfil" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
           Meu Perfil
         </a>
       </ng-container>

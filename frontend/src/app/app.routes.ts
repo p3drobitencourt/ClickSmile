@@ -10,7 +10,11 @@ const DentistaPainelGeralComponent = () => import('./dentista/dentista-painel-ge
 const PacientesViewComponent = () => import('./dentista/pacientes-view.component').then((m) => m.PacientesViewComponent);
 const ConfigViewComponent = () => import('./dentista/config-view.component').then((m) => m.ConfigViewComponent);
 
-const PacienteDashboardComponent = () => import('./paciente/paciente-dashboard.component').then((m) => m.PacienteDashboardComponent);
+const BuscarDentistasComponent = () => import('./paciente/buscar-dentistas.component').then((m) => m.BuscarDentistasComponent);
+const ConsultasPacienteComponent = () => import('./paciente/meus-agendamentos.component').then((m) => m.MeusAgendamentosComponent);
+const ChatPacienteComponent = () => import('./paciente/chat/chat-paciente.component').then((m) => m.ChatPacienteComponent);
+const PerfilPacienteComponent = () => import('./paciente/perfil/perfil-paciente.component').then((m) => m.PerfilPacienteComponent);
+const DashboardPacienteComponent = () => import('./paciente/dashboard/dashboard.component').then((m) => m.DashboardPacienteComponent);
 const CorporateLayoutComponent = () => import('./shared/layouts/corporate-layout.component').then((m) => m.CorporateLayoutComponent);
 const AdminDashboardComponent = () => import('./admin/admin-dashboard.component').then((m) => m.AdminDashboardComponent);
 
@@ -26,7 +30,18 @@ export const routes: Routes = [
     loadComponent: CorporateLayoutComponent,
     children: [
       { path: '', component: HomeRedirectComponent, pathMatch: 'full' },
-      { path: 'paciente', loadComponent: PacienteDashboardComponent, canActivate: [pacienteGuard] },
+      { 
+        path: 'paciente', 
+        canActivate: [pacienteGuard],
+        children: [
+          { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+          { path: 'dashboard', loadComponent: DashboardPacienteComponent },
+          { path: 'buscar', loadComponent: BuscarDentistasComponent },
+          { path: 'consultas', loadComponent: ConsultasPacienteComponent },
+          { path: 'chat', loadComponent: ChatPacienteComponent },
+          { path: 'perfil', loadComponent: PerfilPacienteComponent }
+        ]
+      },
       { 
         path: 'dentista', 
         canActivate: [dentistaGuard],

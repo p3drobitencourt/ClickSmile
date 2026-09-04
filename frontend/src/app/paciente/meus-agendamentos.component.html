@@ -17,12 +17,12 @@
   <div class="flex-1 overflow-y-auto space-y-4 pr-2" *ngIf="agendamentos.length > 0">
     <div class="bg-cs-bg border border-cs-border rounded-lg p-4 flex gap-4" *ngFor="let item of agendamentos">
       <div class="bg-cs-surface border border-cs-border rounded-lg w-16 h-16 flex flex-col items-center justify-center shrink-0">
-        <span class="text-xs text-cs-muted uppercase font-semibold">{{ item.dataHora | date: 'MMM' }}</span>
-        <span class="text-xl text-cs-text font-bold leading-none mt-1">{{ item.dataHora | date: 'dd' }}</span>
+        <span class="text-xs text-cs-muted uppercase font-semibold">{{ item.inicioAt | date: 'MMM' }}</span>
+        <span class="text-xl text-cs-text font-bold leading-none mt-1">{{ item.inicioAt | date: 'dd' }}</span>
       </div>
       <div class="flex-1 min-w-0">
-        <strong class="block text-cs-text text-base truncate">{{ item.dataHora | date: 'EEEE, HH:mm' }}</strong>
-        <p class="text-sm text-cs-muted m-0 truncate">Dentista: {{ item.dentistaId || 'N/A' }}</p>
+        <strong class="block text-cs-text text-base truncate">{{ item.inicioAt | date: 'EEEE, HH:mm' }}</strong>
+        <p class="text-sm text-cs-muted m-0 truncate">Dentista: Dr(a). {{ item.dentistaNome || 'N/A' }}</p>
         <div class="mt-2 flex items-center gap-2">
           <span class="px-2 py-0.5 rounded text-xs font-medium" 
                 [class.bg-emerald-900]="item.status === 'CONFIRMADO' || item.status === 'AGENDADO'" 

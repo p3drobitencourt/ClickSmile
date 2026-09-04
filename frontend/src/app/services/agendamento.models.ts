@@ -10,11 +10,15 @@ export interface AgendamentoClienteResumo {
 }
 
 export interface AgendamentoResumo {
-  id?: number;
-  dentistaId?: number;
-  dataHora: string;
-  cliente?: AgendamentoClienteResumo;
+  id?: number | string;
+  pacienteId?: string;
+  pacienteNome?: string;
+  dentistaId?: string;
+  dentistaNome?: string;
+  inicioAt: string;
+  fimAt?: string;
   status?: string;
+  observacoes?: string;
 }
 
 export interface AgendaProfissionalOption {
